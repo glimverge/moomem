@@ -94,13 +94,13 @@ fn main {
     println("gate fail: persistence reopen inconsistent")
     ok = false
   }
-  if h_r + 1e-12 < b_r {
+  if h_r < b_r {
     println(
       "gate fail: hybrid Recall@5 \{format_mrr(h_r)} < bm25 \{format_mrr(b_r)}",
     )
     ok = false
   }
-  if supersede_rate + 1e-12 < 0.8 {
+  if supersede_rate < 0.8 {
     println(
       "gate fail: near-duplicate supersede \{format_mrr(supersede_rate)} < 0.800",
     )

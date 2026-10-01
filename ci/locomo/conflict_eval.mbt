@@ -28,10 +28,7 @@ fn pair_similarity(old_text : String, new_text : String) -> (Double, Double, Dou
   } else {
     0.0
   }
-  let jac = @src.keyword_jaccard(
-    @src.tokenize(old_text),
-    @src.tokenize(new_text),
-  )
+  let jac = @src.keyword_jaccard(old_text, @src.tokenize(new_text))
   let mx = if cos >= jac { cos } else { jac }
   (cos, jac, mx)
 }

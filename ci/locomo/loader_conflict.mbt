@@ -11,7 +11,7 @@ fn load_conflict_group(
   }
   let out : Array[ConflictPairCase] = []
   for item in arr {
-    let o = match item.as_object() {
+    let o = match json_obj(item) {
       Some(x) => x
       None => fail("conflict pair not object")
     }

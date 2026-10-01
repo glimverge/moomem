@@ -49,14 +49,37 @@ struct ExtractionCase {
 
 ///|
 fn json_str(j : Json) -> String? {
-  j.as_string()
+  if j is String(s) {
+    Some(s)
+  } else {
+    None
+  }
 }
 
 ///|
 fn json_num_int(j : Json) -> Int? {
-  match j.as_number() {
-    Some(n) => Some(n.to_int())
-    None => None
+  if j is Number(n) {
+    Some(n.to_int())
+  } else {
+    None
+  }
+}
+
+///|
+fn json_obj(j : Json) -> Map[String, Json]? {
+  if j is Object(obj) {
+    Some(obj)
+  } else {
+    None
+  }
+}
+
+///|
+fn json_arr(j : Json) -> Array[Json]? {
+  if j is Array(a) {
+    Some(a)
+  } else {
+    None
   }
 }
 
@@ -71,7 +94,7 @@ fn json_str_field(obj : Map[String, Json], key : String) -> String? {
 ///|
 fn json_arr_field(obj : Map[String, Json], key : String) -> Array[Json]? {
   match obj.get(key) {
-    Some(v) => v.as_array()
+    Some(v) => json_arr(v)
     None => None
   }
 }
@@ -91,8 +114,10 @@ fn parse_string_array(arr : Array[Json]) -> Array[String] {
 ///|
 fn load_locomo_subset(path : String) -> LocomoSubset {
   let text = read_text_file(path)
-  let root = @json.parse(text) catch { _ => fail("fixture is not valid JSON: \{path}") }
-  let root_obj = match root.as_object() {
+  let root = @json.parse(text) catch {
+    _ => fail("fixture is not valid JSON: \{path}")
+  }
+  let root_obj = match json_obj(root) {
     Some(o) => o
     None => fail("fixture root is not an object: \{path}")
   }
@@ -102,7 +127,7 @@ fn load_locomo_subset(path : String) -> LocomoSubset {
   }
   let conversations : Array[LocomoConversation] = []
   for cj in convs_json {
-    let obj = match cj.as_object() {
+    let obj = match json_obj(cj) {
       Some(o) => o
       None => fail("conversation entry is not an object")
     }
@@ -116,7 +141,7 @@ fn load_locomo_subset(path : String) -> LocomoSubset {
       None => fail("conversation \{sample_id} missing sessions[]")
     }
     for sj in sessions {
-      let sobj = match sj.as_object() {
+      let sobj = match json_obj(sj) {
         Some(o) => o
         None => fail("session is not an object in \{sample_id}")
       }
@@ -125,7 +150,7 @@ fn load_locomo_subset(path : String) -> LocomoSubset {
         None => fail("session missing turns[] in \{sample_id}")
       }
       for tj in tarr {
-        let tobj = match tj.as_object() {
+        let tobj = match json_obj(tj) {
           Some(o) => o
           None => fail("turn is not an object in \{sample_id}")
         }
@@ -146,7 +171,7 @@ fn load_locomo_subset(path : String) -> LocomoSubset {
       None => fail("conversation \{sample_id} missing qa[]")
     }
     for qj in qarr {
-      let qobj = match qj.as_object() {
+      let qobj = match json_obj(qj) {
         Some(o) => o
         None => fail("qa entry is not an object in \{sample_id}")
       }
@@ -180,8 +205,10 @@ fn load_locomo_subset(path : String) -> LocomoSubset {
 ///|
 fn load_conflict_fixture(path : String) -> ConflictFixture {
   let text = read_text_file(path)
-  let root = @json.parse(text) catch { _ => fail("conflict fixture invalid JSON: \{path}") }
-  let obj = match root.as_object() {
+  let root = @json.parse(text) catch {
+    _ => fail("conflict fixture invalid JSON: \{path}")
+  }
+  let obj = match json_obj(root) {
     Some(o) => o
     None => fail("conflict fixture root not object")
   }
@@ -194,8 +221,10 @@ fn load_conflict_fixture(path : String) -> ConflictFixture {
 ///|
 fn load_extraction_gold(path : String) -> Array[ExtractionCase] {
   let text = read_text_file(path)
-  let root = @json.parse(text) catch { _ => fail("extraction gold invalid JSON: \{path}") }
-  let obj = match root.as_object() {
+  let root = @json.parse(text) catch {
+    _ => fail("extraction gold invalid JSON: \{path}")
+  }
+  let obj = match json_obj(root) {
     Some(o) => o
     None => fail("extraction gold root not object")
   }
@@ -205,7 +234,7 @@ fn load_extraction_gold(path : String) -> Array[ExtractionCase] {
   }
   let out : Array[ExtractionCase] = []
   for item in arr {
-    let o = match item.as_object() {
+    let o = match json_obj(item) {
       Some(x) => x
       None => fail("extraction case not object")
     }

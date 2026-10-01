@@ -169,7 +169,12 @@ fn read_text_file(path : String) -> String {
     "\{cwd}/\{path}"
   }
   @fs.read_file_to_string(abs) catch {
-    e => fail("cannot read \{abs} (cwd=\{cwd}): \{e}")
+    e => {
+      let detail = match e {
+        @fs.IOError(msg) => msg
+      }
+      fail("cannot read \{abs} (cwd=\{cwd}): \{detail}")
+    }
   }
 }
 

@@ -100,7 +100,7 @@ fn run_extraction_live(cases : Array[ExtractionCase]) -> Double {
   println("| denom (stored facts) | \{denom} |")
   println("| Precision | \{format_mrr(precision)} |")
   println("| target | 0.800 |")
-  if precision + 1e-12 >= 0.8 {
+  if precision >= 0.8 {
     println("| gate | PASS |")
   } else {
     println("| gate | MISSED |")

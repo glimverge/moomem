@@ -2,14 +2,14 @@
 
 ///|
 struct RetrievalScores {
-  hit : Int
-  total : Int
-  mrr_sum : Double
+  mut hit : Int
+  mut total : Int
+  mut mrr_sum : Double
   // category 1..4
   cat_hit : Array[Int]
   cat_total : Array[Int]
   cat_mrr : Array[Double]
-  adversarial_excluded : Int
+  mut adversarial_excluded : Int
 }
 
 ///|
@@ -241,7 +241,7 @@ fn run_retrieval_eval(
     "| hybrid - bm25 | \{format_mrr(h_r)} vs \{format_mrr(b_r)} | \{format_mrr(abs_delta)} | \{format_pct(rel)} |",
   )
   if embedder_mode == "api" {
-    if rel + 1e-12 >= 0.15 {
+    if rel >= 0.15 {
       println("TARGET_15PCT: met")
     } else {
       println("TARGET_15PCT: missed")

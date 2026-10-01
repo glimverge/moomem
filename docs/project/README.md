@@ -10,7 +10,7 @@
 | — | [架构设计](architecture.md) | 模块划分、注入点、双槽快照持久化（含类图 / add·recall 时序图） |
 | 03 | [产品需求文档 PRD v1.1](03-prd.md) | 22 章 implementation-ready PRD；FR-01~10、AC-01~07、四周里程碑、Q1/Q2 决议 |
 | 04 | [进度与规划（2026-10-01）](04-progress-and-roadmap.md) | 里程碑进度、P0~P3 后续规划、验收六条对照 |
-| 05 | [测试用例体系](05-test-suite.md) | L0~L3 四层测试体系（现网 114/101×3），AC 映射 |
+| 05 | [测试用例体系](05-test-suite.md) | L0~L3 四层测试体系（现网 115/102×3），AC 映射 |
 | 06 | [W3 独立验证报告](06-w3-qa-verification.md) | W3 交付的独立复验：四项实测发现（含相似度实测数据） |
 | 07 | [W3.1 独立验证报告](07-w3.1-verification.md) | W3.1 补丁复验：A/B/C 实证、R1/R2 残留 |
 | 08 | [W4 LoCoMo L3 评测报告](08-w4-eval-report.md) | PRD §16.1 五项指标三档实测：4 达标 1 未达标（检索 −12.0% 已归因） |

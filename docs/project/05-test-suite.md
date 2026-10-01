@@ -43,7 +43,7 @@ graph LR
 
 ## 2. L0 · 纯工程离线（无 LLM）
 
-包路径均在 `src/`（+ `src/cli`）。`moon test --target native` ≈ **112**；wasm 系跳过 `#cfg(native)` 磁盘/CLI ≈ **99**。（W3 前为 97/90，W3.1 前为 107/96）
+包路径均在 `src/`（+ `src/cli`）。`moon test --target native` = **115**；wasm 系跳过 `#cfg(native)` 磁盘/CLI = **102**。（W3 前为 97/90；W3.1 后 112/99；W4 后 114/101；指纹归一化加固后 115/102）
 
 ### 2.1 类型 / 编解码 / user_id — `types_test.mbt`
 
@@ -214,7 +214,7 @@ moon run ci/llm_live --target native
 
 | 项 | 状态 | 建议 |
 |----|------|------|
-| L0/L1 现网 112/99 | ✅ | W3.1 后计数（W3 增量：W3-A 配置用例 6、W3-C/D CLI 用例 4；W3.1 增量：TC-A1~A3 三通道、TC-A4/A5 断言、TC-C4/C5 host 匹配）；新增用例同步改本表 ID |
+| L0/L1 现网 115/102 | ✅ | 现网计数（W3 增量：配置用例 6、CLI 用例 4；W3.1 增量：TC-A1~A5、TC-C4/C5；W4-0 增量：闲聊清零 2；指纹归一化增量：DedupIndex 主语/标点同指纹 1）；新增用例同步改本表 ID |
 | L2 场景从冒烟扩为矩阵 | ✅（本轮实现） | 发版必跑；失败不降级为 skip |
 | L3 LoCoMo | ✅ | `ci/locomo` + `eval-locomo`；08 报告待产品侧 |
 | CLI 真 LLM 接线 | ✅ W3-C 已接线（`--llm`，native 门控） | L0 覆盖参数解析与配置构造；真实调用归 L2 |
@@ -232,5 +232,6 @@ moon run ci/llm_live --target native
 | 2026-10-01 | 初版：四层体系 + AC 映射 + 现有用例编目；L2 扩场景与发版门禁对齐 |
 | 2026-10-01 | W3.1：L1 增 TC-A1~A3（ReturnRaw 可观测）；L0 增 TC-A4/A5；CLI 增 TC-C4/C5（localhost 精确匹配） |
 | 2026-10-01 | W4：L3 `ci/locomo` 离线 harness + `eval-locomo` CI；W4-0 闲聊清零计数；native 112→114 |
+| 2026-10-01 | 指纹归一化加固（0eee88c，随 docs 重组混入）：`normalize_content` 剥主语前缀（用户的/用户/我的/我）与尾标点，吸收 LLM 提取措辞漂移；judge prompt 增补「语义等价复述判 replace」；native 114→115 |
 | 2026-10-01 | W3.1-C：`StreamEvent::Error` 原因统一 `transport error:` 前缀；解析失败保留 `invalid JSON:`（断言最小修补） |
 | 2026-10-01 | W3.1 独立复验：112/99×3 与全部 DoD 复现；新增两项 P3 残留（代理环境传输失败分类、闲聊不清零计数），见 [07 报告](07-w3.1-verification.md) |

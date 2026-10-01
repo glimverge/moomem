@@ -10,9 +10,17 @@
 
 Common cross-layer bugs:
 
-- API returns format A, frontend expects format B
-- Database stores X, service transforms to Y, but loses data
-- Multiple layers implement the same logic differently
+- Host/CLI expects format A, library returns format B
+- Persist stores snapshot X, codec transforms to Y, but loses fields
+- Multiple layers implement the same validation differently
+
+For **moomem** specifically, think in library layers (not web frontend/ORM):
+
+```
+CLI / host → MemoryStore (store.mbt) → Extractor/Judge/Embedder
+                                    → Indexes (per user_id)
+                                    → PersistenceBackend → json_codec
+```
 
 ---
 
@@ -26,6 +34,12 @@ Draw out how data moves:
 Source → Transform → Store → Retrieve → Transform → Display
 ```
 
+moomem example:
+
+```
+text → Extractor → Dedup/Conflict → Embedder → Indexes → snapshot JSONL → recall
+```
+
 For each arrow, ask:
 
 - What format is the data in?
@@ -34,12 +48,13 @@ For each arrow, ask:
 
 ### Step 2: Identify Boundaries
 
-| Boundary              | Common Issues                     |
-| --------------------- | --------------------------------- |
-| API ↔ Service         | Type mismatches, missing fields   |
-| Service ↔ Database    | Format conversions, null handling |
-| Backend ↔ Frontend    | Serialization, date formats       |
-| Component ↔ Component | Props shape changes               |
+| Boundary | Common Issues |
+| -------- | ------------- |
+| Host/CLI ↔ `MemoryStore` | Missing `Result` handling, invalid `user_id` |
+| `MemoryStore` ↔ traits | Default vs injected behavior, degrade paths |
+| Store ↔ indexes | Forgetting to pass `user_id`; stale Active filters |
+| Persist ↔ `json_codec` | Header/gen/clock drift; half-line truncation |
+| Core ↔ `llm_extractor` | Accidentally importing `mizchi/llm` into core |
 
 ### Step 3: Define Contracts
 

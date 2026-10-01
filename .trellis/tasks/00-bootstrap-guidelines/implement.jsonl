@@ -1,0 +1,4 @@
+{"file": ".trellis/spec/guides/index.md", "reason": "Shared thinking guides to keep while reshaping layer specs"}
+{"file": ".trellis/spec/guides/code-reuse-thinking-guide.md", "reason": "Reuse guidance for documenting module boundaries"}
+{"file": ".trellis/spec/guides/cross-layer-thinking-guide.md", "reason": "Cross-layer contracts: MemoryStore orchestration vs adapters"}
+{"file": ".trellis/tasks/00-bootstrap-guidelines/research/repo-architecture.md", "reason": "Bootstrap architecture notes and proposed spec reshape"}

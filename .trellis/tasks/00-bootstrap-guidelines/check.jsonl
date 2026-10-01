@@ -1,0 +1,4 @@
+{"file": ".trellis/spec/guides/index.md", "reason": "Guides index for consistency review"}
+{"file": ".trellis/spec/guides/code-reuse-thinking-guide.md", "reason": "Reuse checklist while verifying specs"}
+{"file": ".trellis/spec/guides/cross-layer-thinking-guide.md", "reason": "Cross-layer consistency for library specs"}
+{"file": ".trellis/tasks/00-bootstrap-guidelines/research/repo-architecture.md", "reason": "Architecture notes for verifying specs match the real repo"}

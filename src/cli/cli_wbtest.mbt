@@ -178,3 +178,58 @@ test "W3-C3: build_llm_config rejects missing key on non-local endpoint" {
   }
   inspect(err.contains("MOOMEM_LLM_API_KEY"), content="true")
 }
+
+///|
+#cfg(target="native")
+test "W3-C4: localhost endpoint allows missing API key" {
+  @env.unset_env_var("MOOMEM_LLM_API_KEY")
+  @env.unset_env_var("MOOMEM_LLM_BASE_URL")
+  @env.unset_env_var("MOOMEM_LLM_MODEL")
+  let opts = CliOptions::{
+    ..default_options(),
+    llm: true,
+    base_url: "http://127.0.0.1:11434",
+    model: "local-model",
+  }
+  let cfg = match build_llm_config(opts) {
+    Ok(c) => c
+    Err(msg) => {
+      inspect(msg, content="SHOULD NOT REACH")
+      return
+    }
+  }
+  let backend : &@src.PersistenceBackend = @src.MemoryBackend::new()
+  let cfg2 = @src.Config::{ ..cfg, persistence: Some(backend), }
+  let store = match @src.MemoryStore::open("memory://cli-llm-c4", config=cfg2) {
+    Ok(s) => s
+    Err(e) => {
+      inspect(e.message(), content="SHOULD NOT REACH")
+      return
+    }
+  }
+  let st = match store.stats() {
+    Ok(s) => s
+    Err(e) => {
+      inspect(e.message(), content="SHOULD NOT REACH")
+      return
+    }
+  }
+  inspect(st.extractor_mode, content="llm")
+  ignore(store.close())
+}
+
+///|
+#cfg(target="native")
+test "W3-C5: localhost.evil.com is not treated as local" {
+  @env.unset_env_var("MOOMEM_LLM_API_KEY")
+  let opts = CliOptions::{
+    ..default_options(),
+    llm: true,
+    base_url: "http://localhost.evil.com:11434",
+  }
+  let err = match build_llm_config(opts) {
+    Err(msg) => msg
+    Ok(_) => "unexpected ok"
+  }
+  inspect(err.contains("MOOMEM_LLM_API_KEY"), content="true")
+}

@@ -17,8 +17,51 @@ fn normalize_base_url(raw : String) -> String {
 }
 
 ///|
+/// 精确匹配主机名：仅 `localhost` / `127.0.0.1` / `::1` 视为本地。
+/// `http://localhost.evil.com` 等子串陷阱不得放行。
 fn is_localhost_endpoint(url : String) -> Bool {
-  url.contains("localhost") || url.contains("127.0.0.1")
+  // scheme://authority...
+  let after_scheme = match url.split_once("://") {
+    Some((_, rest)) => rest.to_owned()
+    None => return false
+  }
+  // authority = 直到 path / query / fragment
+  let mut authority = after_scheme
+  match authority.split_once("/") {
+    Some((a, _)) => authority = a.to_owned()
+    None => ()
+  }
+  match authority.split_once("?") {
+    Some((a, _)) => authority = a.to_owned()
+    None => ()
+  }
+  match authority.split_once("#") {
+    Some((a, _)) => authority = a.to_owned()
+    None => ()
+  }
+  // 去掉 userinfo@
+  let hostport = match authority.rev_split_once("@") {
+    Some((_, hp)) => hp.to_owned()
+    None => authority
+  }
+  // IPv6 [::1]:port / [::1]；否则 host:port
+  let host = if hostport.has_prefix("[") {
+    match hostport.split_once("]") {
+      Some((bracketed, _)) =>
+        match bracketed.strip_prefix("[") {
+          Some(h) => h.to_owned()
+          None => return false
+        }
+      None => return false
+    }
+  } else {
+    match hostport.split_once(":") {
+      Some((h, _)) => h.to_owned()
+      None => hostport
+    }
+  }
+  let h = host.trim().to_owned().to_lower()
+  h == "localhost" || h == "127.0.0.1" || h == "::1"
 }
 
 ///|

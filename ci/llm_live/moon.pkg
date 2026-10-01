@@ -1,0 +1,13 @@
+// Release-only live LLM gate (DeepSeek OpenAI-compatible).
+// Not part of push/PR test-pipeline — invoked only by release-pipeline.
+import {
+  "heyq02/moomem/src",
+  "heyq02/moomem/src/llm_extractor",
+  "mizchi/llm",
+  "mizchi/llm/openai",
+  "moonbitlang/core/env",
+}
+
+options(
+  "is-main": true,
+)

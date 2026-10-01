@@ -1,0 +1,26 @@
+# 安全与限制
+
+## 安全边界
+
+:::important
+**库不做角色鉴权。** moomem 是嵌入式库，信任边界在宿主进程：能调用 API 的代码即拥有该记忆库全部读写权。用户隔离是结构保证（`user_id` 分片 + 检索强制带 user_id），不能替代宿主信任模型。
+:::
+
+- `user_id` 不进入文件系统路径；禁止 `/`、`\`、空白与控制字符；入口强制校验（非空、≤64、字符集 `[A-Za-z0-9_\-.]`）
+- LLM 密钥由宿主注入，库不持久化任何密钥；CLI 无 `--api-key` 明文参数
+- 共享存储上的目录级 ACL 责任归宿主
+
+## 已知限制
+
+- 持久化为**双槽全量快照**：万级高频写场景下不如真正的追加日志；见 [持久化](/guide/start/persistence)
+- 缺省 `HashingEmbedder` 无真实语义——同义召回需注入生产级嵌入
+- 缺省 `SimilarityJudge` 主要覆盖近重复更新；语义型变更（如搬家）需 `LlmConflictJudge`
+- 单写者模型；不支持并发写
+- wasm/js 缺省为进程内 `MemoryBackend`，磁盘持久化需宿主注入
+- 超长条目当前不截断入库
+
+细节与边界场景见仓库：
+
+- [W3.1 验证报告](https://github.com/glimverge/moomem/blob/main/docs/project/07-w3.1-verification.md)
+- [架构设计](https://github.com/glimverge/moomem/blob/main/docs/project/architecture.md)
+- [交接总结 §6](https://github.com/glimverge/moomem/blob/main/docs/project/09-handover.md)

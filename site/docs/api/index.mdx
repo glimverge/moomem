@@ -1,6 +1,46 @@
 ---
-title: API Overview
+title: 公开 API
 overview: true
 ---
 
-This is an API Overview page which outlines all the available APIs.
+# MemoryStore 公开 API
+
+聚合根 `MemoryStore` 上仅 6 个核心方法；一切可失败操作返回 `Result`，全库禁 panic。
+
+| 方法 | 语义 | 返回 |
+|------|------|------|
+| `open(path, config?)` | 打开或创建记忆库 | `Result[MemoryStore, MoomemError]` |
+| `add(user_id, text)` | 提取→去重→冲突→双索引→落盘 | `Result[AddSummary, MoomemError]` |
+| `recall(user_id, query, top_k?)` | 混合检索（仅 `Active` / `Unstructured`） | `Result[Array[MemoryEntry], MoomemError]` |
+| `forget(user_id, target)` | 软删除 `ById(id)` / `All` | `Result[Int, MoomemError]` |
+| `stats()` | 计数 / 字节 / 截断恢复 / 提取模式 | `Result[StoreStats, MoomemError]` |
+| `close()` | flush 后关闭（幂等） | `Result[Unit, MoomemError]` |
+
+辅助：`export_jsonl` / `import_jsonl` / `list_entries(user_id)`。
+
+`user_id`：非空、≤64 字符、字符集 `[A-Za-z0-9_\-.]`，入口强制校验（含路径穿越拒绝）。
+
+## 注入点
+
+| trait | 缺省（离线） | 生产替换 |
+|-------|--------------|----------|
+| `Embedder` | `HashingEmbedder`（256 维词袋哈希） | 宿主 / vcdb 嵌入 |
+| `Extractor` | `RawExtractor`（原文 unstructured 入库） | `src/llm_extractor` 的 `LlmExtractor` |
+| `ConflictJudge` | `SimilarityJudge`（余弦 + Jaccard，阈值 0.82） | `LlmConflictJudge` |
+| `PersistenceBackend` | native `FsBackend`；wasm/js `MemoryBackend` | IndexedDB 胶水等 |
+| `Clock` | `LogicalClock` | 系统时钟 / 测试用 `FixedClock` |
+
+```moonbit
+let cfg : Config = Config::{
+  ..Config::default(),
+  judge : Some(MyLlmJudge::new() as &ConflictJudge),
+  clock : Some(FixedClock::new(42L) as &Clock),
+}
+let store = MemoryStore::open("./memory", config=cfg).unwrap()
+```
+
+更多：
+
+- [CLI](/api/commands)
+- [LLM 注入](/api/llm)
+- [快速上手](/guide/start/getting-started)

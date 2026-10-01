@@ -1,7 +1,55 @@
-# Commands
+# CLI
 
-## dev
+命令行入口：`moon run src/cli --target native -- <command> ...`，或先 `moon build src/cli --target native` 后调用二进制。
 
-## build
+## 子命令
 
-## preview
+| 命令 | 用途 |
+|------|------|
+| `add` | 写入（`--db` / `--user` / `--text`；可选 `--llm`、`--llm-judge`、`--model`、`--base-url`） |
+| `recall` | 混合召回（`--query`，可选 `--top-k`） |
+| `list` | 列出条目（可选 `--all`） |
+| `stats` | 库统计 |
+| `export` / `import` | JSONL 备份 / 恢复 |
+| `help` | 用法 |
+
+常用默认值：`--db ./moomem-data`、`--user default`、`--top-k 5`（最大 50）。
+
+## 示例
+
+```bash
+moon run src/cli --target native -- add \
+  --db ./mem --user user-42 --text "我对花生过敏"
+
+moon build src/cli --target native
+BIN=_build/native/debug/build/src/cli/cli.exe
+
+$BIN recall --db ./mem --user user-42 --query "花生过敏"
+$BIN list   --db ./mem --user user-42
+$BIN stats  --db ./mem
+$BIN export --db ./mem > backup.jsonl
+$BIN import --db ./mem --file backup.jsonl
+```
+
+## LLM 相关环境变量
+
+| 变量 | 说明 |
+|------|------|
+| `MOOMEM_LLM_API_KEY` | 必填（启用 `--llm` / `--llm-judge` 时） |
+| `MOOMEM_LLM_BASE_URL` | 可选，OpenAI 兼容端点 |
+| `MOOMEM_LLM_MODEL` | 可选，缺省如 `gpt-4o-mini` |
+
+CLI 旗标 `--model` / `--base-url` 优先于环境变量。密钥只从环境变量读，无 `--api-key` 明文参数。`--llm` / `--llm-judge` 仅 native 门控。
+
+```bash
+export MOOMEM_LLM_API_KEY=...
+# export MOOMEM_LLM_BASE_URL=https://api.deepseek.com
+# export MOOMEM_LLM_MODEL=deepseek-chat
+
+moon run src/cli --target native -- add \
+  --db ./mem --user user-42 --text "你好！我对花生过敏" --llm
+
+# 同时启用 LLM 冲突判定：加 --llm-judge（隐含 --llm）
+```
+
+库内注入写法见 [LLM 注入](/api/llm)。

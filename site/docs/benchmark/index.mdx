@@ -1,26 +1,37 @@
 # LoCoMo Benchmark
 
-Release-archived L3 scores from `ci/eval/locomo` (offline + api + live). Metrics only —
-the LoCoMo conversation subset stays under `ci/eval/locomo/data/` (CC BY-NC 4.0).
+发版归档的 L3 评测分数（offline / api / live），来自 `ci/eval/locomo`。本页只展示指标——对话子集仍在 `ci/eval/locomo/data/`（CC BY-NC 4.0）。
+
+完整归因与五项指标结论见仓库 [评测报告](https://github.com/glimverge/moomem/blob/main/docs/project/08-w4-eval-report.md)。
 
 import { BenchmarkPage } from '../../components/BenchmarkPage';
 
 <BenchmarkPage />
 
-## How scores are produced
+## 分数如何产生
 
-1. Push CI keeps the offline hard gate (`moon run ci/eval/locomo`).
-2. After a successful (non dry-run) release, `benchmark-archive` runs all three modes
-   and commits `benchmarks/locomo/results/<version>.json`.
-3. This page is rebuilt by the existing Pages deploy on `main`.
+1. Push CI 保留离线硬门禁（`moon run ci/eval/locomo`）。
+2. 正式发版成功后（非 dry-run），`benchmark-archive` 跑三档并提交 `benchmarks/locomo/results/<version>.json`。
+3. 本页随 `main` 的 Pages 部署重建。
 
-Local archive dry-run (writes `0.0.0-dev`, no push):
+## 本地命令
 
 ```bash
+# 离线档（进 push CI）
+moon run ci/eval/locomo --target native
+moon run ci/eval/locomo --target native -- --report /tmp/offline.json
+
+# 可选 live 档（不进 push CI）
+moon run ci/eval/locomo --target native -- --embedder api   # 需 MOOMEM_EMBED_*
+moon run ci/eval/locomo --target native -- --live           # 需 DEEPSEEK_*
+
+# 发版归档试跑（写 0.0.0-dev，不 push）
 set -a && source .env && set +a
 NEW_VERSION=0.0.0-dev SKIP_COMMIT=1 bash scripts/ci/run-locomo-benchmark-archive.sh
 ```
 
-Env mapping for api mode: `QWEN_API_KEY` / `QWEN_BASE_URL` / `QWEN_MODEL` →
-`MOOMEM_EMBED_API_KEY` / `MOOMEM_EMBED_BASE_URL` / `MOOMEM_EMBED_MODEL`.
-Live mode reads `DEEPSEEK_*` only.
+api 档环境映射：`QWEN_API_KEY` / `QWEN_BASE_URL` / `QWEN_MODEL` → `MOOMEM_EMBED_API_KEY` / `MOOMEM_EMBED_BASE_URL` / `MOOMEM_EMBED_MODEL`。live 档只读 `DEEPSEEK_*`。结果 JSON 永不写入 API Key。
+
+:::important
+LoCoMo 数据许可见仓库 [`ci/eval/locomo/data/README.md`](https://github.com/glimverge/moomem/blob/main/ci/eval/locomo/data/README.md)（CC BY-NC 4.0）。离线 hashing 嵌入可能弱于纯 BM25；≥15% 混合增益目标仅在 `--embedder api` 下评估。
+:::

@@ -1,51 +1,79 @@
-# Getting started
+# 快速上手
 
-## Project structure
+## 环境
 
-After creating a project with `create-rspress`, you will get the following project structure:
+- [moon](https://www.moonbitlang.com/) ≥ `0.1.20260920`（`moon version` 确认）
 
-- `docs/` — The documentation source directory, configured via `root` in `rspress.config.ts`.
-- `docs/_nav.json` — The navigation bar configuration.
-- `docs/guide/_meta.json` — The sidebar configuration for the guide section.
-- `docs/public/` — Static assets directory.
-- `theme/` — Optional custom theme directory, generated when you choose the custom theme scaffold.
-- `rspress.config.ts` — The Rspress configuration file.
+## 安装
 
-## Development
-
-Start the local development server:
-
-```bash
-npm run dev
-```
-
-:::tip
-
-You can specify the port number or host with `--port` or `--host`, such as `rspress dev --port 8080 --host 0.0.0.0`.
-
+:::note
+尚未发布到 mooncakes。本地开发请用本仓库做 path 依赖，或把 `src/` 拷进工程。
 :::
 
-## Production build
+发布后在宿主 `moon.mod` / `moon.mod.json` 中加入：
 
-Build the site for production:
-
-```bash
-npm run build
+```json
+{
+  "deps": {
+    "heyq02/moomem": "0.3.0"
+  }
+}
 ```
 
-By default, Rspress will output to `doc_build` directory.
+## 最短代码
 
-## Preview
+```moonbit
+fn main {
+  let mem = @moomem.MemoryStore::open("./memory").unwrap()
 
-Preview the production build locally:
+  // 对话结束后写入：提取 → 去重 → 冲突 → 嵌入 → 双索引 → 落盘
+  let summary = mem.add("user-42", "我对花生过敏").unwrap()
+  println("extracted=\{summary.extracted} inserted=\{summary.inserted}")
 
-```bash
-npm run preview
+  // LLM 调用前召回：混合检索，只返回该用户记忆
+  let hits = mem.recall("user-42", "花生过敏", top_k=3).unwrap()
+  for e in hits {
+    println("[\{e.created_at}] \{e.content}")
+  }
+
+  ignore(mem.close())
+}
 ```
 
-## Next steps
+次日再 `open` 同一目录：记忆完整，recall 行为一致。
 
-- Learn how to use [MDX & React Components](/guide/use-mdx/components) in your docs.
-- Learn about [Code Blocks](/guide/use-mdx/code-blocks/) syntax highlighting and line highlighting.
-- Learn about [Custom Containers](/guide/use-mdx/container) for tips, warnings, and more.
-- Explore the full [Rspress documentation](https://rspress.rs/) for advanced features.
+## CLI 快速演示
+
+```bash
+# 直接跑包
+moon run src/cli --target native -- add \
+  --db ./mem --user user-42 --text "我对花生过敏"
+
+moon run src/cli --target native -- recall \
+  --db ./mem --user user-42 --query "花生过敏"
+```
+
+完整子命令与环境变量见 [CLI](/api/commands)。可选 LLM 提取：
+
+```bash
+export MOOMEM_LLM_API_KEY=...
+moon run src/cli --target native -- add \
+  --db ./mem --user user-42 --text "你好！我对花生过敏" --llm
+```
+
+## 零网络示例
+
+```bash
+moon run examples/basic-store --target native
+moon run examples/llm-extractor --target native
+moon run examples/conflict-supersede --target native
+moon run examples/cli-smoke --target native
+```
+
+## 下一步
+
+- [持久化](/guide/start/persistence) — 目录布局与条目状态
+- [安全与限制](/guide/start/security)
+- [公开 API](/api/) — MemoryStore 六方法与注入点
+- [LLM 注入](/api/llm)
+- [Benchmark](/benchmark/) — 评测分数与本地复跑

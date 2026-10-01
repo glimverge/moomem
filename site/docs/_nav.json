@@ -1,6 +1,6 @@
 [
   {
-    "text": "Guide",
+    "text": "指南",
     "link": "/guide/start/introduction",
     "activeMatch": "/guide/"
   },
@@ -15,7 +15,7 @@
     "activeMatch": "/benchmark"
   },
   {
-    "text": "Document",
-    "link": "https://rspress.rs/"
+    "text": "GitHub",
+    "link": "https://github.com/glimverge/moomem"
   }
 ]

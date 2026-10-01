@@ -2,42 +2,30 @@
 pageType: home
 
 hero:
-  name: My Site
-  text: A cool website!
-  tagline: This is the tagline
+  name: moomem
+  text: MoonBit 嵌入式 Agent 记忆层
+  tagline: 零部署 · 崩溃可恢复 · 按用户结构隔离
   actions:
     - theme: brand
-      text: Quick Start
-      link: /guide/start/introduction
+      text: 快速上手
+      link: /guide/start/getting-started
     - theme: alt
       text: GitHub
-      link: https://github.com/web-infra-dev/rspress
+      link: https://github.com/glimverge/moomem
   image:
     src: /rspress-icon.png
-    alt: Logo
+    alt: moomem
 features:
-  - title: Blazing fast build speed
-    details: The core compilation module is based on the Rust front-end toolchain, providing a more ultimate development experience.
-    icon: 🏃🏻‍♀️
+  - title: 两行接入
+    details: MemoryStore::open + add / recall；聚合根仅 6 个公开方法，默认零 API Key。
+    link: /guide/start/getting-started
+  - title: 混合检索与隔离
+    details: 向量 + BM25，RRF 融合；索引按 user_id 物理分片，无全库召回接口。
     link: /guide/start/introduction
-  - title: Support for MDX content writing
-    details: MDX is a powerful way to write content, allowing you to use React components in Markdown.
-    icon: 📦
-    link: /guide/use-mdx/components
-  - title: Built-in full-text search
-    details: Automatically generates a full-text search index for you during construction, providing out-of-the-box full-text search capabilities.
-    icon: 🎨
-    link: https://rspress.rs/guide/advanced/custom-search
-  - title: AI-friendly
-    details: Generate llms.txt and Markdown files compliant with the llms.txt specification through SSG-MD, making it easier for large language models to understand and use your documentation.
-    icon: 🤖
-    link: https://rspress.rs/guide/basic/ssg-md
-  - title: Static site generation
-    details: In production, it automatically builds into static HTML files, which can be easily deployed anywhere.
-    icon: 🌈
-    link: https://rspress.rs/guide/basic/ssg
-  - title: Providing multiple custom capabilities
-    details: Through its extension mechanism, you can easily extend theme UI and build process.
-    icon: 🔥
-    link: https://rspress.rs/guide/basic/custom-theme
+  - title: 崩溃安全持久化
+    details: 双槽 JSONL 快照 + head 指针；进程被杀后 open 同一目录即可恢复。
+    link: /guide/start/persistence
+  - title: 可选 LLM 路径
+    details: 核心包零 LLM 依赖；注入 LlmExtractor / LlmConflictJudge 即可结构化提取与冲突判定。
+    link: /api/llm
 ---

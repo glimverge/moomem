@@ -4,8 +4,8 @@ import { defineConfig } from '@rspress/core';
 export default defineConfig({
   base: '/moomem/',
   root: path.join(__dirname, 'docs'),
-  lang: 'en',
-  title: 'My Site',
+  lang: 'zh',
+  title: 'moomem',
   icon: '/rspress-icon.png',
   logo: {
     light: '/rspress-light-logo.png',
@@ -16,7 +16,7 @@ export default defineConfig({
       {
         icon: 'github',
         mode: 'link',
-        content: 'https://github.com/web-infra-dev/rspress',
+        content: 'https://github.com/glimverge/moomem',
       },
     ],
   },

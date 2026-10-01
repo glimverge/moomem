@@ -2,12 +2,10 @@
 name: Release Pipeline
 
 on:
-  push:
-    tags: ["v*"]
   workflow_dispatch:
     inputs:
       bump:
-        description: "Version bump type (manual dispatch only)"
+        description: "Version bump type"
         type: choice
         required: true
         default: patch
@@ -18,7 +16,7 @@ on:
           - alpha
           - beta
       dry_run:
-        description: "Skip mooncakes publish, git tag/commit, and GitHub Release (quality + live LLM still run)"
+        description: "Skip mooncakes publish, git commit/tag, and GitHub Release (quality + live LLM still run)"
         type: boolean
         default: false
 
@@ -96,14 +94,13 @@ jobs:
       contents: write
     env:
       # workflow_dispatch boolean inputs are strings on github.event.inputs
-      DRY_RUN: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.dry_run == 'true' }}
-      BUMP: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.bump || '' }}
+      DRY_RUN: ${{ github.event.inputs.dry_run == 'true' }}
+      BUMP: ${{ github.event.inputs.bump }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
         with:
-          # Needed so manual bump can push commit + tag with GITHUB_TOKEN
-          # (token-authored events do not re-trigger this workflow).
+          # Push commit + tag with GITHUB_TOKEN (does not re-trigger workflows).
           fetch-depth: 0
           token: ${{ secrets.GITHUB_TOKEN }}
 
@@ -113,7 +110,7 @@ jobs:
           version: ${{ env.MOON_VERSION }}
           cache: "false"
 
-      - name: Resolve and validate version
+      - name: Bump version
         id: ver
         env:
           BUMP: ${{ env.BUMP }}
@@ -171,55 +168,26 @@ jobs:
             esac
           }
 
-          mod_version="$(sed -nE 's/^version[[:space:]]*=[[:space:]]*"([^"]+)".*/\1/p' moon.mod | head -n1)"
-          if [[ -z "${mod_version}" ]]; then
+          base_version="$(sed -nE 's/^version[[:space:]]*=[[:space:]]*"([^"]+)".*/\1/p' moon.mod | head -n1)"
+          if [[ -z "${base_version}" ]]; then
             echo "Could not parse version from moon.mod" >&2
             exit 1
           fi
-          parse_version "${mod_version}"
+          parse_version "${base_version}"
 
+          new_version="$(bump_version "${BUMP}")"
           is_prerelease=false
-
-          if [[ "${GITHUB_REF_TYPE}" == "tag" ]]; then
-            tag="${GITHUB_REF_NAME}"
-            tag_version="${tag#v}"
-            if [[ "${tag}" == "${tag_version}" ]]; then
-              echo "Tag must look like vX.Y.Z, got: ${tag}" >&2
-              exit 1
-            fi
-            if [[ "${tag_version}" != "${mod_version}" ]]; then
-              echo "Version mismatch: tag=${tag_version} moon.mod=${mod_version}" >&2
-              exit 1
-            fi
-            echo "mod_version=${mod_version}" >> "$GITHUB_OUTPUT"
-            echo "tag_version=${tag_version}" >> "$GITHUB_OUTPUT"
-            if [[ "${mod_version}" == *"-alpha."* || "${mod_version}" == *"-beta."* ]]; then
-              is_prerelease=true
-            fi
-            echo "Module ${MODULE_NAME}@${mod_version} (from tag)"
-          else
-            if [[ -z "${BUMP}" ]]; then
-              echo "Manual dispatch requires bump input (major|minor|patch|alpha|beta)" >&2
-              exit 1
-            fi
-            new_version="$(bump_version "${BUMP}")"
-            parse_version "${new_version}"
-            if [[ "${new_version}" == *"-alpha."* || "${new_version}" == *"-beta."* ]]; then
-              is_prerelease=true
-            fi
-
-            # Rewrite moon.mod version in-place for package/publish
-            tmp="$(mktemp)"
-            sed -E "s/^version[[:space:]]*=[[:space:]]*\"[^\"]+\"/version = \"${new_version}\"/" moon.mod > "${tmp}"
-            mv "${tmp}" moon.mod
-
-            echo "Manual dispatch: bump=${BUMP} ${mod_version} → ${new_version}"
-            echo "mod_version=${new_version}" >> "$GITHUB_OUTPUT"
-            echo "tag_version=${new_version}" >> "$GITHUB_OUTPUT"
-            echo "bumped=true" >> "$GITHUB_OUTPUT"
-            echo "base_version=${mod_version}" >> "$GITHUB_OUTPUT"
+          if [[ "${new_version}" == *"-alpha."* || "${new_version}" == *"-beta."* ]]; then
+            is_prerelease=true
           fi
 
+          tmp="$(mktemp)"
+          sed -E "s/^version[[:space:]]*=[[:space:]]*\"[^\"]+\"/version = \"${new_version}\"/" moon.mod > "${tmp}"
+          mv "${tmp}" moon.mod
+
+          echo "Bump ${BUMP}: ${base_version} → ${new_version}"
+          echo "base_version=${base_version}" >> "$GITHUB_OUTPUT"
+          echo "mod_version=${new_version}" >> "$GITHUB_OUTPUT"
           echo "prerelease=${is_prerelease}" >> "$GITHUB_OUTPUT"
 
       - name: Package module
@@ -251,7 +219,7 @@ jobs:
         run: moon publish -v
 
       - name: Commit version bump and push tag
-        if: env.DRY_RUN != 'true' && github.event_name == 'workflow_dispatch' && steps.ver.outputs.bumped == 'true'
+        if: env.DRY_RUN != 'true'
         env:
           NEW_VERSION: ${{ steps.ver.outputs.mod_version }}
           BASE_VERSION: ${{ steps.ver.outputs.base_version }}
@@ -271,7 +239,6 @@ jobs:
           git commit -m "chore: release ${tag} (${BUMP} from ${BASE_VERSION})"
           git tag "${tag}"
 
-          # Push branch tip + tag; GITHUB_TOKEN pushes do not re-trigger workflows
           git push origin "HEAD:${GITHUB_REF_NAME}"
           git push origin "${tag}"
 
@@ -280,9 +247,7 @@ jobs:
         run: |
           set -euo pipefail
           echo "Dry-run complete for ${MODULE_NAME}@${{ steps.ver.outputs.mod_version }}"
-          if [[ -n "${{ steps.ver.outputs.base_version }}" ]]; then
-            echo "Would bump: ${{ steps.ver.outputs.base_version }} → ${{ steps.ver.outputs.mod_version }} (${{ env.BUMP }})"
-          fi
+          echo "Would bump: ${{ steps.ver.outputs.base_version }} → ${{ steps.ver.outputs.mod_version }} (${{ env.BUMP }})"
           echo "Skipped: moon publish, git commit/tag, GitHub Release"
           echo "Completed gates: quality + live LLM"
 
@@ -291,7 +256,7 @@ jobs:
         run: rm -f "$HOME/.moon/credentials.json"
 
       - name: Create GitHub Release
-        if: env.DRY_RUN != 'true' && (github.ref_type == 'tag' || github.event_name == 'workflow_dispatch')
+        if: env.DRY_RUN != 'true'
         uses: softprops/action-gh-release@v2
         with:
           tag_name: v${{ steps.ver.outputs.mod_version }}

@@ -229,7 +229,7 @@ fn main {
             match build_llm_config(opts) {
               Err(msg) => die(msg)
               Ok(cfg) =>
-                match @src.MemoryStore::open(opts.db, config=Some(cfg)) {
+                match @src.MemoryStore::open(opts.db, config=cfg) {
                   Err(e) => die(e.message())
                   Ok(store) => run_add(store, opts)
                 }

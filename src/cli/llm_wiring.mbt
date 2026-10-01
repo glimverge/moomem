@@ -43,10 +43,10 @@ fn build_llm_config(opts : CliOptions) -> Result[@src.Config, String] {
   } else {
     ""
   }
-  let local = base_url.length() > 0 && is_localhost_endpoint(base_url)
+  let is_local = base_url.length() > 0 && is_localhost_endpoint(base_url)
   // 2) API key：本地端点可空；否则必需
   let api_key = env_or_empty("MOOMEM_LLM_API_KEY")
-  if api_key.length() == 0 && !local {
+  if api_key.length() == 0 && !is_local {
     return Err(
       "moomem: --llm requires MOOMEM_LLM_API_KEY (or a localhost MOOMEM_LLM_BASE_URL)",
     )

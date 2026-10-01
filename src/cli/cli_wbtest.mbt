@@ -76,3 +76,11 @@ test "QA cli: bad --top-k / unknown option / missing value rejected" {
   }
   inspect(missing, content="true")
 }
+
+///|
+#cfg(target="native")
+test "W3-D: MOOMEM_VERSION matches CLI usage and is not 0.1.x" {
+  // usage 首行含版本号；与公开常量一致，且已与 moon.mod 同步到 0.2.x
+  inspect(@src.MOOMEM_VERSION, content="0.2.2")
+  inspect(@src.MOOMEM_VERSION.has_prefix("0.1"), content="false")
+}

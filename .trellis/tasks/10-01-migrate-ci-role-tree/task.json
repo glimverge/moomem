@@ -1,8 +1,8 @@
 {
-  "id": "testing-examples-architecture",
-  "name": "testing-examples-architecture",
-  "title": "测试与示例能力架构规划",
-  "description": "",
+  "id": "migrate-ci-role-tree",
+  "name": "migrate-ci-role-tree",
+  "title": "迁移 ci 角色子树",
+  "description": "Move ci/llm_live|locomo|tuning to gates/eval/tools target paths; sync workflows and README commands",
   "status": "in_progress",
   "dev_type": null,
   "scope": null,
@@ -18,12 +18,8 @@
   "commit": null,
   "pr_url": null,
   "subtasks": [],
-  "children": [
-    "10-01-migrate-ci-role-tree",
-    "10-01-expand-examples-e2",
-    "10-01-align-docs-after-migrate"
-  ],
-  "parent": null,
+  "children": [],
+  "parent": "10-01-testing-examples-architecture",
   "relatedFiles": [],
   "notes": "",
   "meta": {}

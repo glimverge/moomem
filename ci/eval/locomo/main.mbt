@@ -1,11 +1,11 @@
 // LoCoMo L3 evaluation entrypoint (W4).
 //
 // Offline (default):
-//   moon run ci/locomo --target native
+//   moon run ci/eval/locomo --target native
 // API embedder:
-//   moon run ci/locomo --target native -- --embedder api
+//   moon run ci/eval/locomo --target native -- --embedder api
 // Live extraction:
-//   moon run ci/locomo --target native -- --live
+//   moon run ci/eval/locomo --target native -- --live
 
 ///|
 fn main {
@@ -54,7 +54,7 @@ fn main {
   // ---- conflict ----
   println("## Conflict")
   println("")
-  let conflict_path = "ci/locomo/data/conflict_pairs.json"
+  let conflict_path = "ci/eval/locomo/data/conflict_pairs.json"
   let conflicts = load_conflict_fixture(conflict_path)
   let supersede_rate = run_conflict_eval(conflicts)
 
@@ -68,7 +68,7 @@ fn main {
   println("## Extraction")
   println("")
   if opts.live {
-    let gold = load_extraction_gold("ci/locomo/data/extraction_gold.json")
+    let gold = load_extraction_gold("ci/eval/locomo/data/extraction_gold.json")
     ignore(run_extraction_live(gold))
   } else {
     run_extraction_offline_skip()

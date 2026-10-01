@@ -4,17 +4,17 @@
 
 ## Repository packages
 
-目标态角色描述如下。**物理迁移尚未执行**：括号内为现行路径；权威蓝图与对照表见 [`docs/project/10-testing-examples-architecture.md`](../../../docs/project/10-testing-examples-architecture.md)。
+目标态角色描述如下。**`ci/*` 角色子树已落地**；`examples/` 仍为扁平 demo，待 `expand-examples-e2`。权威蓝图见 [`docs/project/10-testing-examples-architecture.md`](../../../docs/project/10-testing-examples-architecture.md)。
 
-| Path (target · current if different) | Role | Key deps |
+| Path | Role | Key deps |
 |------|------|----------|
 | `src/` | Core library (`MemoryStore` aggregate); L0 包旁测试 | `moonbitlang/x/fs`, `moonbitlang/core/json` |
 | `src/llm_extractor/` | Optional LLM extract/judge adapters; L1 包旁测试 | `heyq02/moomem/src`, `mizchi/llm` |
 | `src/cli/` | Native CLI binary (`is-main`); L0 `cli_wbtest` | core + llm_extractor + `mizchi/llm/openai` + `x/fs` + `env` |
-| `ci/gates/live-llm/` *(current: `ci/llm_live/`)* | L2 Live LLM release gate | separate package |
-| `ci/eval/locomo/` *(current: `ci/locomo/`)* | L3 LoCoMo eval harness + `data/` | separate package |
-| `ci/tools/retrieval-tuning/` *(current: `ci/tuning/`)* | Offline retrieval tuning tool (U1; **not in CI**) | separate package |
-| `examples/<scene>/` *(current: flat `examples/` demo)* | E2 scene demos: `basic-store`, `llm-extractor`, `conflict-supersede`, `cli-smoke` | — |
+| `ci/gates/live-llm/` | L2 Live LLM release gate | separate package |
+| `ci/eval/locomo/` | L3 LoCoMo eval harness + `data/` | separate package |
+| `ci/tools/retrieval-tuning/` | Offline retrieval tuning tool (U1; **not in CI**) | separate package |
+| `examples/<scene>/` *(pending: flat `examples/` demo)* | E2 scene demos: `basic-store`, `llm-extractor`, `conflict-supersede`, `cli-smoke` | — |
 | `docs/project/` | Architecture, PRD reports; testing/examples architecture = doc **10** | — |
 | `spec/` | Feature/process specs (CI pipelines, W3/W4) — **not** Trellis coding specs | — |
 | `.trellis/spec/` | AI coding guidelines (this tree) | — |
@@ -71,16 +71,16 @@ L1 mock-LLM tests live beside adapters: `src/llm_extractor/*_test.mbt`. Gates / 
 
 ## Where new tests / examples / gates go
 
-Align with [doc 10 decision tree](../../../docs/project/10-testing-examples-architecture.md). Prefer **target** paths in new design docs; until migration lands, create under **current** paths.
+Align with [doc 10 decision tree](../../../docs/project/10-testing-examples-architecture.md). Prefer target paths; `ci/*` role tree is migrated — only `examples/` still uses the flat demo until E2 lands.
 
-| Need | Put it in (target) | Current path (pre-migration) |
-|------|--------------------|------------------------------|
-| Asserted offline regression (core) | Package-side `src/*_test.mbt` / `*_wbtest.mbt` (L0) | same |
-| Asserted mock-LLM contract | `src/llm_extractor/*_test.mbt` (L1) | same |
-| Real LLM blocking release | `ci/gates/live-llm/` (L2) | `ci/llm_live/` |
-| Benchmark / corpus eval | `ci/eval/locomo/` (L3) | `ci/locomo/` |
-| Sweep / calibrate Config, not a gate | `ci/tools/retrieval-tuning/` (tool) | `ci/tuning/` |
-| Teachable runnable demo (no AC suite) | `examples/<scene>/` (E2) | flat `examples/` |
+| Need | Put it in |
+|------|----------|
+| Asserted offline regression (core) | Package-side `src/*_test.mbt` / `*_wbtest.mbt` (L0) |
+| Asserted mock-LLM contract | `src/llm_extractor/*_test.mbt` (L1) |
+| Real LLM blocking release | `ci/gates/live-llm/` (L2) |
+| Benchmark / corpus eval | `ci/eval/locomo/` (L3) |
+| Sweep / calibrate Config, not a gate | `ci/tools/retrieval-tuning/` (tool) |
+| Teachable runnable demo (no AC suite) | `examples/<scene>/` (E2; until migrate: flat `examples/`) |
 
 **Forbidden**: live key paths inside examples; treating tools as default L0; stuffing eval corpora into package-side unit tests.
 

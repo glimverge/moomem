@@ -88,7 +88,7 @@ moon test                    # native 后端，全绿（核心 + llm_extractor +
 moon test --target wasm      # 四后端行为一致（AC-06）；native 专属的磁盘与 CLI 测试除外
 moon test --target wasm-gc
 moon test --target js
-moon run ci/tuning --target native   # 零网络离线调参台（检索/冲突参数网格扫描）
+moon run ci/tools/retrieval-tuning --target native   # 零网络离线调参台（检索/冲突参数网格扫描）
 ```
 
 ### 5) L3 评测（LoCoMo 子集）
@@ -96,7 +96,7 @@ moon run ci/tuning --target native   # 零网络离线调参台（检索/冲突�
 离线（零网络、零密钥；`test-pipeline` 的 `eval-locomo` job 同此命令）：
 
 ```bash
-moon run ci/locomo --target native
+moon run ci/eval/locomo --target native
 # 成功日志含 LOCOMO_PASS
 ```
 
@@ -104,13 +104,13 @@ moon run ci/locomo --target native
 
 ```bash
 # 真实嵌入 API（需 MOOMEM_EMBED_API_KEY 等；不进 push CI）
-moon run ci/locomo --target native -- --embedder api
+moon run ci/eval/locomo --target native -- --embedder api
 
 # 提取 Precision（需 DEEPSEEK_*；仅 --live 时读密钥）
-moon run ci/locomo --target native -- --live
+moon run ci/eval/locomo --target native -- --live
 ```
 
-数据与许可说明见 `ci/locomo/data/README.md`（LoCoMo 派生切片为 CC BY-NC 4.0）。离线 hashing 下混合检索可能低于纯 BM25（无语义嵌入）；≥15% 增益仅在 `--embedder api` 下评估（`TARGET_15PCT`）。
+数据与许可说明见 `ci/eval/locomo/data/README.md`（LoCoMo 派生切片为 CC BY-NC 4.0）。离线 hashing 下混合检索可能低于纯 BM25（无语义嵌入）；≥15% 增益仅在 `--embedder api` 下评估（`TARGET_15PCT`）。
 
 ---
 
@@ -263,7 +263,7 @@ recall 只返回 `Active` / `Unstructured`；`Superseded` / `Deleted` 物理保�
 1. **持久化为双槽全量快照**（对 PRD"追加写 JSONL"的有意偏差）：`moonbitlang/x/fs` 无 append/rename API，追加日志无法实现；万级以上条目的高频写入场景建议关注 v0.2（native 侧 extern C 追加写 / x/fs 出 append API 后切回日志追加）
 2. recall 在命中数不足 top_k 时会用该用户最新条目**补齐**（零命中仍返回空列表，不编造）；该策略可通过 `Config.backfill = RecallBackfill::NoBackfill` 关闭
 3. 缺省 `HashingEmbedder` 无语义能力：字面无重叠的语义关联（如"午餐"↔"花生过敏"）召回不到，需注入真实嵌入模型
-4. **缺省 `SimilarityJudge` 的冲突判定仅覆盖"近重复式"事实更新**（实测：`严重过敏原清单包含花生制品项` → `...海鲜制品项`，相似度 0.828，刚过 0.82 阈值）。语义型更新在缺省离线路径下**不会**触发 supersede——例如 PRD AC-04 的原始场景"我住在北京市海淀区" → "我住在深圳市南山区"，实测相似度仅 0.471（cos 0.471 / Jaccard 0.259），判定为 Ignore。**AC-04 的语义路径由注入 `LlmConflictJudge` 覆盖**（见 `ci/llm_live` L2-07）；离线档位由 `ci/tuning` 语料覆盖。这也意味着 `supersede_threshold` 上调（如 0.90）会显著削弱近重复档的召回（实测 supersede 3/3 → 1/3）
+4. **缺省 `SimilarityJudge` 的冲突判定仅覆盖"近重复式"事实更新**（实测：`严重过敏原清单包含花生制品项` → `...海鲜制品项`，相似度 0.828，刚过 0.82 阈值）。语义型更新在缺省离线路径下**不会**触发 supersede——例如 PRD AC-04 的原始场景"我住在北京市海淀区" → "我住在深圳市南山区"，实测相似度仅 0.471（cos 0.471 / Jaccard 0.259），判定为 Ignore。**AC-04 的语义路径由注入 `LlmConflictJudge` 覆盖**（见 `ci/gates/live-llm` L2-07）；离线档位由 `ci/tools/retrieval-tuning` 语料覆盖。这也意味着 `supersede_threshold` 上调（如 0.90）会显著削弱近重复档的召回（实测 supersede 3/3 → 1/3）
 5. recall 环节的嵌入失败降级为 BM25 单路，但**不**在该次结果上标记 degraded（add 环节的降级标记完整）
 6. superseded / deleted 的恢复 API 未开放（v0.2 候选，`InvalidOperation` 预留）
 7. `stats.bytes_on_disk` 为快照字符数（MemoryBackend 下为逻辑值），非精确磁盘字节

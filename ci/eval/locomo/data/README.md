@@ -1,6 +1,6 @@
-# ci/locomo/data — 评测数据说明
+# ci/eval/locomo/data — 评测数据说明
 
-本目录存放 W4 评测所需的**数据文件**。代码（harness）在 `ci/locomo/`，两者分开：
+本目录存放 W4 评测所需的**数据文件**。代码（harness）在 `ci/eval/locomo/`，两者分开：
 数据是内容资产，harness 是工程实现。
 
 ## 1. 文件清单

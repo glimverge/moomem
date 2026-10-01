@@ -5,7 +5,7 @@
 // 2) Grid scan rrf_k × conflict_candidates × supersede_threshold × coexist_band
 // 3) Print Markdown metrics table + best combo suggestion
 //
-// Run: moon run ci/tuning --target native
+// Run: moon run ci/tools/retrieval-tuning --target native
 
 ///|
 fn fail(msg : String) -> Unit {

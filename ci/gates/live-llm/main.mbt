@@ -2,7 +2,7 @@
 // 场景矩阵见 docs/project/05-test-suite.md §4（L2-01~L2-12）。
 //
 // 环境变量：DEEPSEEK_API_KEY / DEEPSEEK_BASE_URL / DEEPSEEK_MODEL
-// 运行：moon run ci/llm_live --target native
+// 运行：moon run ci/gates/live-llm --target native
 
 ///|
 fn require_env(key : String) -> String {

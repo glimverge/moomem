@@ -1,8 +1,8 @@
 {
-  "id": "testing-examples-architecture",
-  "name": "testing-examples-architecture",
-  "title": "测试与示例能力架构规划",
-  "description": "",
+  "id": "expand-examples-e2",
+  "name": "expand-examples-e2",
+  "title": "落地 E2 四场景示例",
+  "description": "Create examples/{basic-store,llm-extractor,conflict-supersede,cli-smoke}; smoke matrix; migrate llm demo",
   "status": "in_progress",
   "dev_type": null,
   "scope": null,
@@ -18,12 +18,8 @@
   "commit": null,
   "pr_url": null,
   "subtasks": [],
-  "children": [
-    "10-01-migrate-ci-role-tree",
-    "10-01-expand-examples-e2",
-    "10-01-align-docs-after-migrate"
-  ],
-  "parent": null,
+  "children": [],
+  "parent": "10-01-testing-examples-architecture",
   "relatedFiles": [],
   "notes": "",
   "meta": {}

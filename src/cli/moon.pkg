@@ -8,8 +8,9 @@ import {
   "moonbitlang/x/fs",
 }
 
+pkgtype(kind: "executable")
+
 options(
-  "is-main": true,
   targets: {
     "llm_wiring.mbt": ["native"],
     "llm_wiring_stub.mbt": ["not", "native"],

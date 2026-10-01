@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Generate the LoCoMo subset fixture used by ci/locomo (W4 retrieval eval).
+"""Generate the LoCoMo subset fixture used by ci/eval/locomo (W4 retrieval eval).
 
 LoCoMo is released under CC BY-NC 4.0 (non-commercial). The upstream data file
 is NOT redistributed in full; this script derives a small, faithful subset that
@@ -12,7 +12,7 @@ Provenance:
   license     : CC BY-NC 4.0 (Attribution-NonCommercial 4.0 International)
 
 Usage:
-  python3 scripts/locomo/make_subset.py [--input locomo10.json] [--out ci/locomo/data/locomo_subset.json]
+  python3 scripts/locomo/make_subset.py [--input locomo10.json] [--out ci/eval/locomo/data/locomo_subset.json]
 
 If --input is omitted the upstream file is downloaded to a temporary path.
 The output is deterministic for a given upstream revision (key order preserved
@@ -124,7 +124,7 @@ def build(raw: list[dict], selected: list[str]) -> dict:
 def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--input", default=None, help="local locomo10.json (skips download)")
-    ap.add_argument("--out", default="ci/locomo/data/locomo_subset.json")
+    ap.add_argument("--out", default="ci/eval/locomo/data/locomo_subset.json")
     args = ap.parse_args()
 
     if args.input:

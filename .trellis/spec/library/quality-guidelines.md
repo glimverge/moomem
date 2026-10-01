@@ -39,19 +39,19 @@ Iron rules: L0/L1 never read `DEEPSEEK_*`; L2 never joins push CI; examples neve
 
 ### Verification commands
 
-**Current (run these today — pre-migration paths):**
+**Current (run these today — ci role tree migrated; examples still flat):**
 
 ```bash
 moon test
 moon test --target wasm
-moon run ci/tuning --target native            # tool（无 CI 调用）
+moon run ci/tools/retrieval-tuning --target native   # tool（无 CI 调用）
+moon run ci/eval/locomo --target native              # L3 offline eval
 # optional local / release-only / smoke:
-# moon run ci/llm_live --target native        # L2 gate
-# moon run ci/locomo --target native          # L3 eval
-# moon run examples --target native           # 现状单包 demo
+# moon run ci/gates/live-llm --target native         # L2 gate（需 DEEPSEEK_*）
+# moon run examples --target native                  # 现状单包 demo（E2 未迁）
 ```
 
-**Target (post-migration — paths do not exist yet; do not use until migrate-ci-role-tree / expand-examples-e2 land):**
+**Target (post expand-examples-e2 — scene packages not landed yet):**
 
 ```bash
 moon test
@@ -97,8 +97,8 @@ Do not invent a parallel log subsystem unless product requirements change.
 | Second stateful orchestrator | `MemoryStore` only; long `add` stages stay as package-private helpers on the same aggregate |
 | “Fix” retrieval fusion by exploding / splitting the store API | Keep `MemoryStore` facade; fusion is Config/eval work (P7/W5), not a module-interface deepen |
 | Frontend/ORM templates | N/A — this is a MoonBit library |
-| Live keys / `DEEPSEEK_*` in L0/L1 or examples | gates only (`ci/gates/live-llm`; current `ci/llm_live`) |
-| Default CI for retrieval-tuning | keep as `ci/tools/*` (current `ci/tuning`) |
+| Live keys / `DEEPSEEK_*` in L0/L1 or examples | gates only (`ci/gates/live-llm`) |
+| Default CI for retrieval-tuning | keep as `ci/tools/retrieval-tuning` (U1; not in push CI) |
 
 ## When changing public behavior
 

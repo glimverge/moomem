@@ -1,9 +1,9 @@
 {
-  "id": "testing-examples-architecture",
-  "name": "testing-examples-architecture",
-  "title": "测试与示例能力架构规划",
-  "description": "",
-  "status": "in_progress",
+  "id": "align-docs-after-migrate",
+  "name": "align-docs-after-migrate",
+  "title": "迁移后文档与 spec 对齐",
+  "description": "Sweep docs/spec/README for post-migration paths; update doc 10 migration status",
+  "status": "planning",
   "dev_type": null,
   "scope": null,
   "package": null,
@@ -18,12 +18,8 @@
   "commit": null,
   "pr_url": null,
   "subtasks": [],
-  "children": [
-    "10-01-migrate-ci-role-tree",
-    "10-01-expand-examples-e2",
-    "10-01-align-docs-after-migrate"
-  ],
-  "parent": null,
+  "children": [],
+  "parent": "10-01-testing-examples-architecture",
   "relatedFiles": [],
   "notes": "",
   "meta": {}

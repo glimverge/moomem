@@ -37,9 +37,11 @@ fn normalize_base_url(raw : String) -> String {
 
 ///|
 fn format_mrr(v : Double) -> String {
-  let scaled = (v * 1000.0 + 0.5).to_int()
-  let whole = scaled / 1000
-  let frac = scaled % 1000
+  let scaled = (v * 1000.0 + (if v >= 0.0 { 0.5 } else { -0.5 })).to_int()
+  let sign = if scaled < 0 { "-" } else { "" }
+  let absv = if scaled < 0 { -scaled } else { scaled }
+  let whole = absv / 1000
+  let frac = absv % 1000
   let f3 = if frac < 10 {
     "00\{frac}"
   } else if frac < 100 {
@@ -47,7 +49,7 @@ fn format_mrr(v : Double) -> String {
   } else {
     "\{frac}"
   }
-  "\{whole}.\{f3}"
+  "\{sign}\{whole}.\{f3}"
 }
 
 ///|

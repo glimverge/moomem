@@ -32,41 +32,35 @@ fn build_embed_body(model : String, inputs : Array[String]) -> String {
 ///|
 fn parse_embeddings_response(body : String) -> Array[(Int, Array[Double])] {
   let root = @json.parse(body) catch { e => fail("embed JSON parse: \{e}") }
-  let data = match root.value("data") {
-    Some(v) =>
-      match v.as_array() {
-        Some(a) => a
-        None => fail("embed response data is not array")
+  let data = match root {
+    Object(obj) =>
+      match obj.get("data") {
+        Some(Array(a)) => a
+        Some(_) => fail("embed response data is not array")
+        None => fail("embed response missing data")
       }
-    None => fail("embed response missing data")
+    _ => fail("embed response root not object")
   }
   let out : Array[(Int, Array[Double])] = []
   for item in data {
-    let obj = match item.as_object() {
-      Some(o) => o
-      None => fail("embed data item not object")
+    let obj = match item {
+      Object(o) => o
+      _ => fail("embed data item not object")
     }
     let idx = match obj.get("index") {
-      Some(v) =>
-        match v.as_number() {
-          Some(n) => n.to_int()
-          None => 0
-        }
-      None => out.length()
+      Some(Number(n, ..)) => n.to_int()
+      _ => out.length()
     }
-    let emb_j = match obj.get("embedding") {
-      Some(v) => v
+    let emb_a = match obj.get("embedding") {
+      Some(Array(a)) => a
+      Some(_) => fail("embedding is not array")
       None => fail("embed item missing embedding")
-    }
-    let emb_a = match emb_j.as_array() {
-      Some(a) => a
-      None => fail("embedding is not array")
     }
     let vec : Array[Double] = []
     for n in emb_a {
-      match n.as_number() {
-        Some(d) => vec.push(d)
-        None => fail("embedding dim not number")
+      match n {
+        Number(d, ..) => vec.push(d)
+        _ => fail("embedding dim not number")
       }
     }
     out.push((idx, vec))
@@ -89,7 +83,7 @@ fn parse_embeddings_response(body : String) -> Array[(Int, Array[Double])] {
 }
 
 ///|
-fn api_embed_once(
+fn ApiEmbedder::embed_once(
   self : ApiEmbedder,
   inputs : Array[String],
 ) -> Result[Array[Array[Double]], @src.MoomemError] {
@@ -132,7 +126,7 @@ fn api_embed_once(
 
 ///|
 fn ApiEmbedder::probe_dim(self : ApiEmbedder) -> Int {
-  match api_embed_once(self, ["probe"]) {
+  match self.embed_once(["probe"]) {
     Ok(vs) => {
       if vs.length() == 0 || vs[0].length() == 0 {
         fail("embed probe returned empty vector")
@@ -150,21 +144,28 @@ fn ApiEmbedder::from_env() -> ApiEmbedder {
   let base_raw = match @env.get_env_var("MOOMEM_EMBED_BASE_URL") {
     Some(v) => {
       let t = v.trim().to_owned()
-      if t.length() > 0 { t } else { "https://api.openai.com/v1" }
+      if t.length() > 0 {
+        t
+      } else {
+        "https://api.openai.com/v1"
+      }
     }
     None => "https://api.openai.com/v1"
   }
-  let base_url = normalize_base_url(base_raw)
-  // keep /v1 for embeddings path: normalize strips /v1 — re-append
-  let base_url = if base_url.has_suffix("/v1") {
-    base_url
+  let stripped = normalize_base_url(base_raw)
+  let base_url = if stripped.has_suffix("/v1") {
+    stripped
   } else {
-    "\{base_url}/v1"
+    "\{stripped}/v1"
   }
   let model = match @env.get_env_var("MOOMEM_EMBED_MODEL") {
     Some(v) => {
       let t = v.trim().to_owned()
-      if t.length() > 0 { t } else { "text-embedding-3-small" }
+      if t.length() > 0 {
+        t
+      } else {
+        "text-embedding-3-small"
+      }
     }
     None => "text-embedding-3-small"
   }
@@ -198,7 +199,7 @@ pub impl @src.Embedder for ApiEmbedder with fn embed(self, texts) {
       batch.push(texts[j])
       j = j + 1
     }
-    match api_embed_once(self, batch) {
+    match self.embed_once(batch) {
       Ok(vs) => {
         for v in vs {
           all.push(v)

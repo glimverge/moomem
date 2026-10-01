@@ -11,7 +11,6 @@ struct LocomoQA {
   question : String
   category : Int
   evidence : Array[String]
-  answer : String
 }
 
 ///|
@@ -58,7 +57,7 @@ fn json_str(j : Json) -> String? {
 
 ///|
 fn json_num_int(j : Json) -> Int? {
-  if j is Number(n) {
+  if j is Number(n, ..) {
     Some(n.to_int())
   } else {
     None
@@ -191,11 +190,7 @@ fn load_locomo_subset(path : String) -> LocomoSubset {
         Some(a) => parse_string_array(a)
         None => []
       }
-      let answer = match json_str_field(qobj, "answer") {
-        Some(s) => s
-        None => ""
-      }
-      qa.push(LocomoQA::{ question, category, evidence, answer, })
+      qa.push(LocomoQA::{ question, category, evidence, })
     }
     conversations.push(LocomoConversation::{ sample_id, turns, qa, })
   }

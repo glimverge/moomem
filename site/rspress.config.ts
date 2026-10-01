@@ -2,6 +2,7 @@ import * as path from 'node:path';
 import { defineConfig } from '@rspress/core';
 
 export default defineConfig({
+  base: '/moomem/',
   root: path.join(__dirname, 'docs'),
   lang: 'en',
   title: 'My Site',

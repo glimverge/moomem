@@ -33,7 +33,7 @@ LLM Agent 每次推理只依赖本轮上下文，进程结束即失忆。**moome
 
 ## 证据
 
-- [Benchmark 站内页](https://glimverge.github.io/moomem/benchmark/) — 发版归档的 LoCoMo L3 分数
+- [Benchmark 站内页](https://glimverge.github.io/moomem/benchmark/) — 本地归档的 LoCoMo L3 分数
 - [LoCoMo 评测报告](docs/project/08-w4-eval-report.md) — 提取 / 冲突 / 持久化 / 隔离 / 检索归因
 
 ## 最短上手

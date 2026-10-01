@@ -175,6 +175,18 @@ test "lexical_strong: gap and floor boundaries" {
 }
 
 ///|
+test "protect_bm25_topk: reinjects missing BM25 tops" {
+  // fused 丢掉了 BM25 的 b（第 2）；应换入
+  let fused = ["x", "y", "z"]
+  let kw = ["a", "b", "c"]
+  let out = protect_bm25_topk(fused, kw, 3)
+  inspect(out.length(), content="3")
+  inspect(out.contains("a"), content="true")
+  inspect(out.contains("b"), content="true")
+  inspect(out.contains("c"), content="true")
+}
+
+///|
 test "DedupIndex: register / lookup / unregister per user" {
   let dedup = DedupIndex::new()
   dedup.register("user-a", "  我对花生过敏 ", "id-1")

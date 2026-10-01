@@ -117,3 +117,53 @@ fn lexical_strong(
   let b2 = bm25_scores[1]
   b1 >= b2 * gap
 }
+
+///|
+/// 保护 BM25 top-k 成员：加权 RRF 结果若丢掉词法 top，则从尾部挤出非保护项换入。
+/// 保证 adaptive 路径 Recall@5 不低于同库 BM25 单路（不改变计分子集）。
+fn protect_bm25_topk(
+  fused : Array[String],
+  kw_ids : Array[String],
+  k : Int,
+) -> Array[String] {
+  let out : Array[String] = []
+  let in_out : Map[String, Bool] = Map([])
+  let limit = if k < fused.length() { k } else { fused.length() }
+  for i = 0; i < limit; i = i + 1 {
+    out.push(fused[i])
+    in_out.set(fused[i], true)
+  }
+  let protect_n = if k < kw_ids.length() { k } else { kw_ids.length() }
+  let keep_set : Map[String, Bool] = Map([])
+  for i = 0; i < protect_n; i = i + 1 {
+    keep_set.set(kw_ids[i], true)
+  }
+  for i = 0; i < protect_n; i = i + 1 {
+    let id = kw_ids[i]
+    if in_out.contains(id) {
+      continue
+    }
+    // 找可替换的尾部位：非 BM25 保护集成员
+    let mut replaced = false
+    let mut j = out.length() - 1
+    while j >= 0 {
+      if !keep_set.contains(out[j]) {
+        in_out.remove(out[j])
+        out[j] = id
+        in_out.set(id, true)
+        replaced = true
+        break
+      }
+      j = j - 1
+    }
+    if !replaced {
+      // 结果全是保护成员且未满，或无法腾位：追加（截断到 k）
+      if out.length() < k {
+        out.push(id)
+        in_out.set(id, true)
+      }
+    }
+  }
+  // 若仍未满（BM25 不足 k），保持 fused 已填部分
+  out
+}

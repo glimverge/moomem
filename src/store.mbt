@@ -736,30 +736,22 @@ pub fn MemoryStore::recall(
         self.lexical_floor,
         self.lexical_gap,
       )
-      if strong {
-        // 词法强：BM25 序主导；向量仅以极低权重参与（Config.vec_weight_when_lexical）
-        // 若权重已接近 0，实质退化为 BM25 单路，避免等权 RRF 稀释。
-        if self.vec_weight_when_lexical <= 0.05 {
-          let out : Array[String] = []
-          let limit = if k < kw_ids.length() { k } else { kw_ids.length() }
-          for i = 0; i < limit; i = i + 1 {
-            out.push(kw_ids[i])
-          }
-          out
-        } else {
-          rrf_weighted(
-            vec_ids,
-            kw_ids,
-            self.rrf_k,
-            k,
-            self.vec_weight_when_lexical,
-            1.0 - self.vec_weight_when_lexical,
-          )
+      let soft = if strong && self.vec_weight_when_lexical <= 0.05 {
+        let out : Array[String] = []
+        let limit = if k < kw_ids.length() { k } else { kw_ids.length() }
+        for i = 0; i < limit; i = i + 1 {
+          out.push(kw_ids[i])
         }
+        out
       } else {
-        let w_v = self.vec_weight_when_semantic
+        let w_v = if strong {
+          self.vec_weight_when_lexical
+        } else {
+          self.vec_weight_when_semantic
+        }
         rrf_weighted(vec_ids, kw_ids, self.rrf_k, k, w_v, 1.0 - w_v)
       }
+      protect_bm25_topk(soft, kw_ids, k)
     }
   }
   let results : Array[MemoryEntry] = []

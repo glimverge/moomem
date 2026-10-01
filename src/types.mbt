@@ -324,19 +324,19 @@ pub const MAX_EXTRACTION_FAILURES : Int = 3
 
 ///|
 /// adaptive 词法强判定：BM25 top1 下限（独立开发集校准；偏低以覆盖短轮次）
-pub const DEFAULT_LEXICAL_FLOOR : Double = 0.5
+pub const DEFAULT_LEXICAL_FLOOR : Double = 0.8
 
 ///|
 /// adaptive 词法强判定：top1 ≥ top2 × gap
-pub const DEFAULT_LEXICAL_GAP : Double = 1.05
+pub const DEFAULT_LEXICAL_GAP : Double = 1.1
 
 ///|
 /// adaptive：词法强时向量通道权重（≤0.05 时 recall 走 BM25 单路）
 pub const DEFAULT_VEC_WEIGHT_LEXICAL : Double = 0.05
 
 ///|
-/// adaptive：词法弱时向量通道权重（略偏 BM25，减少弱词法稀释）
-pub const DEFAULT_VEC_WEIGHT_SEMANTIC : Double = 0.35
+/// adaptive：词法弱时向量通道权重（近均衡；BM25 top 由 protect_bm25_topk 兜底）
+pub const DEFAULT_VEC_WEIGHT_SEMANTIC : Double = 0.45
 
 // ---------------------------------------------------------------------------
 // user_id 契约（架构文档 7.4：唯一实现，所有入口调用）

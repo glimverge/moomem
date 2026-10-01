@@ -282,3 +282,4 @@ test_counts: string  # e.g. native=97 passed
 - [README](../README.md) — local commands, expected test counts, toolchain floor
 - Sequence / class diagrams under `docs/` — behavioral reference for e2e expectations
 - Implementation: [`.github/workflows/test-pipeline.yml`](../.github/workflows/test-pipeline.yml) + [`.github/actions/setup-moonbit`](../.github/actions/setup-moonbit/action.yml)
+- Downstream: [Release Pipeline](./spec-process-cicd-release-pipeline.md) (`workflow_call` consumer)

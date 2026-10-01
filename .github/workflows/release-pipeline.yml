@@ -1,0 +1,129 @@
+# Spec: spec/spec-process-cicd-release-pipeline.md
+name: Release Pipeline
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Skip mooncakes publish and GitHub Release (package + whoami only)"
+        type: boolean
+        default: false
+
+concurrency:
+  group: release-pipeline-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  CI: "true"
+  MOON_VERSION: "0.1.20260920"
+  MODULE_NAME: "heyq02/moomem"
+
+jobs:
+  quality:
+    name: Quality Gate
+    uses: ./.github/workflows/test-pipeline.yml
+
+  release:
+    name: Publish mooncakes
+    needs: quality
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    env:
+      # workflow_dispatch boolean inputs are strings on github.event.inputs
+      DRY_RUN: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.dry_run == 'true' }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup MoonBit (no cache)
+        uses: ./.github/actions/setup-moonbit
+        with:
+          version: ${{ env.MOON_VERSION }}
+          cache: "false"
+
+      - name: Resolve and validate version
+        id: ver
+        run: |
+          set -euo pipefail
+          mod_version="$(sed -nE 's/^version[[:space:]]*=[[:space:]]*"([^"]+)".*/\1/p' moon.mod | head -n1)"
+          if [[ -z "${mod_version}" ]]; then
+            echo "Could not parse version from moon.mod" >&2
+            exit 1
+          fi
+          echo "mod_version=${mod_version}" >> "$GITHUB_OUTPUT"
+          echo "Module ${MODULE_NAME}@${mod_version}"
+
+          if [[ "${GITHUB_REF_TYPE}" == "tag" ]]; then
+            tag="${GITHUB_REF_NAME}"
+            tag_version="${tag#v}"
+            if [[ "${tag}" == "${tag_version}" ]]; then
+              echo "Tag must look like vX.Y.Z, got: ${tag}" >&2
+              exit 1
+            fi
+            if [[ "${tag_version}" != "${mod_version}" ]]; then
+              echo "Version mismatch: tag=${tag_version} moon.mod=${mod_version}" >&2
+              exit 1
+            fi
+            echo "tag_version=${tag_version}" >> "$GITHUB_OUTPUT"
+          else
+            echo "Manual dispatch: publishing moon.mod version ${mod_version}"
+            echo "tag_version=${mod_version}" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Package module
+        run: moon package -v
+
+      - name: Configure mooncakes credentials
+        if: env.DRY_RUN != 'true'
+        env:
+          MOONCAKES_TOKEN: ${{ secrets.MOONCAKES_TOKEN }}
+        run: |
+          set -euo pipefail
+          if [[ -z "${MOONCAKES_TOKEN:-}" ]]; then
+            echo "MOONCAKES_TOKEN secret is not set." >&2
+            echo "1) Locally: moon login" >&2
+            echo "2) Copy full contents of ~/.moon/credentials.json" >&2
+            echo "3) GitHub → Settings → Secrets → Actions → MOONCAKES_TOKEN" >&2
+            exit 1
+          fi
+          mkdir -p "$HOME/.moon"
+          printf '%s' "${MOONCAKES_TOKEN}" > "$HOME/.moon/credentials.json"
+          chmod 600 "$HOME/.moon/credentials.json"
+
+      - name: Verify mooncakes identity
+        if: env.DRY_RUN != 'true'
+        run: moon whoami
+
+      - name: Publish to mooncakes.io
+        if: env.DRY_RUN != 'true'
+        run: moon publish -v
+
+      - name: Dry-run summary
+        if: env.DRY_RUN == 'true'
+        run: |
+          set -euo pipefail
+          echo "Dry-run complete for ${MODULE_NAME}@${{ steps.ver.outputs.mod_version }}"
+          echo "Skipped: moon publish, GitHub Release"
+
+      - name: Cleanup mooncakes credentials
+        if: always()
+        run: rm -f "$HOME/.moon/credentials.json"
+
+      - name: Create GitHub Release
+        if: env.DRY_RUN != 'true' && github.ref_type == 'tag'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: ${{ env.MODULE_NAME }} ${{ steps.ver.outputs.mod_version }}
+          generate_release_notes: true
+          body: |
+            Published to mooncakes.io as `${{ env.MODULE_NAME }}@${{ steps.ver.outputs.mod_version }}`.
+
+            Install:
+            ```bash
+            moon add ${{ env.MODULE_NAME }}@${{ steps.ver.outputs.mod_version }}
+            ```

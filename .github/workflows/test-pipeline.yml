@@ -18,9 +18,9 @@ concurrency:
 
 env:
   CI: "true"
-  # Pin ≥ README floor (moon ≥ 0.1.20260920)
-  MOON_VERSION: "0.1.20260920"
-  # Documented native baseline (core + llm_extractor + cli)
+  # Dated CDN pins (e.g. 0.1.20260920) return 403; always install latest.
+  MOON_VERSION: "latest"
+  # Documented native baseline (core + llm_extractor + cli); suite only grows
   NATIVE_TEST_BASELINE: "97"
 
 jobs:

@@ -1,10 +1,11 @@
 name: Setup MoonBit
-description: Install pinned MoonBit toolchain, restore caches, refresh registry
+description: Install MoonBit toolchain (latest), restore caches, refresh registry
 
 inputs:
   version:
-    description: MoonBit toolchain version (MOONBIT_INSTALL_VERSION)
-    required: true
+    description: Ignored; always installs latest (dated CDN pins currently 403)
+    required: false
+    default: "latest"
   cache:
     description: Cache ~/.moon and .mooncakes (disable on publish jobs to avoid credential persistence)
     required: false
@@ -18,7 +19,7 @@ runs:
       uses: actions/cache@v4
       with:
         path: ~/.moon
-        key: moon-${{ runner.os }}-${{ inputs.version }}
+        key: moon-${{ runner.os }}-latest
         restore-keys: |
           moon-${{ runner.os }}-
 
@@ -34,10 +35,9 @@ runs:
     - name: Install MoonBit toolchain
       shell: bash
       env:
-        MOONBIT_INSTALL_VERSION: ${{ inputs.version }}
+        MOONBIT_INSTALL_VERSION: latest
       run: |
         set -euo pipefail
-        # Always invoke installer with pin; cache hits make this a no-op when already matching.
         curl --fail --silent --show-error --location \
           https://cli.moonbitlang.com/install/unix.sh | bash
         echo "$HOME/.moon/bin" >> "$GITHUB_PATH"
@@ -47,7 +47,6 @@ runs:
       run: |
         set -euo pipefail
         moon version --all
-        moon version | grep -F "${{ inputs.version }}"
 
     - name: Update package registry
       shell: bash

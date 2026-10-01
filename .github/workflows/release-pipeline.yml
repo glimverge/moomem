@@ -26,7 +26,7 @@ concurrency:
 
 env:
   CI: "true"
-  MOON_VERSION: "0.1.20260920"
+  MOON_VERSION: "latest"
   MODULE_NAME: "heyq02/moomem"
 
 jobs:

@@ -10,6 +10,7 @@
 6. [x] 给 `benchmark/index.mdx` 补中文导语与命令入口（不改归档数据逻辑）
 7. [x] 删除 `site/docs/guide/use-mdx/**` 整树
 8. [x] 本地 `pnpm`/`npm` 在 `site/` 下 build 或 dev 冒烟（按仓库既有脚本），确认无断链到已删页
+9. [x] 纠正发布状态：`README.md` / `guide/start/getting-started.md` 去掉「尚未发布」，安装改为 `moon add heyq02/moomem`（不钉版本号）
 
 ## Validation
 

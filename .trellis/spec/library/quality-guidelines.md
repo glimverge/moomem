@@ -56,7 +56,7 @@ Do not invent a parallel log subsystem unless product requirements change.
 |--------------|----------------------------|
 | `panic` / `abort` on library errors | `Result[T, MoomemError]` |
 | `@fs` outside `persist.mbt` (core) | `persist.mbt` only |
-| JSON encode/decode outside `json_codec.mbt` | `json_codec.mbt` only |
+| `@json.parse` / snapshot+entry codecs outside `json_codec.mbt` | `json_codec.mbt` only (`store.mbt` may set `Json::string` metadata tags) |
 | Cross-user recall / unscoped index scan | always pass `user_id` |
 | Core depending on `mizchi/llm` | `src/llm_extractor/` |
 | Append-only JSONL persistence | dual-slot + head |

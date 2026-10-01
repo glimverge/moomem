@@ -65,7 +65,7 @@ Tests: `types_test.mbt`, `qa_adversarial_test.mbt` ("user_id boundaries through 
 | → Active / Unstructured | successful `add` path | `store.add` |
 | Active → Superseded | `ConflictJudge` returns `Replace` | `store.add` (sets `superseded_by`, drops indexes) |
 | Active → Deleted | `forget` | soft delete; snapshot keeps row |
-| Restore / revive | **not** public in current API | would be `InvalidOperation` if forced |
+| Restore / revive | **not** public in current API | no revive method; `InvalidOperation` is used for closed store, bad config, missing forget target |
 
 Invariant: `recall` only returns recallable statuses; superseded/deleted remain in snapshot for audit/export.
 

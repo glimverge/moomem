@@ -3,7 +3,7 @@
   "name": "host-internal-fs-spec",
   "title": "Document host vs internal surface and FS locality",
   "description": "P1 Option A + P4: Trellis spec notes for non-host pub indexes/helpers and FS call-site isolation",
-  "status": "planning",
+  "status": "in_progress",
   "dev_type": null,
   "scope": null,
   "package": null,
@@ -20,7 +20,13 @@
   "subtasks": [],
   "children": [],
   "parent": "10-01-architecture-deepening",
-  "relatedFiles": [],
-  "notes": "",
+  "relatedFiles": [
+    ".trellis/spec/library/public-api-and-types.md",
+    ".trellis/spec/library/persistence.md",
+    ".trellis/spec/library/directory-structure.md",
+    ".trellis/spec/library/index.md",
+    ".trellis/tasks/10-01-host-internal-fs-spec/prd.md"
+  ],
+  "notes": "Spec-only: host vs internal surface (P1A) + FS package-import vs call-site (P4). Check passed AC1–AC4; fixed symbol file locations + directory-structure @fs anti-pattern wording. Ready to archive.",
   "meta": {}
 }

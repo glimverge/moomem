@@ -50,13 +50,19 @@ PersistenceBackend
 
 `MemoryStore` holds a `&PersistenceBackend`; default selection happens in `open` (native → FS, non-native → memory unless injected). Backend differences stay inside `persist.mbt` (including `#cfg` where used).
 
-## FS isolation rule
+## FS isolation rule (package import vs call site)
 
-- **Only** `src/persist.mbt` in the core library may call `@fs.*`.
-- Tests that need real disk for native FS coverage (`persist_test.mbt`) may use `@fs` to set up/tear down fixtures — that is test code, not a second production adapter.
-- CLI may use `@fs` for reading import files (`cli/main.mbt`) — outside the core package boundary.
+MoonBit package graph isolation is coarser than call-site isolation today:
 
-If `moonbitlang/x` FS APIs break, the replacement cost is intended to be this one adapter file (RK-03).
+| Layer | Rule |
+|-------|------|
+| **Package import** | Core `src/moon.pkg` **may** (and does) import `moonbitlang/x/fs`. That import is unavoidable for `FsBackend`; it does **not** authorize `@fs` use elsewhere in core. |
+| **Non-test core call sites** | Only `src/persist.mbt` may call `@fs.*`. Enforce with review / `rg '@fs'` on non-test core sources — not by assuming the package graph prevents bleed. |
+| **Allowlisted exceptions** | `persist_test.mbt` (native FS fixtures / tear-down) and `src/cli/` (e.g. reading import files) may use `@fs`. Those are test/CLI adapters, not a second production persistence path inside the core aggregate. |
+
+Do **not** split a single-adapter `persist` subpackage solely to hide the `x/fs` import — one real consumer (`FsBackend`) does not justify the package churn. Prefer documenting and grepping call sites. A subpackage split is only worth revisiting if MoonBit gains finer isolation **and** there are multiple real FS consumers.
+
+If `moonbitlang/x` FS APIs break, the replacement cost is intended to be this one adapter file (`persist.mbt`, RK-03).
 
 ## Store orchestration
 
@@ -67,7 +73,9 @@ If `moonbitlang/x` FS APIs break, the replacement cost is intended to be this on
 ## Anti-patterns
 
 - Reintroducing append-only JSONL without an FS API that supports it.
-- Calling `@fs` from `store.mbt`, indexes, or `json_codec.mbt`.
+- Calling `@fs` from `store.mbt`, indexes, or `json_codec.mbt` (or any non-test core file other than `persist.mbt`).
+- Treating “`moon.pkg` imports `x/fs`” as permission to call `@fs` outside `persist.mbt`.
+- Introducing a single-adapter persist subpackage just to relocate the `x/fs` import.
 - Writing JSON serializers inline in `persist.mbt` instead of `json_codec.mbt`.
 - Relying on real disk for unit tests when `MemoryBackend` can inject the failure mode.
 - Assuming `bytes_on_disk` / `last_write_at` are OS-accurate under `MemoryBackend` (they are logical).

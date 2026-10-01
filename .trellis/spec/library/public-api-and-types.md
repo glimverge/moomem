@@ -1,10 +1,10 @@
 # Public API and Types
 
-> The host-facing surface of the core library.
+> Host-facing surface vs supported internal / test / CI diagnostic surfaces.
 
-## Public methods
+## Host surface (`MemoryStore`)
 
-Primary API (documented in `README.md` and `src/lib.mbt` / `src/store.mbt`):
+The **host API** for applications and the CLI is `MemoryStore` only (documented in `README.md` and `src/lib.mbt` / `src/store.mbt`).
 
 | Method | Signature (conceptual) | Role |
 |--------|------------------------|------|
@@ -21,6 +21,24 @@ Helpers used by CLI / FR-07/08 (also on `MemoryStore` in `store.mbt`):
 - `list_entries(user_id, …)`
 
 Do not invent a parallel public facade; extend `MemoryStore` only when the feature belongs to the aggregate.
+
+## Supported internal / test / CI surface (not host API)
+
+These symbols are `pub` and used by unit tests and CI diagnostics. They are **not** the host API — do not build application code against them as a second facade, and do not expose a parallel “IndexStore” host API.
+
+| Symbol | Location | Role |
+|--------|----------|------|
+| `VectorIndex` | `index_vector.mbt` | Per-user vector shards (internal to `MemoryStore`) |
+| `KeywordIndex` | `index_keyword.mbt` | Per-user BM25 shards |
+| `DedupIndex` | `dedup.mbt` | Per-user content fingerprints |
+| `tokenize` | `index_keyword.mbt` | Tokenization for BM25 / diagnostics |
+| `rrf` | `ranker.mbt` | Reciprocal rank fusion |
+| `cosine_similarity` | `embedder.mbt` | Vector similarity |
+| `keyword_jaccard` | `conflict.mbt` | Lexical overlap |
+
+Diagnostic caller outside the core package: `ci/locomo/conflict_eval.mbt` (uses tokenize / cosine / jaccard-style helpers for eval — not a host product path).
+
+Keep these symbols `pub` for the supported test/CI surface (Option A). Narrowing visibility is out of scope for this guideline.
 
 ## Core types (`src/types.mbt`)
 
@@ -82,3 +100,4 @@ Invariant: `recall` only returns recallable statuses; superseded/deleted remain 
 - Hard-deleting rows from the snapshot on `forget` (current semantics are soft-delete).
 - Validating `user_id` only in CLI — library entrances must call `validate_user_id`.
 - Changing `MOOMEM_VERSION` without aligning `moon.mod` (release pipeline owns mod version; constant is manual sync — see comment in `lib.mbt`).
+- Treating `VectorIndex` / `KeywordIndex` / `DedupIndex` / `tokenize` / `rrf` / `cosine_similarity` / `keyword_jaccard` as the host API, or inventing a parallel IndexStore facade for callers.

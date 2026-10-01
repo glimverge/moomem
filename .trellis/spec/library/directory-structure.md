@@ -30,8 +30,8 @@ Layering matches `docs/project/architecture.md` §1.3:
 | Traits + defaults | `embedder.mbt`, `extractor.mbt`, `conflict.mbt` | Injectables + `HashingEmbedder` / `RawExtractor` / `SimilarityJudge` / clocks |
 | Dedup | `dedup.mbt` | Per-user content fingerprints |
 | Indexes | `index_vector.mbt`, `index_keyword.mbt`, `ranker.mbt` | Per-user shards + BM25 + RRF |
-| Persistence | `persist.mbt` | `PersistenceBackend`, `FsBackend`, `MemoryBackend` — **only FS import site in core** |
-| Orchestration | `store.mbt` | `MemoryStore` aggregate root |
+| Persistence | `persist.mbt` | `PersistenceBackend`, `FsBackend`, `MemoryBackend` — **only non-test core `@fs` call site** (`moon.pkg` may still import `x/fs`) |
+| Orchestration | `store.mbt` | `MemoryStore` aggregate root (host API); indexes/dedup/`tokenize`/`rrf`/similarity helpers are supported internal/test/CI surfaces, not host API — see [Public API and Types](./public-api-and-types.md) |
 
 ## Tests
 
@@ -46,7 +46,8 @@ Black-box tests sit beside sources as `*_test.mbt`:
 
 ## Package config reality
 
-- Core `src/moon.pkg` imports `moonbitlang/x/fs` even though **call sites** must stay in `persist.mbt` (architectural isolation, not package-graph isolation).
+- Core `src/moon.pkg` imports `moonbitlang/x/fs` even though **call sites** must stay in `persist.mbt` (architectural isolation, not package-graph isolation). Do not invent a single-adapter persist subpackage to paper over that; see [Persistence](./persistence.md).
+- Allowlisted `@fs` outside that rule: `persist_test.mbt`, `src/cli/`.
 - `src/llm_extractor/moon.pkg` imports core + `mizchi/llm` only.
 - `src/cli/moon.pkg` uses `targets` to compile `llm_wiring.mbt` on native and `llm_wiring_stub.mbt` on non-native.
 
@@ -65,6 +66,6 @@ Black-box tests sit beside sources as `*_test.mbt`:
 ## Anti-patterns
 
 - Do **not** add React/web/ORM-style folders; this repo has no frontend.
-- Do **not** put `@fs.*` calls in `store.mbt`, indexes, or codecs.
+- Do **not** put `@fs.*` calls in non-test core outside `persist.mbt` (allowlist: `persist_test.mbt`, `src/cli/`).
 - Do **not** put `@json.parse` / entry serializers outside `json_codec.mbt` (CLI import reuses store helpers that call the codec).
 - Do **not** grow a second aggregate alongside `MemoryStore`; it is the sole stateful orchestrator.

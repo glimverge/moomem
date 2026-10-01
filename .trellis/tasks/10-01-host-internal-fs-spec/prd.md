@@ -16,10 +16,10 @@ Encode in `.trellis/spec/library/` that index/dedup/helpers are not the host API
 
 ## Acceptance Criteria
 
-- [ ] AC1. Spec states host vs internal clearly with real symbol names.
-- [ ] AC2. Spec states FS package-import vs call-site rule with allowlist exceptions.
-- [ ] AC3. Indexes in `.trellis/spec/library/index.md` still accurate.
-- [ ] AC4. No `src/` / `ci/` / `examples/` diffs.
+- [x] AC1. Spec states host vs internal clearly with real symbol names.
+- [x] AC2. Spec states FS package-import vs call-site rule with allowlist exceptions.
+- [x] AC3. Indexes in `.trellis/spec/library/index.md` still accurate.
+- [x] AC4. No `src/` / `ci/` / `examples/` diffs.
 
 ## Out of scope
 

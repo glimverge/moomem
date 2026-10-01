@@ -2,6 +2,16 @@
 
 > **Purpose**: Expand your thinking to catch things you might not have considered.
 
+## Doc routing (do not merge trees)
+
+| Intent | Tree |
+|--------|------|
+| Product narrative / architecture / handover | `docs/project/` |
+| Feature & process acceptance (W3/W4, CI) | `spec/` |
+| AI coding conventions (this tree, esp. `library/`) | `.trellis/spec/` |
+
+Full index: [`docs/README.md`](../../../docs/README.md) →「Where to look」.
+
 ---
 
 ## Why Thinking Guides?

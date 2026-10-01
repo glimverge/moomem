@@ -2,6 +2,18 @@
 
 本目录是 moomem 项目的文档单一事实源，结构对齐 FlowUs 工作区的 **PARA** 组织方式（0 索引 / 1 项目 / 3 资源 / 4 归档），云端镜像存于 FlowUs「临界微光」工作区。两处数字以仓库为准，改动先改仓库再同步 FlowUs。
 
+## Where to look（三棵文档树，勿混淆）
+
+仓库里有三套并行、各有用途的文档；**不要合并**，按意图选一处：
+
+| 你要找… | 去哪里 | 不是… |
+|---------|--------|-------|
+| 产品叙事、架构设计、PRD、进度、验证/评测报告、交接 | [`docs/project/`](project/)（本树） | 编码细则或 CI 验收条款 |
+| 功能/流程验收契约（W3/W4 AC、CI·发布流水线规格） | [`spec/`](../spec/) | Trellis AI 改代码规则 |
+| AI / 维护者改 `src/` 前的包层约定与编码规范 | [`.trellis/spec/`](../.trellis/spec/)（尤其 `library/`） | 产品 PRD 正文 |
+
+调研立项材料在 [`resources/`](resources/)；赛季归档目标在 [`archive/`](archive/)。
+
 ## 结构与 FlowUs 对照
 
 | 目录 | 对应 FlowUs 位置 | 内容 |
@@ -27,5 +39,6 @@
 
 ## docs 之外的文档类资产
 
-- [`spec/`](../spec/)：工程规格书（feature：W3 / W3.1 / W4；process：CI·发布流水线）——Cursor 执行分工模式的交付物
+- [`spec/`](../spec/)：功能/流程验收契约（feature：W3 / W3.1 / W4；process：CI·发布流水线）——与 `.trellis/spec` 分工见上方「Where to look」
+- [`.trellis/spec/`](../.trellis/spec/)：AI 编码约定（目录结构、错误/持久化/测试等层规）——改核心库前先读
 - [`ci/locomo/data/README.md`](../ci/locomo/data/README.md)：评测数据资产说明（LoCoMo 派生切片，CC BY-NC 4.0）

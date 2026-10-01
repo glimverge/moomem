@@ -81,43 +81,66 @@ PRD 6/15 章原文为"追加写 JSONL"。`moonbitlang/x/fs` 实测 API（write_s
 
 ## 2. 文件列表
 
+> 与仓库 0.2.2 树对齐（2026-10-01 复核）。改代码时的包/层约定见 `.trellis/spec/library/`。
+
 ```
 moomem/
-├── moon.mod                   # 模块定义；deps: moonbitlang/x
+├── moon.mod                   # 模块定义 heyq02/moomem@0.2.2；deps: moonbitlang/x, mizchi/llm（cli/llm_extractor）
 ├── README.md                  # 快速上手 + 性能 + 安全边界（15分钟跑通场景A）
-├── docs/                      # PARA 结构（对齐 FlowUs）
-│   ├── README.md              # 文档总索引
-│   ├── project/               # 项目主体文档
+├── docs/                      # PARA 结构（对齐 FlowUs）；路由见 docs/README.md
+│   ├── README.md              # 文档总索引 + where-to-look
+│   ├── project/               # 项目主体叙事：架构 / PRD / 进度 / 测试 / 验证 / 评测 / 交接
 │   │   ├── architecture.md    # 本文档
 │   │   ├── class-diagram.mermaid
 │   │   ├── sequence-diagram-add.mermaid
 │   │   ├── sequence-diagram-recall.mermaid
-│   │   └── 03~09 编号报告（PRD/进度/测试/验证/评测/交接）
+│   │   └── 03~09 编号报告
 │   ├── resources/             # 调研与立项依据（选题/竞品）
 │   └── archive/               # 归档（赛季结束后迁入）
-├── src/
-│   ├── moon.pkg.json          # 核心库包配置
-│   ├── lib.mbt                # 公开 re-export、MOOMEM_VERSION
-│   ├── types.mbt              # 核心类型：EntryStatus/EntryKind/MemoryEntry/Config/StoreStats/AddSummary/ExtractedFact...
+├── spec/                      # 功能/流程验收契约（W3/W4、CI 流水线）— 非 Trellis 编码规范
+├── .trellis/spec/             # AI 编码约定（改 src/ 前读 library/）
+├── examples/
+│   ├── moon.pkg
+│   └── llm_extractor_demo.mbt # LLM 提取演示（可 mock）
+├── ci/
+│   ├── locomo/                # LoCoMo L3 评测 harness（moon.pkg + *.mbt）
+│   ├── tuning/                # 离线调参台
+│   └── llm_live/              # Live LLM 门禁（发版流水线）
+├── src/                       # 核心库（13 个非测试 .mbt）
+│   ├── moon.pkg               # 核心库包配置（import moonbitlang/x/fs；调用点仍须隔离在 persist.mbt）
+│   ├── lib.mbt                # 公开常量、MOOMEM_VERSION / SNAPSHOT_VERSION
+│   ├── types.mbt              # 核心类型：EntryStatus/EntryKind/MemoryEntry/Config/StoreStats/AddSummary/...
 │   ├── errors.mbt             # MoomemError 统一错误
 │   ├── json_codec.mbt         # 各类型 to_json/from_json（唯一 JSON 编解码处）
-│   ├── embedder.mbt           # trait Embedder + HashingEmbedder(缺省) + Clock trait + LogicalClock
+│   ├── embedder.mbt           # trait Embedder + HashingEmbedder；同文件：Clock + LogicalClock + FixedClock
 │   ├── extractor.mbt          # trait Extractor + RawExtractor(缺省)
 │   ├── conflict.mbt           # trait ConflictJudge + SimilarityJudge(缺省) + ConflictDecision
 │   ├── dedup.mbt              # 精确去重（同 user 内容指纹）
 │   ├── index_vector.mbt       # 每 user 分片的余弦近邻索引
 │   ├── index_keyword.mbt      # 每 user 分片的内置 BM25 + CJK 分词器
 │   ├── ranker.mbt             # RRF 融合
-│   ├── persist.mbt            # trait PersistenceBackend + FsBackend + MemoryBackend（双槽快照）
+│   ├── persist.mbt            # trait PersistenceBackend + FsBackend + MemoryBackend（双槽快照；核心唯一 @fs 调用点）
 │   ├── store.mbt              # MemoryStore：open/add/recall/forget/stats/close 编排
-│   ├── types_test.mbt         # 黑盒：编解码/校验
-│   ├── index_test.mbt         # 黑盒：双索引/RRF/BM25 分词
-│   ├── extractor_test.mbt     # 黑盒：注入点/降级
-│   ├── persist_test.mbt       # 黑盒：快照/恢复/半行截断（MemoryBackend 模拟崩溃）
-│   └── store_e2e_test.mbt     # 黑盒：AC-01~05 端到端（隔离/冲突/持久化恢复/降级）
-└── src/cli/
-    ├── moon.pkg.json          # main 包；import 根包 + moonbitlang/x/fs
-    └── main.mbt               # CLI：add/recall/list/stats/export/import
+│   ├── types_test.mbt         # 黑盒：编解码 / validate_user_id
+│   ├── index_test.mbt         # 黑盒：双索引 / RRF / BM25 / 分片隔离
+│   ├── extractor_test.mbt     # 黑盒：注入点 / raw 模式
+│   ├── persist_test.mbt       # 黑盒：双槽 / head 损坏 / MemoryBackend 崩溃注入
+│   ├── store_e2e_test.mbt     # 黑盒：AC-01~05 端到端
+│   ├── qa_adversarial_test.mbt
+│   ├── w3_config_test.mbt     # Config 校验 / W3 相关
+│   ├── llm_extractor/         # 可选 LLM 适配包（核心零 mizchi/llm）
+│   │   ├── moon.pkg
+│   │   ├── llm_extractor.mbt  # LlmExtractor
+│   │   ├── llm_judge.mbt      # LlmConflictJudge
+│   │   ├── prompts.mbt
+│   │   ├── llm_extractor_test.mbt
+│   │   └── qa_w2_adversarial_test.mbt
+│   └── cli/                   # native CLI（is-main）
+│       ├── moon.pkg           # targets：native 编译 llm_wiring.mbt，非 native 用 stub
+│       ├── main.mbt           # CLI：add/recall/list/stats/export/import
+│       ├── llm_wiring.mbt     # native：--llm / --llm-judge 接线
+│       ├── llm_wiring_stub.mbt
+│       └── cli_wbtest.mbt
 ```
 
 ---
@@ -490,7 +513,7 @@ open(path)：选择后端（native→FsBackend）→ load() 读 head 指向槽�
 > 粒度说明：每个任务 = 一个功能层次（含 3+ 文件 + 对应测试），任务内部文件可并行实现。FR/AC 编号对应 PRD 第 8/17 章。里程碑映射：T01+T02+T03+T04 = W1 闭环；T05 = W3 可用性。
 
 ### T01 项目基础设施与核心类型层
-- **文件**：`moon.mod.json`、`src/moon.pkg.json`、`src/lib.mbt`、`src/types.mbt`、`src/errors.mbt`、`src/json_codec.mbt`、`src/types_test.mbt`
+- **文件**：`moon.mod`、`src/moon.pkg`、`src/lib.mbt`、`src/types.mbt`、`src/errors.mbt`、`src/json_codec.mbt`、`src/types_test.mbt`
 - **功能点**：moon 模块声明（deps: moonbitlang/x）；全部公共类型与错误枚举；MemoryEntry/Config/Stats 的 JSON 编解码（JSONL 每行 = 一个 entry 的 JSON）；user_id 合法性校验函数；版本常量与 re-export。
 - **依赖**：无 ｜ **优先级**：P0
 - **对应**：FR 全体基础；FR-08（编解码）；AC-01 的数据格式基础
@@ -518,7 +541,7 @@ open(path)：选择后端（native→FsBackend）→ load() 读 head 指向槽�
 - **验收**：崩溃注入测试（MemoryBackend 模拟半行损坏）；重启恢复等价；隔离渗透 0；stats 与实况一致。
 
 ### T05 CLI、导入导出、多后端验证与文档
-- **文件**：`src/cli/moon.pkg.json`、`src/cli/main.mbt`、`src/store_e2e_test.mbt`（补充 export/import 等价用例）、`README.md`
+- **文件**：`src/cli/moon.pkg`、`src/cli/main.mbt`、`src/store_e2e_test.mbt`（补充 export/import 等价用例）、`README.md`
 - **功能点**：CLI 五+二子命令（add/recall/list/stats/export/import）；export 全量 JSONL、import 重建（导出再导入等价，FR-08）；`moon test --target wasm-gc/js/native` 三后端验证（FR-09）；README（15 分钟上手、性能章节、安全边界、后端适配表）。
 - **依赖**：T04 ｜ **优先级**：P1
 - **对应**：FR-07、FR-08、FR-09；AC-06
@@ -542,7 +565,7 @@ graph LR
 ```
 moonbitlang/core : moon 内置 prelude，无需声明
 moonbitlang/x    : ^0.4.x（仅使用 fs 子包；官方实验性）
-                   → 声明于根 moon.mod.json 的 deps；
+                   → 声明于根 moon.mod 的 deps；
                    → import 仅出现在 src/persist.mbt 与 src/cli/；
                    → 升级/替换成本被适配层锁死（RK-03 对策）
 第三方依赖        : 无（vcdb / MoonRetrieve / mizchi-llm 均不引入，

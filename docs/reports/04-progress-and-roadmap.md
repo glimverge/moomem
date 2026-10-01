@@ -38,7 +38,7 @@
 10-01| W3 独立验证:1 项 P1(提取器 ReturnRaw 降级不可见)、2 项 P3(本地端点判定过宽、传输失败误报为非法 JSON)、1 项 P2 记录(缺省冲突判定仅覆盖近重复式更新,实测语义型住址更新相似度 0.471)| ✅ 修复规格已产出并落地(见 [spec/spec-feature-w3.1-observability-hardening.md](../../spec/spec-feature-w3.1-observability-hardening.md))| 
 10-01| W3.1 补丁:A-`ExtractedFact.degraded`/`degrade_reason` + store 自报降级消费(三通道可见,修复 P1);B-本地端点 host 精确匹配;C-传输失败与解析失败分类;native 107→112,wasm 系 96→99| ✅ 完成(独立复验通过,见 [07-w3.1-verification.md](07-w3.1-verification.md));余 2 项 P3 残留(R1 代理环境分类、R2 闲聊不清零计数)| 
 10-01| W4-0:闲聊(`Ok([])`)清零 `extraction_failures`(连续失败熔断语义)| ✅ 随 W4 前置落地  
-10-01| W4:LoCoMo L3 离线 harness(`ci/locomo`)+ test-pipeline `eval-locomo`| ✅ 完成；离线门禁 `LOCOMO_PASS`。实测(hashing)：Hybrid Recall@5 **77/230 (0.335)** / MRR@5 **0.199**；BM25-only **100/230 (0.435)** / **0.310**（hashing 下 hybrid 低于 BM25，`TARGET_15PCT` 仅 `--embedder api`）；近重复 supersede **19/20 (0.950)**；隔离渗透 **0**；持久化 reopen **1/1**；提取离线 SKIP（`--live`）。报告正文由产品侧写 [08](08-w4-eval-report.md)  
+10-01| W4:LoCoMo L3 离线 harness(`ci/locomo`)+ test-pipeline `eval-locomo`| ✅ 完成；离线门禁 `LOCOMO_PASS`。实测(hashing)：Hybrid Recall@5 **77/230 (0.335)** / MRR@5 **0.199**；BM25-only **100/230 (0.435)** / **0.310**（hashing 下 hybrid 低于 BM25，`TARGET_15PCT` 仅 `--embedder api`）；近重复 supersede **19/20 (0.950)**；隔离渗透 **0**；持久化 reopen **1/1**；提取离线 SKIP（`--live`）。报告正文见 [08-w4-eval-report.md](08-w4-eval-report.md)（独立复验通过；`--embedder api` / `--live` 两档数字待密钥后补测）  
   
 进度结论
 
@@ -48,7 +48,7 @@ PRD 四周里程碑中 W1–W3.1 与 W4 harness 已落地；量化数字见上�
 
   * **P0 · 赛事申报(截止 10-31)** :飞书表单完成十月赛报名(最多 3 次提交,以最后一次有效提交为准);确认已加入赛事交流群且群昵称为 GitHub ID(奖金发放硬性条件);仓库需保持连续提交记录。
   * **P1 · 官方测试套件交叉验证** : 四层体系见 [05-test-suite.md](05-test-suite.md)（L0 离线 + L1 Mock LLM 进 test-pipeline；L2 Live LLM 进 release-pipeline）；持续用 moonbitlang/core 范式复核并保持 GitHub Action 绿标。
-  * ~~**P1 · W4 评测闭环**~~ :✅ harness 已完成(`ci/locomo` + CI)；08 报告与 api/live 数字由产品侧补齐。
+  * ~~**P1 · W4 评测闭环**~~ :✅ harness 与离线 [08 报告](08-w4-eval-report.md)已完成；`--embedder api` / `--live` 数字待密钥补测。
   * ~~**P1 · W3.1 补丁(独立验证发现)**~~ :✅ 已完成(10-01,A/B/C 三项落地并独立复验通过,见 [07 报告](07-w3.1-verification.md))。
   * **P2 · W3.1 残留收敛** :R1 代理环境下传输失败分类(建议先向 mizchi/llm 上游提 issue,不在本项目内改)。R2 已随 W4-0 修复。
   * **P2 · 工程债** :moon.mod.json → moon.mod 格式迁移(工具链已通告弃用,migrate 会重构模块配置布局,单独立项);向 mizchi/llm 上游提 MockProvider impl 未导出的小 PR;评估 v0.2.2 发布(含 W3 / W3.1 全部改动)。

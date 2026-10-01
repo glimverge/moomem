@@ -2,3 +2,5 @@ _build/
 .mooncakes/
 
 .env
+
+.DS_Store/

@@ -266,6 +266,11 @@ src/
 examples/             W2 可运行示例：moon run examples（mock 驱动，零网络）
 ```
 
+## 项目文档
+
+- [架构设计](docs/architecture.md)：模块划分、注入点、双槽快照持久化（含类图 / add·recall 时序图）
+- [选题调研 → 竞品复核 → PRD → 进度规划](docs/reports/)：全生命周期项目文档四篇
+
 ## License
 
 Apache-2.0

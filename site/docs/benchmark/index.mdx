@@ -33,5 +33,5 @@ NEW_VERSION=0.0.0-dev SKIP_COMMIT=1 bash scripts/ci/run-locomo-benchmark-archive
 api 档环境映射：`QWEN_API_KEY` / `QWEN_BASE_URL` / `QWEN_MODEL` → `MOOMEM_EMBED_API_KEY` / `MOOMEM_EMBED_BASE_URL` / `MOOMEM_EMBED_MODEL`。live 档只读 `DEEPSEEK_*`。结果 JSON 永不写入 API Key。
 
 :::important
-LoCoMo 数据许可见仓库 [`ci/eval/locomo/data/README.md`](https://github.com/glimverge/moomem/blob/main/ci/eval/locomo/data/README.md)（CC BY-NC 4.0）。离线 hashing 嵌入可能弱于纯 BM25；≥15% 混合增益目标仅在 `--embedder api` 下评估。
+LoCoMo 数据许可见仓库 [`ci/eval/locomo/data/README.md`](https://github.com/glimverge/moomem/blob/main/ci/eval/locomo/data/README.md)（CC BY-NC 4.0）。缺省 `AdaptiveLexical` 下离线/api 混合 Recall@5 不低于 BM25（见 [08 §七](https://github.com/glimverge/moomem/blob/main/docs/project/08-w4-eval-report.md)）；stretch ≥15% 增益仅在 `--embedder api` 下评估且不阻塞。
 :::

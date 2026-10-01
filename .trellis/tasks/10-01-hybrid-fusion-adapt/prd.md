@@ -21,10 +21,10 @@
 
 ## Acceptance Criteria
 
-- [ ] AC1：独立集可对比「等权 RRF vs 自适应」
-- [ ] AC2：`moon run ci/eval/locomo -- --embedder api` → hybrid Recall@5 ≥ BM25
-- [ ] AC3：不拆公开 API；不计分子集拟合
-- [ ] AC4：自适应分支单测 + native `moon test` 绿
+- [x] AC1：独立集可对比「等权 RRF vs 自适应」
+- [x] AC2：`moon run ci/eval/locomo -- --embedder api` → hybrid Recall@5 ≥ BM25
+- [x] AC3：不拆公开 API；不计分子集拟合
+- [x] AC4：自适应分支单测 + native `moon test` 绿
 - [ ] AC5（stretch）：≥ BM25 +15% — 达成写入报告，未达不阻塞
 
 ## Out of scope

@@ -1,8 +1,8 @@
 # moomem
 
-[![Build Status](https://img.shields.io/github/actions/workflow/status/glimverge/moomem/test-pipeline.yml?style=flat-square&label=Build)](https://github.com/glimverge/moomem/actions)
+[![Test Status](https://img.shields.io/github/actions/workflow/status/glimverge/moomem/test-pipeline.yml?style=flat-square&label=Test)](https://github.com/glimverge/moomem/actions)
 [![MoonBit](https://img.shields.io/badge/MoonBit-0.2.2-black?style=flat-square)](https://www.moonbitlang.com/)
-[![License](https://img.shields.io/badge/License-Apache%202.0-blue?style=flat-square)](LICENSE)
+[![License](https://img.shields.io/badge/License-MIT-blue?style=flat-square)](LICENSE)
 
 > Embedded agent memory for MoonBit — zero deploy, crash-safe persistence, structural user isolation.
 
@@ -212,6 +212,7 @@ moon test --target js
 
 moon run ci/tools/retrieval-tuning --target native   # offline param grid
 moon run ci/eval/locomo --target native              # LoCoMo subset; look for LOCOMO_PASS
+moon run ci/eval/locomo --target native -- --report /tmp/offline.json
 ```
 
 Optional live tiers (not in push CI):
@@ -220,6 +221,17 @@ Optional live tiers (not in push CI):
 moon run ci/eval/locomo --target native -- --embedder api   # needs MOOMEM_EMBED_*
 moon run ci/eval/locomo --target native -- --live           # needs DEEPSEEK_*
 ```
+
+After a successful (non dry-run) release, job `benchmark-archive` runs offline + api + live,
+writes `benchmarks/locomo/results/<version>.json`, and commits with `chore(benchmark):`.
+Site page: `site/docs/benchmark/` (nav **Benchmark**). Local dry archive (no push):
+
+```bash
+set -a && source .env && set +a   # QWEN_* + DEEPSEEK_*
+NEW_VERSION=0.0.0-dev SKIP_COMMIT=1 bash scripts/ci/run-locomo-benchmark-archive.sh
+```
+
+`QWEN_*` maps to `MOOMEM_EMBED_*` when the latter are unset. Result JSON never stores API keys.
 
 LoCoMo slice licensing: see [`ci/eval/locomo/data/README.md`](ci/eval/locomo/data/README.md) (CC BY-NC 4.0). Offline hashing embedder may underperform pure BM25; the ≥15% hybrid gain target applies under `--embedder api`.
 
@@ -234,6 +246,7 @@ ci/
   gates/             Live LLM release gates
   eval/locomo/       L3 LoCoMo harness + data
   tools/             Offline retrieval tuning
+benchmarks/locomo/   Release-archived LoCoMo scores (site consumes)
 docs/                Project docs (architecture, PRD, eval reports)
 site/                Rspress docs site (GitHub Pages)
 ```

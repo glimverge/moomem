@@ -46,9 +46,9 @@ pub fn entry_from_json(j : Json) -> Result[MemoryEntry, MoomemError] {
 }
 
 fn entry_from_json_impl(j : Json) -> MemoryEntry raise MoomemError {
-  let obj = match j.as_object() {
-    Some(o) => o
-    None => raise MoomemError::StoreCorrupted("entry is not a JSON object")
+  let obj = match j {
+    Object(o) => o
+    _ => raise MoomemError::StoreCorrupted("entry is not a JSON object")
   }
   let id = get_string_field(obj, "id")
   let user_id = get_string_field(obj, "user_id")
@@ -65,32 +65,20 @@ fn entry_from_json_impl(j : Json) -> MemoryEntry raise MoomemError {
   }
   let created_at = get_int64_field(obj, "created_at")
   let superseded_by = match obj.get("superseded_by") {
-    Some(j) =>
-      match j.as_string() {
-        Some(s) => Some(s)
-        None => {
-          if j.as_null() != None {
-            None
-          } else {
-            raise MoomemError::StoreCorrupted(
-              "field 'superseded_by' is not a string or null",
-            )
-          }
-        }
-      }
+    Some(String(s)) => Some(s)
+    Some(Null) => None
+    Some(_) =>
+      raise MoomemError::StoreCorrupted(
+        "field 'superseded_by' is not a string or null",
+      )
     None => None
   }
   let seq = get_int_field(obj, "seq")
   let metadata : Map[String, Json] = Map([])
   match obj.get("metadata") {
-    Some(j) =>
-      match j.as_object() {
-        Some(m) => m.each((k, v) => metadata.set(k, v))
-        None =>
-          if j.as_null() == None {
-            raise MoomemError::StoreCorrupted("field 'metadata' is not an object")
-          }
-      }
+    Some(Object(m)) => m.each((k, v) => metadata.set(k, v))
+    Some(Null) => ()
+    Some(_) => raise MoomemError::StoreCorrupted("field 'metadata' is not an object")
     None => ()
   }
   MemoryEntry::{
@@ -122,14 +110,14 @@ fn status_to_json(s : EntryStatus) -> Json {
 }
 
 fn status_from_json(j : Json) -> EntryStatus raise MoomemError {
-  match j.as_string() {
-    Some("active") => Active
-    Some("superseded") => Superseded
-    Some("deleted") => Deleted
-    Some("unstructured") => Unstructured
-    Some(other) =>
+  match j {
+    String("active") => Active
+    String("superseded") => Superseded
+    String("deleted") => Deleted
+    String("unstructured") => Unstructured
+    String(other) =>
       raise MoomemError::StoreCorrupted("unknown status '\{other}'")
-    None => raise MoomemError::StoreCorrupted("status is not a string")
+    _ => raise MoomemError::StoreCorrupted("status is not a string")
   }
 }
 
@@ -143,13 +131,13 @@ fn kind_to_json(k : EntryKind) -> Json {
 }
 
 fn kind_from_json(j : Json) -> EntryKind raise MoomemError {
-  match j.as_string() {
-    Some("fact") => Fact
-    Some("preference") => Preference
-    Some("event") => Event
-    Some("unstructured") => Unstructured
-    Some(other) => raise MoomemError::StoreCorrupted("unknown kind '\{other}'")
-    None => raise MoomemError::StoreCorrupted("kind is not a string")
+  match j {
+    String("fact") => Fact
+    String("preference") => Preference
+    String("event") => Event
+    String("unstructured") => Unstructured
+    String(other) => raise MoomemError::StoreCorrupted("unknown kind '\{other}'")
+    _ => raise MoomemError::StoreCorrupted("kind is not a string")
   }
 }
 
@@ -159,33 +147,24 @@ fn kind_from_json(j : Json) -> EntryKind raise MoomemError {
 
 fn get_string_field(obj : Map[String, Json], key : String) -> String raise MoomemError {
   match obj.get(key) {
-    Some(j) =>
-      match j.as_string() {
-        Some(s) => s
-        None => raise MoomemError::StoreCorrupted("field '\{key}' is not a string")
-      }
+    Some(String(s)) => s
+    Some(_) => raise MoomemError::StoreCorrupted("field '\{key}' is not a string")
     None => raise MoomemError::StoreCorrupted("field '\{key}' is missing")
   }
 }
 
 fn get_int_field(obj : Map[String, Json], key : String) -> Int raise MoomemError {
   match obj.get(key) {
-    Some(j) =>
-      match j.as_number() {
-        Some(n) => n.to_int()
-        None => raise MoomemError::StoreCorrupted("field '\{key}' is not a number")
-      }
+    Some(Number(n, ..)) => n.to_int()
+    Some(_) => raise MoomemError::StoreCorrupted("field '\{key}' is not a number")
     None => raise MoomemError::StoreCorrupted("field '\{key}' is missing")
   }
 }
 
 fn get_int64_field(obj : Map[String, Json], key : String) -> Int64 raise MoomemError {
   match obj.get(key) {
-    Some(j) =>
-      match j.as_number() {
-        Some(n) => n.to_int64()
-        None => raise MoomemError::StoreCorrupted("field '\{key}' is not a number")
-      }
+    Some(Number(n, ..)) => n.to_int64()
+    Some(_) => raise MoomemError::StoreCorrupted("field '\{key}' is not a number")
     None => raise MoomemError::StoreCorrupted("field '\{key}' is missing")
   }
 }
@@ -195,23 +174,20 @@ fn get_double_array_field(
   key : String
 ) -> Array[Double] raise MoomemError {
   match obj.get(key) {
-    Some(j) =>
-      match j.as_array() {
-        Some(items) => {
-          let out : Array[Double] = []
-          for item in items {
-            match item.as_number() {
-              Some(n) => out.push(n)
-              None =>
-                raise MoomemError::StoreCorrupted(
-                  "field '\{key}' contains non-number item",
-                )
-            }
-          }
-          out
+    Some(Array(items)) => {
+      let out : Array[Double] = []
+      for item in items {
+        match item {
+          Number(n, ..) => out.push(n)
+          _ =>
+            raise MoomemError::StoreCorrupted(
+              "field '\{key}' contains non-number item",
+            )
         }
-        None => raise MoomemError::StoreCorrupted("field '\{key}' is not an array")
       }
+      out
+    }
+    Some(_) => raise MoomemError::StoreCorrupted("field '\{key}' is not an array")
     None => raise MoomemError::StoreCorrupted("field '\{key}' is missing")
   }
 }
@@ -221,23 +197,20 @@ fn get_string_array_field(
   key : String
 ) -> Array[String] raise MoomemError {
   match obj.get(key) {
-    Some(j) =>
-      match j.as_array() {
-        Some(items) => {
-          let out : Array[String] = []
-          for item in items {
-            match item.as_string() {
-              Some(s) => out.push(s)
-              None =>
-                raise MoomemError::StoreCorrupted(
-                  "field '\{key}' contains non-string item",
-                )
-            }
-          }
-          out
+    Some(Array(items)) => {
+      let out : Array[String] = []
+      for item in items {
+        match item {
+          String(s) => out.push(s)
+          _ =>
+            raise MoomemError::StoreCorrupted(
+              "field '\{key}' contains non-string item",
+            )
         }
-        None => raise MoomemError::StoreCorrupted("field '\{key}' is not an array")
       }
+      out
+    }
+    Some(_) => raise MoomemError::StoreCorrupted("field '\{key}' is not an array")
     None => raise MoomemError::StoreCorrupted("field '\{key}' is missing")
   }
 }
@@ -258,9 +231,9 @@ fn snapshot_header_to_json(v : Int, gen : Int, clock : Int64) -> Json {
 /// 解析 header 行；校验版本号。返回 (v, gen, clock)。
 pub fn parse_snapshot_header(j : Json) -> Result[(Int, Int, Int64), MoomemError] {
   try {
-    let obj = match j.as_object() {
-      Some(o) => o
-      None =>
+    let obj = match j {
+      Object(o) => o
+      _ =>
         raise MoomemError::StoreCorrupted("snapshot header is not a JSON object")
     }
     let v = get_int_field(obj, "v")
@@ -344,9 +317,9 @@ fn parse_snapshot_text_impl(
     raise MoomemError::StoreCorrupted("empty snapshot")
   }
   let header_json = parse_json_line_impl(lines[0])
-  let obj = match header_json.as_object() {
-    Some(o) => o
-    None => raise MoomemError::StoreCorrupted("snapshot header is not a JSON object")
+  let obj = match header_json {
+    Object(o) => o
+    _ => raise MoomemError::StoreCorrupted("snapshot header is not a JSON object")
   }
   let v = get_int_field(obj, "v")
   if v != SNAPSHOT_VERSION {

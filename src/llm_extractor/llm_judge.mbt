@@ -136,6 +136,8 @@ pub impl @src.ConflictJudge for LlmConflictJudge with judge(
   }
 }
 
+pub extend LlmConflictJudge with @src.ConflictJudge::{judge}
+
 // ---------------------------------------------------------------------------
 // 裁决响应解析
 // ---------------------------------------------------------------------------
@@ -156,16 +158,13 @@ fn parse_verdicts_response(
     Ok(j) => j
     Err(e) => return Err(e)
   }
-  let obj : Map[String, Json] = match j.as_object() {
-    Some(o) => o
-    None => return Err("response is not a JSON object")
+  let obj : Map[String, Json] = match j {
+    Object(o) => o
+    _ => return Err("response is not a JSON object")
   }
   let verdicts_json : Array[Json] = match obj.get("verdicts") {
-    Some(v) =>
-      match v.as_array() {
-        Some(arr) => arr
-        None => return Err("\"verdicts\" is not an array")
-      }
+    Some(Array(arr)) => arr
+    Some(_) => return Err("\"verdicts\" is not an array")
     None => return Err("missing \"verdicts\" field")
   }
   if verdicts_json.length() == 0 {
@@ -182,23 +181,16 @@ fn parse_verdicts_response(
   let verdicts : Array[@src.ConflictVerdict] = []
   let mut dropped = 0
   for vj in verdicts_json {
-    let vo : Map[String, Json] = match vj.as_object() {
-      Some(o) => o
-      None => {
+    let vo : Map[String, Json] = match vj {
+      Object(o) => o
+      _ => {
         dropped = dropped + 1
         continue
       }
     }
     let id : String = match vo.get("id") {
-      Some(i) =>
-        match i.as_string() {
-          Some(s) => s
-          None => {
-            dropped = dropped + 1
-            continue
-          }
-        }
-      None => {
+      Some(String(s)) => s
+      _ => {
         dropped = dropped + 1
         continue
       }

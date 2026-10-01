@@ -139,16 +139,13 @@ fn parse_extraction_response(
     Ok(j) => j
     Err(e) => return Err(e)
   }
-  let obj : Map[String, Json] = match j.as_object() {
-    Some(o) => o
-    None => return Err("response is not a JSON object")
+  let obj : Map[String, Json] = match j {
+    Object(o) => o
+    _ => return Err("response is not a JSON object")
   }
   let facts_json : Array[Json] = match obj.get("facts") {
-    Some(f) =>
-      match f.as_array() {
-        Some(arr) => arr
-        None => return Err("\"facts\" is not an array")
-      }
+    Some(Array(arr)) => arr
+    Some(_) => return Err("\"facts\" is not an array")
     None => return Err("missing \"facts\" field")
   }
   if facts_json.length() == 0 {
@@ -175,38 +172,27 @@ fn parse_extraction_response(
 
 /// 解析单条事实 entry；不可用返回 None。
 fn parse_one_fact(fj : Json) -> @src.ExtractedFact? {
-  let obj : Map[String, Json] = match fj.as_object() {
-    Some(o) => o
-    None => return None
+  let obj : Map[String, Json] = match fj {
+    Object(o) => o
+    _ => return None
   }
   let content : String = match obj.get("content") {
-    Some(c) =>
-      match c.as_string() {
-        Some(s) => s
-        None => return None
-      }
-    None => return None
+    Some(String(s)) => s
+    _ => return None
   }
   if content.trim().length() == 0 {
     return None
   }
   let kind : @src.EntryKind = match obj.get("kind") {
-    Some(k) =>
-      match k.as_string() {
-        Some("fact") => @src.EntryKind::Fact
-        Some("preference") => @src.EntryKind::Preference
-        Some("event") => @src.EntryKind::Event
-        _ => return None // 未知 kind → 丢弃（宁少勿错）
-      }
+    Some(String("fact")) => @src.EntryKind::Fact
+    Some(String("preference")) => @src.EntryKind::Preference
+    Some(String("event")) => @src.EntryKind::Event
+    Some(_) => return None // 未知 kind → 丢弃（宁少勿错）
     None => return None
   }
   let span : String? = match obj.get("span") {
-    Some(s) =>
-      match s.as_string() {
-        Some(v) => if v.trim().length() == 0 { None } else { Some(v) }
-        None => None
-      }
-    None => None
+    Some(String(v)) => if v.trim().length() == 0 { None } else { Some(v) }
+    _ => None
   }
   Some(@src.ExtractedFact::{ content, kind, source_span : span })
 }
@@ -217,10 +203,10 @@ fn parse_one_fact(fj : Json) -> @src.ExtractedFact? {
 
 /// 解析裁决响应中单条 entry 的 decision；未知值返回 None（宁少勿错 → 视为无裁决）。
 fn parse_decision(j : Json) -> @src.ConflictDecision? {
-  match j.as_string() {
-    Some("replace") => Some(@src.ConflictDecision::Replace)
-    Some("coexist") => Some(@src.ConflictDecision::Coexist)
-    Some("ignore") => Some(@src.ConflictDecision::Ignore)
+  match j {
+    String("replace") => Some(@src.ConflictDecision::Replace)
+    String("coexist") => Some(@src.ConflictDecision::Coexist)
+    String("ignore") => Some(@src.ConflictDecision::Ignore)
     _ => None
   }
 }

@@ -65,7 +65,7 @@ pub impl PersistenceBackend for MemoryBackend with save(self, snapshot) {
       } else {
         snapshot.length()
       }
-      snapshot.substring(end=cut)
+      snapshot[:cut].to_owned()
     }
     None => snapshot
   }
@@ -73,6 +73,8 @@ pub impl PersistenceBackend for MemoryBackend with save(self, snapshot) {
   self.bytes_written = self.bytes_written + stored.length().to_int64()
   Ok(())
 }
+
+pub extend MemoryBackend with PersistenceBackend::{save, load}
 
 /// 当前保存的快照（测试观察用）。
 pub fn MemoryBackend::peek(self : MemoryBackend) -> String? {
@@ -134,7 +136,7 @@ fn FsBackend::read_slot_if_valid(
     let content = @fs.read_file_to_string(path)
     // 校验首行 header 可解析（尾部半行损坏交给上层 store 截断处理）
     let first_line = match content.split("\n").next() {
-      Some(l) => l.to_string()
+      Some(l) => l.to_owned()
       None => ""
     }
     match parse_json_line(first_line) {
@@ -154,7 +156,7 @@ fn FsBackend::read_slot_if_valid(
 /// 从快照文本解析 header 中的 gen（用于双槽歧义时取大者）。
 fn snapshot_gen_of(content : String) -> Int? {
   let first_line = match content.split("\n").next() {
-    Some(l) => l.to_string()
+    Some(l) => l.to_owned()
     None => return None
   }
   match parse_json_line(first_line) {
@@ -292,6 +294,8 @@ pub impl PersistenceBackend for FsBackend with save(self, snapshot) {
   }
 }
 
+pub extend FsBackend with PersistenceBackend::{save, load}
+
 /// 将 @fs 的 IOError 转为可读消息。
 fn io_error_message(op : String, e : @fs.IOError) -> String {
   let detail : String = match e {
@@ -308,7 +312,7 @@ fn mkdir_p(path : String) -> Unit raise @fs.IOError {
   }
   let segments : Array[String] = []
   for seg in path.split("/") {
-    segments.push(seg.to_string())
+    segments.push(seg.to_owned())
   }
   let mut acc = ""
   for i = 0; i < segments.length(); i = i + 1 {

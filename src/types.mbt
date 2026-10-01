@@ -11,7 +11,19 @@ pub(all) enum EntryStatus {
   Superseded
   Deleted
   Unstructured
-} derive(Show, Eq)
+} derive(Eq)
+
+pub impl Show for EntryStatus with fn output(self, logger) {
+  match self {
+    Active => logger.write_string("Active")
+    Superseded => logger.write_string("Superseded")
+    Deleted => logger.write_string("Deleted")
+    Unstructured => logger.write_string("Unstructured")
+  }
+}
+
+pub extend EntryStatus with Show::{to_string, output}
+pub extend EntryStatus with Eq::{not_equal, equal}
 
 /// 条目语义类型（由 Extractor 产出）。
 pub(all) enum EntryKind {
@@ -19,7 +31,19 @@ pub(all) enum EntryKind {
   Preference
   Event
   Unstructured
-} derive(Show, Eq)
+} derive(Eq)
+
+pub impl Show for EntryKind with fn output(self, logger) {
+  match self {
+    Fact => logger.write_string("Fact")
+    Preference => logger.write_string("Preference")
+    Event => logger.write_string("Event")
+    Unstructured => logger.write_string("Unstructured")
+  }
+}
+
+pub extend EntryKind with Show::{to_string, output}
+pub extend EntryKind with Eq::{not_equal, equal}
 
 /// 最小记忆单元：一条可复用事实。
 pub(all) struct MemoryEntry {
@@ -68,11 +92,22 @@ pub impl Show for MemoryEntry with output(self, logger) {
   logger.write_string(text)
 }
 
+pub extend MemoryEntry with Show::{to_string, output}
+
 /// forget 的目标选择：按 id 或清空该 user 全部可检索条目。
 pub(all) enum ForgetTarget {
   ById(String)
   All
-} derive(Show)
+}
+
+pub impl Show for ForgetTarget with fn output(self, logger) {
+  match self {
+    ById(id) => logger.write_string("ById(\{id})")
+    All => logger.write_string("All")
+  }
+}
+
+pub extend ForgetTarget with Show::{to_string, output}
 
 /// add 的返回摘要：让开发者看见"AI 理解了什么"（PRD 12.3）。
 pub struct AddSummary {
@@ -88,7 +123,16 @@ pub struct AddSummary {
   degraded : Bool
   /// 人类可读备注（重复 id、冲突判定、降级原因等）
   notes : Array[String]
-} derive(Show)
+}
+
+/// 手写 Show（原 derive(Show) 输出格式保持不变：字段名: 值，逗号分隔）。
+pub impl Show for AddSummary with fn output(self, logger) {
+  logger.write_string(
+    "{extracted: \{self.extracted}, inserted: \{self.inserted}, duplicates: \{self.duplicates}, superseded: \{self.superseded}, degraded: \{self.degraded}, notes: \{show_string_array(self.notes)}}",
+  )
+}
+
+pub extend AddSummary with Show::{to_string, output}
 
 /// stats 的返回结构（PRD FR-10）。
 pub struct StoreStats {
@@ -106,7 +150,16 @@ pub struct StoreStats {
   truncated_recovered : Int
   /// 当前提取器模式（"raw" | "llm"），AI 可解释验收
   extractor_mode : String
-} derive(Show)
+}
+
+/// 手写 Show（原 derive(Show) 输出格式保持不变：字段名: 值，逗号分隔）。
+pub impl Show for StoreStats with fn output(self, logger) {
+  logger.write_string(
+    "{total: \{self.total}, active: \{self.active}, superseded: \{self.superseded}, deleted: \{self.deleted}, unstructured: \{self.unstructured}, bytes_on_disk: \{self.bytes_on_disk}, last_write_at: \{show_int64_opt(self.last_write_at)}, truncated_recovered: \{self.truncated_recovered}, extractor_mode: \{self.extractor_mode}}",
+  )
+}
+
+pub extend StoreStats with Show::{to_string, output}
 
 /// 打开 MemoryStore 的配置。所有注入点均为 Option，None 时使用缺省确定性实现。
 pub(all) struct Config {
@@ -207,6 +260,28 @@ fn is_valid_user_id_char(c : Char) -> Bool {
 // ---------------------------------------------------------------------------
 // 包内工具：稳定哈希 / 十六进制 / 条目 id 生成
 // ---------------------------------------------------------------------------
+
+/// Array[String] 的展示格式（与原 derive(Show) 一致：[a, b, c]）。
+fn show_string_array(arr : Array[String]) -> String {
+  let buf = StringBuilder()
+  buf.write_char('[')
+  for i, s in arr {
+    if i > 0 {
+      buf.write_string(", ")
+    }
+    buf.write_string(s)
+  }
+  buf.write_char(']')
+  buf.to_string()
+}
+
+/// Int64? 的展示格式（与原 derive(Show) 一致：Some(v) / None）。
+fn show_int64_opt(v : Int64?) -> String {
+  match v {
+    Some(x) => "Some(\{x})"
+    None => "None"
+  }
+}
 
 /// FNV-1a 32bit 稳定哈希（三后端确定性一致，用于嵌入分桶与内容指纹）。
 fn fnv1a(s : String) -> Int {

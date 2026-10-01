@@ -18,7 +18,22 @@ pub(all) suberror MoomemError {
   BackendUnsupported(String)
   /// 状态机非法迁移 / 非法操作（如 store 已关闭、目标条目不存在）
   InvalidOperation(String)
-} derive(Show)
+}
+
+/// 手写 Show（原 derive(Show) 输出格式保持不变：Variant(payload)）。
+pub impl Show for MoomemError with fn output(self, logger) {
+  match self {
+    InvalidUserId(detail) => logger.write_string("InvalidUserId(\{detail})")
+    StoreCorrupted(detail) => logger.write_string("StoreCorrupted(\{detail})")
+    IoFailure(detail) => logger.write_string("IoFailure(\{detail})")
+    ExtractionFailure(detail) => logger.write_string("ExtractionFailure(\{detail})")
+    EmbeddingFailure(detail) => logger.write_string("EmbeddingFailure(\{detail})")
+    BackendUnsupported(detail) => logger.write_string("BackendUnsupported(\{detail})")
+    InvalidOperation(detail) => logger.write_string("InvalidOperation(\{detail})")
+  }
+}
+
+pub extend MoomemError with Show::{to_string, output}
 
 /// 人类可读的错误消息（含上下文），供 CLI 与宿主程序展示。
 pub fn MoomemError::message(self : MoomemError) -> String {

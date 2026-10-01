@@ -7,7 +7,19 @@ pub(all) enum ConflictDecision {
   Replace
   Coexist
   Ignore
-} derive(Show, Eq)
+} derive(Eq)
+
+/// 手写 Show（原 derive(Show) 输出格式保持不变：构造器名）。
+pub impl Show for ConflictDecision with fn output(self, logger) {
+  match self {
+    Replace => logger.write_string("Replace")
+    Coexist => logger.write_string("Coexist")
+    Ignore => logger.write_string("Ignore")
+  }
+}
+
+pub extend ConflictDecision with Show::{to_string, output}
+pub extend ConflictDecision with Eq::{not_equal, equal}
 
 /// 单个候选条目的裁决。
 pub(all) struct ConflictVerdict {
@@ -63,6 +75,8 @@ pub impl ConflictJudge for SimilarityJudge with judge(self, new_fact, candidates
   }
   Ok(verdicts)
 }
+
+pub extend SimilarityJudge with ConflictJudge::{judge}
 
 /// 关键词 Jaccard 重叠度：|token(new) ∩ keywords(cand)| / |并集|。
 /// 两侧均空时返回 0.0。

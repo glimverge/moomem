@@ -3,7 +3,7 @@
 test "user_id: legal ids accepted" {
   let cases = ["user-42", "a", "A.b_c-d", "0123456789", "x-y.z_w"]
   for id in cases {
-    let ok = match validate_user_id(id) {
+    let ok = match @src.validate_user_id(id) {
       Ok(_) => true
       Err(_) => false
     }
@@ -16,14 +16,14 @@ test "user_id: 64 chars is the boundary" {
   let half = "abcdefghijklmnopqrstuvwxyzabcdef" // 32
   let legal = half + half
   inspect(legal.length(), content="64")
-  let ok = match validate_user_id(legal) {
+  let ok = match @src.validate_user_id(legal) {
     Ok(_) => true
     Err(_) => false
   }
   inspect(ok, content="true")
   // 65 个字符：拒绝
   let too_long = legal + "q"
-  let rejected = match validate_user_id(too_long) {
+  let rejected = match @src.validate_user_id(too_long) {
     Err(InvalidUserId(_)) => true
     _ => false
   }
@@ -36,7 +36,7 @@ test "user_id: illegal ids rejected (empty / path / charset / dot)" {
     "user@42", "user#1", "user/../../etc",
   ]
   for id in bad_ids {
-    let rejected = match validate_user_id(id) {
+    let rejected = match @src.validate_user_id(id) {
       Err(InvalidUserId(_)) => true
       _ => false
     }
@@ -48,7 +48,7 @@ test "codec: MemoryEntry to_json -> from_json roundtrip" {
   let metadata : Map[String, Json] = Map([])
   metadata.set("extractor", Json::string("raw"))
   metadata.set("conflict_decision", Json::string("replace"))
-  let entry : MemoryEntry = MemoryEntry::{
+  let entry : @src.MemoryEntry = @src.MemoryEntry::{
     id : "000000000001-abcd",
     user_id : "user-42",
     content : "我对花生过敏",
@@ -61,15 +61,15 @@ test "codec: MemoryEntry to_json -> from_json roundtrip" {
     seq : 1,
     metadata,
   }
-  let json_text = entry_to_json(entry).stringify()
-  let parsed = match parse_json_line(json_text) {
+  let json_text = @src.entry_to_json(entry).stringify()
+  let parsed = match @src.parse_json_line(json_text) {
     Ok(j) => j
     Err(e) => {
       inspect(e.message(), content="SHOULD NOT REACH")
       return
     }
   }
-  let restored = match entry_from_json(parsed) {
+  let restored = match @src.entry_from_json(parsed) {
     Ok(e2) => e2
     Err(e) => {
       inspect(e.message(), content="SHOULD NOT REACH")
@@ -106,7 +106,7 @@ test "codec: MemoryEntry to_json -> from_json roundtrip" {
 }
 
 test "codec: superseded entry with superseded_by roundtrip" {
-  let entry : MemoryEntry = MemoryEntry::{
+  let entry : @src.MemoryEntry = @src.MemoryEntry::{
     id : "000000000002-ffff",
     user_id : "u",
     content : "用户住北京",
@@ -119,15 +119,15 @@ test "codec: superseded entry with superseded_by roundtrip" {
     seq : 2,
     metadata : Map([]),
   }
-  let text = entry_to_json(entry).stringify()
-  let j = match parse_json_line(text) {
+  let text = @src.entry_to_json(entry).stringify()
+  let j = match @src.parse_json_line(text) {
     Ok(j) => j
     Err(e) => {
       inspect(e.message(), content="SHOULD NOT REACH")
       return
     }
   }
-  let restored = match entry_from_json(j) {
+  let restored = match @src.entry_from_json(j) {
     Ok(e2) => e2
     Err(e) => {
       inspect(e.message(), content="SHOULD NOT REACH")
@@ -144,7 +144,7 @@ test "codec: superseded entry with superseded_by roundtrip" {
 }
 
 test "codec: snapshot text build -> parse roundtrip with header" {
-  let e1 : MemoryEntry = MemoryEntry::{
+  let e1 : @src.MemoryEntry = @src.MemoryEntry::{
     id : "000000000001-00aa",
     user_id : "user-a",
     content : "fact one",
@@ -157,7 +157,7 @@ test "codec: snapshot text build -> parse roundtrip with header" {
     seq : 1,
     metadata : Map([]),
   }
-  let e2 : MemoryEntry = MemoryEntry::{
+  let e2 : @src.MemoryEntry = @src.MemoryEntry::{
     id : "000000000002-00bb",
     user_id : "user-b",
     content : "fact two",
@@ -170,8 +170,8 @@ test "codec: snapshot text build -> parse roundtrip with header" {
     seq : 2,
     metadata : Map([]),
   }
-  let text = build_snapshot_text(5, 2L, [e1, e2])
-  let result = match parse_snapshot_text(text) {
+  let text = @src.build_snapshot_text(5, 2L, [e1, e2])
+  let result = match @src.parse_snapshot_text(text) {
     Ok(r) => r
     Err(e) => {
       inspect(e.message(), content="SHOULD NOT REACH")
@@ -188,7 +188,7 @@ test "codec: snapshot text build -> parse roundtrip with header" {
 
 test "codec: version mismatch rejected" {
   let bad_header = "{\"v\":99,\"gen\":1,\"clock\":0}\n"
-  let rejected = match parse_snapshot_text(bad_header) {
+  let rejected = match @src.parse_snapshot_text(bad_header) {
     Err(StoreCorrupted(_)) => true
     _ => false
   }
@@ -196,7 +196,7 @@ test "codec: version mismatch rejected" {
 }
 
 test "codec: middle corruption rejected, tail truncation counted" {
-  let e1 : MemoryEntry = MemoryEntry::{
+  let e1 : @src.MemoryEntry = @src.MemoryEntry::{
     id : "000000000001-00aa",
     user_id : "u",
     content : "ok entry",
@@ -209,17 +209,17 @@ test "codec: middle corruption rejected, tail truncation counted" {
     seq : 1,
     metadata : Map([]),
   }
-  let line1 = entry_to_json(e1).stringify()
+  let line1 = @src.entry_to_json(e1).stringify()
   // 中部损坏：两行之间夹一行坏行 → StoreCorrupted
   let middle_bad = "{\"v\":1,\"gen\":1,\"clock\":1}\n" + line1 + "\n{broken json!!!\n" + line1 + "\n"
-  let rejected = match parse_snapshot_text(middle_bad) {
+  let rejected = match @src.parse_snapshot_text(middle_bad) {
     Err(StoreCorrupted(_)) => true
     _ => false
   }
   inspect(rejected, content="true")
   // 尾部半行损坏 → 截断计数
-  let tail_bad = "{\"v\":1,\"gen\":1,\"clock\":1}\n" + line1 + "\n" + line1.substring(end=20)
-  let result = match parse_snapshot_text(tail_bad) {
+  let tail_bad = "{\"v\":1,\"gen\":1,\"clock\":1}\n" + line1 + "\n" + line1[:20].to_owned()
+  let result = match @src.parse_snapshot_text(tail_bad) {
     Ok(r) => r
     Err(e) => {
       inspect(e.message(), content="SHOULD NOT REACH")

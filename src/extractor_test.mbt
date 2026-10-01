@@ -2,7 +2,7 @@
 // 与降级路径（T02 验收，AC-05 的单元基础）。
 
 test "HashingEmbedder: deterministic and 256-dim by default" {
-  let embedder = match HashingEmbedder::new(256) {
+  let embedder = match @src.HashingEmbedder::new(256) {
     Ok(e) => e
     Err(e) => {
       inspect(e.message(), content="SHOULD NOT REACH")
@@ -47,7 +47,7 @@ test "HashingEmbedder: deterministic and 256-dim by default" {
 }
 
 test "HashingEmbedder: rejects non-positive dim" {
-  let rejected = match HashingEmbedder::new(0) {
+  let rejected = match @src.HashingEmbedder::new(0) {
     Err(EmbeddingFailure(_)) => true
     _ => false
   }
@@ -55,7 +55,7 @@ test "HashingEmbedder: rejects non-positive dim" {
 }
 
 test "HashingEmbedder: identical text cosine 1, disjoint text cosine 0" {
-  let embedder = match HashingEmbedder::new(64) {
+  let embedder = match @src.HashingEmbedder::new(64) {
     Ok(e) => e
     Err(_) => {
       inspect("init failed", content="SHOULD NOT REACH")
@@ -69,7 +69,7 @@ test "HashingEmbedder: identical text cosine 1, disjoint text cosine 0" {
       return
     }
   }
-  let close = cosine_similarity(vs[0], vs[1]).is_close(1.0, absolute_tolerance=1.0e-9)
+  let close = @src.cosine_similarity(vs[0], vs[1]).is_close(1.0, absolute_tolerance=1.0e-9)
   inspect(close, content="true")
 }
 
@@ -78,36 +78,36 @@ test "cosine_similarity: handcrafted orthogonal and parallel vectors" {
   let b : Array[Double] = [0.0, 1.0]
   let c : Array[Double] = [2.0, 0.0]
   let zero : Array[Double] = [0.0, 0.0]
-  inspect(cosine_similarity(a, a), content="1")
-  inspect(cosine_similarity(a, c), content="1")
-  inspect(cosine_similarity(a, b), content="0")
-  inspect(cosine_similarity(a, zero), content="0")
-  inspect(cosine_similarity(a, []), content="0")
-  inspect(cosine_similarity(a, [1.0]), content="0")
+  inspect(@src.cosine_similarity(a, a), content="1")
+  inspect(@src.cosine_similarity(a, c), content="1")
+  inspect(@src.cosine_similarity(a, b), content="0")
+  inspect(@src.cosine_similarity(a, zero), content="0")
+  inspect(@src.cosine_similarity(a, []), content="0")
+  inspect(@src.cosine_similarity(a, [1.0]), content="0")
 }
 
 test "tokenize: CJK single chars + bigrams, latin words lowercased" {
-  let tokens = tokenize("我爱北京")
+  let tokens = @src.tokenize("我爱北京")
   inspect(tokens.length(), content="7") // 4 单字 + 3 二元组
   inspect(tokens[0], content="我")
   inspect(tokens[2], content="我爱")
   inspect(tokens[6], content="北京")
-  let latin = tokenize("Hello, World! 123")
+  let latin = @src.tokenize("Hello, World! 123")
   inspect(latin.length(), content="3")
   inspect(latin[0], content="hello")
   inspect(latin[1], content="world")
   inspect(latin[2], content="123")
-  let mixed = tokenize("用MoonBit写记忆")
+  let mixed = @src.tokenize("用MoonBit写记忆")
   // 拉丁词 1 个 + CJK 单字 3 个 + 二元组 2 个 + CJK 单字 1 个起始
   inspect(mixed.length(), content="7")
   inspect(mixed[0], content="用")
   inspect(mixed[1], content="moonbit")
   inspect(mixed[6], content="记忆")
-  inspect(tokenize("   ").length(), content="0")
+  inspect(@src.tokenize("   ").length(), content="0")
 }
 
 test "RawExtractor: raw passthrough with kind=unstructured" {
-  let extractor = RawExtractor::new()
+  let extractor = @src.RawExtractor::new()
   inspect(extractor.mode(), content="raw")
   let facts = match extractor.extract("user-42", "我对花生过敏") {
     Ok(fs) => fs
@@ -132,18 +132,18 @@ test "RawExtractor: raw passthrough with kind=unstructured" {
 }
 
 test "Clock: LogicalClock increments, FixedClock constant" {
-  let clock = LogicalClock::new()
+  let clock = @src.LogicalClock::new()
   inspect(clock.now_ms(), content="1")
   inspect(clock.now_ms(), content="2")
-  let resumed = LogicalClock::new(start=100L)
+  let resumed = @src.LogicalClock::new(start=100L)
   inspect(resumed.now_ms(), content="101")
-  let fixed = FixedClock::new(42L)
+  let fixed = @src.FixedClock::new(42L)
   inspect(fixed.now_ms(), content="42")
   inspect(fixed.now_ms(), content="42")
 }
 
 test "SimilarityJudge: replace / coexist / ignore bands" {
-  let embedder = match HashingEmbedder::new(256) {
+  let embedder = match @src.HashingEmbedder::new(256) {
     Ok(e) => e
     Err(_) => {
       inspect("init failed", content="SHOULD NOT REACH")
@@ -151,15 +151,15 @@ test "SimilarityJudge: replace / coexist / ignore bands" {
     }
   }
   // 阈值 0.9：精确测试三个区间
-  let judge = SimilarityJudge::new(0.9, embedder)
+  let judge = @src.SimilarityJudge::new(0.9, embedder)
   let make_entry = (id : String, content : String, emb : Array[Double]) => {
-    MemoryEntry::{
+    @src.MemoryEntry::{
       id,
       user_id : "user-42",
       content,
       kind : Fact,
       embedding : emb,
-      keywords : tokenize(content),
+      keywords : @src.tokenize(content),
       status : Active,
       created_at : 1L,
       superseded_by : None,
@@ -183,7 +183,7 @@ test "SimilarityJudge: replace / coexist / ignore bands" {
   )
   // 候选 3：完全无关 → sim < 0.75 → Ignore
   let cand_far = make_entry("e-far", "今天天气不错", embed_one("今天天气不错"))
-  let fact : ExtractedFact = ExtractedFact::{
+  let fact : @src.ExtractedFact = @src.ExtractedFact::{
     content : "用户住北京",
     kind : Fact,
     source_span : None,
@@ -208,18 +208,18 @@ test "SimilarityJudge: replace / coexist / ignore bands" {
 
 test "SimilarityJudge: keyword jaccard" {
   // tokenize("我爱北京") = {我,爱,北,京,我爱,爱北,北京}（7 个去重 token）
-  let jac_full = keyword_jaccard("我爱北京", ["我", "爱", "北京"])
+  let jac_full = @src.keyword_jaccard("我爱北京", ["我", "爱", "北京"])
   let close = jac_full.is_close(3.0 / 7.0, absolute_tolerance=1.0e-9)
   inspect(close, content="true")
-  let jac_partial = keyword_jaccard("我爱北京", ["我", "恨", "上海"])
+  let jac_partial = @src.keyword_jaccard("我爱北京", ["我", "恨", "上海"])
   let close = jac_partial.is_close(1.0 / 9.0, absolute_tolerance=1.0e-9)
   inspect(close, content="true")
-  inspect(keyword_jaccard("我爱你", ["无关词"]), content="0")
-  inspect(keyword_jaccard("", []), content="0")
+  inspect(@src.keyword_jaccard("我爱你", ["无关词"]), content="0")
+  inspect(@src.keyword_jaccard("", []), content="0")
 }
 
 test "DedupIndex: register / lookup / unregister per user" {
-  let dedup = DedupIndex::new()
+  let dedup = @src.DedupIndex::new()
   dedup.register("user-a", "  我对花生过敏 ", "id-1")
   // 归一化后命中（大小写与首尾空白不敏感）
   inspect(dedup.lookup("user-a", "我对花生过敏") == Some("id-1"), content="true")

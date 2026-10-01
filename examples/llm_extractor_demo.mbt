@@ -107,7 +107,11 @@ fn main {
   }
   // 5) 观测指标：LLM 调用预算（单次提取 ≤ 2 次，PRD 13.3）
   println("[观测] LLM 总调用次数: \{extractor.llm_call_count()} + \{judge.llm_call_count()} (judge)")
-  println("[观测] 最近提取失败: \{extractor.last_failure_reason()}")
+  let last_failure = match extractor.last_failure_reason() {
+    Some(r) => r
+    None => "None"
+  }
+  println("[观测] 最近提取失败: \{last_failure}")
   ignore(store.close())
   println("")
   println("=== 演示结束。生产环境请注入真实 Provider（见文件头注释）。 ===")

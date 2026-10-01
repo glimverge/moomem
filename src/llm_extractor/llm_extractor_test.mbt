@@ -181,7 +181,7 @@ test "LlmExtractor: 提取事实并过滤闲聊, kind/span 映射正确" {
     ),
   ])
   let p : &@llm.Provider = provider
-  let ext = LlmExtractor::new(p)
+  let ext = @llm_extractor.LlmExtractor::new(p)
   let e : &@src.Extractor = ext
   let facts = match e.extract("user-42", "你好呀！我对花生过敏。对了，我喜欢清淡的粤菜。上周去了杭州出差。明天见！") {
     Ok(fs) => fs
@@ -207,7 +207,7 @@ test "LlmExtractor: 提取事实并过滤闲聊, kind/span 映射正确" {
 test "LlmExtractor: 纯闲聊返回空数组(不入库信号)" {
   let provider = ScriptedProvider::new([Text("{\"facts\":[]}")])
   let p : &@llm.Provider = provider
-  let ext = LlmExtractor::new(p)
+  let ext = @llm_extractor.LlmExtractor::new(p)
   let e : &@src.Extractor = ext
   let facts = match e.extract("user-42", "今天天气不错，哈哈哈") {
     Ok(fs) => fs
@@ -224,7 +224,7 @@ test "LlmExtractor: markdown 代码围栏包裹的 JSON 可解析" {
   let fenced = "```json\n" + facts_response([fact_json("用户养了一只猫", "fact", "养了一只猫")]) + "\n```"
   let provider = ScriptedProvider::new([Text(fenced)])
   let p : &@llm.Provider = provider
-  let ext = LlmExtractor::new(p)
+  let ext = @llm_extractor.LlmExtractor::new(p)
   let e : &@src.Extractor = ext
   let facts = match e.extract("user-42", "我养了一只猫，叫团子") {
     Ok(fs) => fs
@@ -241,7 +241,7 @@ test "LlmExtractor: JSON 前后夹带说明文字可解析" {
   let noisy = "好的，以下是提取结果：\n" + facts_response([fact_json("用户不吃香菜", "preference", "不吃香菜")]) + "\n希望对你有帮助。"
   let provider = ScriptedProvider::new([Text(noisy)])
   let p : &@llm.Provider = provider
-  let ext = LlmExtractor::new(p)
+  let ext = @llm_extractor.LlmExtractor::new(p)
   let e : &@src.Extractor = ext
   let facts = match e.extract("user-42", "我不吃香菜") {
     Ok(fs) => fs
@@ -265,7 +265,7 @@ test "LlmExtractor: 非法 JSON 重试 1 次后成功" {
     Text(facts_response([fact_json("用户会说日语", "fact", "会说日语")])), // 第 2 次：合法
   ])
   let p : &@llm.Provider = provider
-  let ext = LlmExtractor::new(p)
+  let ext = @llm_extractor.LlmExtractor::new(p)
   let e : &@src.Extractor = ext
   let facts = match e.extract("user-42", "我会说日语") {
     Ok(fs) => fs
@@ -287,7 +287,7 @@ test "LlmExtractor: 重试仍非法 → ReturnRaw 降级为原文 unstructured(�
     Text("还是不是JSON"), // 第 2 次（重试）：仍非法
   ])
   let p : &@llm.Provider = provider
-  let ext = LlmExtractor::new(p) // 默认 ReturnRaw
+  let ext = @llm_extractor.LlmExtractor::new(p) // 默认 ReturnRaw
   let e : &@src.Extractor = ext
   let raw = "我对花生过敏"
   let facts = match e.extract("user-42", raw) {
@@ -321,7 +321,7 @@ test "LlmExtractor: 网络/鉴权失败 → 降级且不重试" {
     Text("SHOULD NOT BE CALLED"), // 若实现错误重试会消耗此脚本并暴露
   ])
   let p : &@llm.Provider = provider
-  let ext = LlmExtractor::new(p)
+  let ext = @llm_extractor.LlmExtractor::new(p)
   let e : &@src.Extractor = ext
   let raw = "我的常用邮箱是 a@b.c"
   let facts = match e.extract("user-42", raw) {
@@ -354,7 +354,7 @@ test "LlmExtractor: PropagateError 策略 → Err, store 降级结果可见原�
     Fail("401 unauthorized (mock)"),
   ])
   let p : &@llm.Provider = provider
-  let ext = LlmExtractor::new(p, degrade=PropagateError)
+  let ext = @llm_extractor.LlmExtractor::new(p, degrade=PropagateError)
   let e : &@src.Extractor = ext
   let failed = match e.extract("user-42", "我住在深圳") {
     Err(_) => true
@@ -394,7 +394,7 @@ test "LlmExtractor: PropagateError 策略 → Err, store 降级结果可见原�
   }
   inspect(entries.length(), content="1")
   inspect(entries[0].kind == @src.EntryKind::Unstructured, content="true")
-  inspect(entries[0].metadata.get("extraction_degraded"), content="Some(String(true))")
+  inspect(entries[0].metadata.get("extraction_degraded") == Some(Json::string("true")), content="true")
   ignore(store.close())
 }
 
@@ -411,7 +411,7 @@ test "LlmExtractor: 未知 kind 条目被丢弃, 全部不可用触发重试" {
     ),
   ])
   let p : &@llm.Provider = provider
-  let ext = LlmExtractor::new(p)
+  let ext = @llm_extractor.LlmExtractor::new(p)
   let e : &@src.Extractor = ext
   let facts = match e.extract("user-42", "我今天心情不错，而且每天晨跑") {
     Ok(fs) => fs
@@ -433,7 +433,7 @@ test "LlmExtractor: max_facts 截断(宁少勿错)" {
   }
   let provider = ScriptedProvider::new([Text(facts_response(many))])
   let p : &@llm.Provider = provider
-  let ext = LlmExtractor::new(p, max_facts=5)
+  let ext = @llm_extractor.LlmExtractor::new(p, max_facts=5)
   let e : &@src.Extractor = ext
   let facts = match e.extract("user-42", "大量内容") {
     Ok(fs) => fs
@@ -449,7 +449,7 @@ test "LlmExtractor: max_facts 截断(宁少勿错)" {
 test "LlmExtractor: 空白文本零 LLM 调用" {
   let provider = ScriptedProvider::new([])
   let p : &@llm.Provider = provider
-  let ext = LlmExtractor::new(p)
+  let ext = @llm_extractor.LlmExtractor::new(p)
   let e : &@src.Extractor = ext
   let facts = match e.extract("user-42", "   \n  ") {
     Ok(fs) => fs
@@ -469,7 +469,7 @@ test "LlmExtractor: 自定义 Provider 实现注入, provider 名出现在失败
   let provider = ScriptedProvider::new([Fail("dial tcp: timeout (mock)")])
   provider.provider_name = "my-openai-proxy"
   let p : &@llm.Provider = provider
-  let ext = LlmExtractor::new(p)
+  let ext = @llm_extractor.LlmExtractor::new(p)
   let e : &@src.Extractor = ext
   let facts = match e.extract("user-42", "内容") {
     Ok(fs) => fs
@@ -502,7 +502,7 @@ test "store 集成: 闲聊不入库, 事实入库且 metadata 记录提取模式
     ),
   ])
   let p : &@llm.Provider = provider
-  let ext = LlmExtractor::new(p)
+  let ext = @llm_extractor.LlmExtractor::new(p)
   let e : &@src.Extractor = ext
   let store = match mk_store(e, None) {
     Ok(s) => s
@@ -542,7 +542,7 @@ test "store 集成: 闲聊不入库, 事实入库且 metadata 记录提取模式
   inspect(entries.length(), content="1")
   inspect(entries[0].content, content="用户对花生过敏")
   inspect(entries[0].kind == @src.EntryKind::Fact, content="true")
-  inspect(entries[0].metadata.get("extractor"), content="Some(String(llm))")
+  inspect(entries[0].metadata.get("extractor") == Some(Json::string("llm")), content="true")
   // 检索命中（提取后的内容可被 recall）
   let hits = match store.recall("user-42", "花生过敏") {
     Ok(r) => r
@@ -572,7 +572,7 @@ test "store 集成: 闲聊不入库, 事实入库且 metadata 记录提取模式
 test "LlmConflictJudge: 无候选时零调用" {
   let provider = ScriptedProvider::new([])
   let p : &@llm.Provider = provider
-  let judge = LlmConflictJudge::new(p)
+  let judge = @llm_extractor.LlmConflictJudge::new(p)
   let j : &@src.ConflictJudge = judge
   let fact = @src.ExtractedFact::{
     content : "我搬到上海了",
@@ -607,7 +607,7 @@ test "LlmConflictJudge: replace/coexist/ignore 裁决映射正确" {
     ),
   ])
   let p : &@llm.Provider = provider
-  let judge = LlmConflictJudge::new(p)
+  let judge = @llm_extractor.LlmConflictJudge::new(p)
   let j : &@src.ConflictJudge = judge
   let fact = @src.ExtractedFact::{
     content : "用户搬到上海了",
@@ -638,7 +638,7 @@ test "LlmConflictJudge: 非法 JSON 重试 1 次后成功" {
     Text(verdicts_response([verdict_json("cand-0001", "replace")])), // 合法
   ])
   let p : &@llm.Provider = provider
-  let judge = LlmConflictJudge::new(p)
+  let judge = @llm_extractor.LlmConflictJudge::new(p)
   let j : &@src.ConflictJudge = judge
   let fact = @src.ExtractedFact::{
     content : "用户搬到上海了",
@@ -660,7 +660,7 @@ test "LlmConflictJudge: 非法 JSON 重试 1 次后成功" {
 test "LlmConflictJudge: 重试仍失败 → Err, store 降级为并存且原因可见" {
   let provider = ScriptedProvider::new([Text("垃圾"), Text("还是垃圾")])
   let p : &@llm.Provider = provider
-  let judge = LlmConflictJudge::new(p)
+  let judge = @llm_extractor.LlmConflictJudge::new(p)
   let j : &@src.ConflictJudge = judge
   // ---- extractor 正常, judge 持续失败 → store 降级为 coexist ----
   let ext_provider = ScriptedProvider::new([
@@ -672,7 +672,7 @@ test "LlmConflictJudge: 重试仍失败 → Err, store 降级为并存且原因�
     ),
   ])
   let ep : &@llm.Provider = ext_provider
-  let ext = LlmExtractor::new(ep)
+  let ext = @llm_extractor.LlmExtractor::new(ep)
   let e : &@src.Extractor = ext
   let store = match mk_store(e, Some(j)) {
     Ok(s) => s
@@ -717,9 +717,9 @@ test "端到端: LLM replace 裁决触发 supersede 状态机" {
     facts_response([fact_json("用户现在居住在上海", "fact", "居住在上海")]),
   ])
   let p : &@llm.Provider = provider
-  let ext = LlmExtractor::new(p)
+  let ext = @llm_extractor.LlmExtractor::new(p)
   let e : &@src.Extractor = ext
-  let judge = LlmConflictJudge::new(p)
+  let judge = @llm_extractor.LlmConflictJudge::new(p)
   let j : &@src.ConflictJudge = judge
   let store = match mk_store(e, Some(j)) {
     Ok(s) => s

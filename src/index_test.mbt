@@ -2,7 +2,7 @@
 // 核心断言：user 分片隔离的结构保证（AC-02 的索引层基础）。
 
 test "VectorIndex: per-user isolation and top-k search" {
-  let embedder = match HashingEmbedder::new(64) {
+  let embedder = match @src.HashingEmbedder::new(64) {
     Ok(e) => e
     Err(_) => {
       inspect("init failed", content="SHOULD NOT REACH")
@@ -15,7 +15,7 @@ test "VectorIndex: per-user isolation and top-k search" {
       Err(_) => []
     }
   }
-  let index = VectorIndex::new()
+  let index = @src.VectorIndex::new()
   index.upsert("user-a", "a-1", embed_one("我对花生过敏"))
   index.upsert("user-a", "a-2", embed_one("花生过敏很严重"))
   index.upsert("user-b", "b-1", embed_one("我对花生过敏"))
@@ -43,7 +43,7 @@ test "VectorIndex: per-user isolation and top-k search" {
 }
 
 test "VectorIndex: remove drops entry from search" {
-  let embedder = match HashingEmbedder::new(64) {
+  let embedder = match @src.HashingEmbedder::new(64) {
     Ok(e) => e
     Err(_) => {
       inspect("init failed", content="SHOULD NOT REACH")
@@ -56,7 +56,7 @@ test "VectorIndex: remove drops entry from search" {
       Err(_) => []
     }
   }
-  let index = VectorIndex::new()
+  let index = @src.VectorIndex::new()
   index.upsert("u", "id-1", embed_one("我爱北京"))
   index.upsert("u", "id-2", embed_one("我爱北京"))
   inspect(index.size("u"), content="2")
@@ -68,10 +68,10 @@ test "VectorIndex: remove drops entry from search" {
 }
 
 test "KeywordIndex: CJK query hits, per-user isolation, remove" {
-  let index = KeywordIndex::new()
-  index.upsert("user-a", "a-1", tokenize("我对花生过敏"))
-  index.upsert("user-a", "a-2", tokenize("花生过敏要小心"))
-  index.upsert("user-b", "b-1", tokenize("我对花生过敏"))
+  let index = @src.KeywordIndex::new()
+  index.upsert("user-a", "a-1", @src.tokenize("我对花生过敏"))
+  index.upsert("user-a", "a-2", @src.tokenize("花生过敏要小心"))
+  index.upsert("user-b", "b-1", @src.tokenize("我对花生过敏"))
   // 中文查询命中
   let hits = index.search("user-a", "花生过敏", 5)
   inspect(hits.length(), content="2")
@@ -92,9 +92,9 @@ test "KeywordIndex: CJK query hits, per-user isolation, remove" {
 }
 
 test "KeywordIndex: BM25 ranking prefers stronger match" {
-  let index = KeywordIndex::new()
-  index.upsert("u", "doc-once", tokenize("花生"))
-  index.upsert("u", "doc-many", tokenize("花生 花生 花生 花生"))
+  let index = @src.KeywordIndex::new()
+  index.upsert("u", "doc-once", @src.tokenize("花生"))
+  index.upsert("u", "doc-many", @src.tokenize("花生 花生 花生 花生"))
   let hits = index.search("u", "花生", 2)
   inspect(hits.length(), content="2")
   inspect(hits[0].0, content="doc-many") // tf 更高者排前
@@ -103,7 +103,7 @@ test "KeywordIndex: BM25 ranking prefers stronger match" {
 test "rrf: fuses two ranked lists with deterministic order" {
   let list_a = ["x", "y", "z"]
   let list_b = ["y", "w", "x"]
-  let fused = rrf([list_a, list_b], 60, 3)
+  let fused = @src.rrf([list_a, list_b], 60, 3)
   // y: 1/62 + 1/61; x: 1/61 + 1/63; z: 1/62; w: 1/62
   // y > x > z == w（z 与 w 同分，按 id 升序：w < z）
   inspect(fused.length(), content="3")
@@ -113,15 +113,15 @@ test "rrf: fuses two ranked lists with deterministic order" {
 }
 
 test "rrf: single list passes through, top_k truncates" {
-  let single = rrf([["a", "b", "c"]], 60, 10)
+  let single = @src.rrf([["a", "b", "c"]], 60, 10)
   inspect(single.length(), content="3")
   inspect(single[0], content="a")
-  let truncated = rrf([["a", "b", "c"]], 60, 2)
+  let truncated = @src.rrf([["a", "b", "c"]], 60, 2)
   inspect(truncated.length(), content="2")
   inspect(truncated[0], content="a")
   inspect(truncated[1], content="b")
   // 空输入
-  inspect(rrf([], 60, 5).length(), content="0")
+  inspect(@src.rrf([], 60, 5).length(), content="0")
   // k 非法 → 空
-  inspect(rrf([["a"]], 0, 5).length(), content="0")
+  inspect(@src.rrf([["a"]], 0, 5).length(), content="0")
 }

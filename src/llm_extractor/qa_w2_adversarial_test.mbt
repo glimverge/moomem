@@ -121,7 +121,7 @@ test "qa2: 50条合法facts默认截断为16条, 不触发重试" {
     i => qa2_fact(i, "fact", "s"),
   )))])
   let p : &@llm.Provider = provider
-  let ext = LlmExtractor::new(p) // 默认 max_facts=16
+  let ext = @llm_extractor.LlmExtractor::new(p) // 默认 max_facts=16
   let e : &@src.Extractor = ext
   let facts = match e.extract("qa2-user", "大量事实文本") {
     Ok(fs) => fs
@@ -147,7 +147,7 @@ test "qa2: content空串/纯空白条目被丢弃, 合法条目保留" {
   ])
   let provider = Qa2SeqProvider::new([qa2_text_events(resp)])
   let p : &@llm.Provider = provider
-  let ext = LlmExtractor::new(p)
+  let ext = @llm_extractor.LlmExtractor::new(p)
   let e : &@src.Extractor = ext
   let facts = match e.extract("qa2-user", "我在深圳工作") {
     Ok(fs) => fs
@@ -171,7 +171,7 @@ test "qa2: facts非空但content全为空串 → 视为非法响应触发重试"
     qa2_text_events(good),
   ])
   let p : &@llm.Provider = provider
-  let ext = LlmExtractor::new(p)
+  let ext = @llm_extractor.LlmExtractor::new(p)
   let e : &@src.Extractor = ext
   let facts = match e.extract("qa2-user", "我养了一只狗") {
     Ok(fs) => fs
@@ -195,7 +195,7 @@ test "qa2: kind大小写变体/前后缀空白被丢弃, 仅精确小写接受" 
   ])
   let provider = Qa2SeqProvider::new([qa2_text_events(resp)])
   let p : &@llm.Provider = provider
-  let ext = LlmExtractor::new(p)
+  let ext = @llm_extractor.LlmExtractor::new(p)
   let e : &@src.Extractor = ext
   let facts = match e.extract("qa2-user", "我每天跑步") {
     Ok(fs) => fs
@@ -214,7 +214,7 @@ test "qa2: span非字符串或空串 → source_span为None但条目保留" {
   let resp = "{\"facts\":[{\"content\":\"用户喜欢爬山\",\"kind\":\"fact\",\"span\":123},{\"content\":\"用户会弹钢琴\",\"kind\":\"fact\",\"span\":\"\"}]}"
   let provider = Qa2SeqProvider::new([qa2_text_events(resp)])
   let p : &@llm.Provider = provider
-  let ext = LlmExtractor::new(p)
+  let ext = @llm_extractor.LlmExtractor::new(p)
   let e : &@src.Extractor = ext
   let facts = match e.extract("qa2-user", "我喜欢爬山，会弹钢琴") {
     Ok(fs) => fs
@@ -233,7 +233,7 @@ test "qa2: JSON含转义引号与嵌套对象字段, content/span保真解析" {
   let resp = "{\"facts\":[{\"content\":\"用户说\\\"你好\\\"\",\"kind\":\"fact\",\"span\":\"原文\\\"引用\\\"\",\"extra\":{\"nested\":{\"x\":1},\"list\":[1,2,3]}}]}"
   let provider = Qa2SeqProvider::new([qa2_text_events(resp)])
   let p : &@llm.Provider = provider
-  let ext = LlmExtractor::new(p)
+  let ext = @llm_extractor.LlmExtractor::new(p)
   let e : &@src.Extractor = ext
   let facts = match e.extract("qa2-user", "我说\"你好\"") {
     Ok(fs) => fs
@@ -262,7 +262,7 @@ test "qa2: 流中段TextDelta后Error → 视为失败不重试, 部分文本不
     qa2_text_events("SHOULD NOT BE CALLED"), // 若错误重试会消耗并暴露
   ])
   let p : &@llm.Provider = provider
-  let ext = LlmExtractor::new(p)
+  let ext = @llm_extractor.LlmExtractor::new(p)
   let e : &@src.Extractor = ext
   let raw = "我的电话是 13800000000"
   let facts = match e.extract("qa2-user", raw) {
@@ -301,7 +301,7 @@ test "qa2: 先Error后MessageEnd时序 → 错误不被正常收尾事件抹除"
     ],
   ])
   let p : &@llm.Provider = provider
-  let ext = LlmExtractor::new(p)
+  let ext = @llm_extractor.LlmExtractor::new(p)
   let e : &@src.Extractor = ext
   let facts = match e.extract("qa2-user", "我在上海工作") {
     Ok(fs) => fs
@@ -339,7 +339,7 @@ test "qa2: 多段TextDelta拼接 + MessageEnd携带usage → 正常解析" {
     ],
   ])
   let p : &@llm.Provider = provider
-  let ext = LlmExtractor::new(p)
+  let ext = @llm_extractor.LlmExtractor::new(p)
   let e : &@src.Extractor = ext
   let facts = match e.extract("qa2-user", "我偏好多段输出") {
     Ok(fs) => fs
@@ -360,7 +360,7 @@ test "qa2: provider静默空响应(零事件) → 视为非法触发重试" {
     qa2_text_events(qa2_facts([qa2_fact("用户在杭州", "fact", "在杭州")])),
   ])
   let p : &@llm.Provider = provider
-  let ext = LlmExtractor::new(p)
+  let ext = @llm_extractor.LlmExtractor::new(p)
   let e : &@src.Extractor = ext
   let facts = match e.extract("qa2-user", "我在杭州") {
     Ok(fs) => fs
@@ -380,7 +380,7 @@ test "qa2: facts字段非数组 → 非法响应触发重试后成功" {
     qa2_text_events(qa2_facts([qa2_fact("用户是医生", "fact", "是医生")])),
   ])
   let p : &@llm.Provider = provider
-  let ext = LlmExtractor::new(p)
+  let ext = @llm_extractor.LlmExtractor::new(p)
   let e : &@src.Extractor = ext
   let facts = match e.extract("qa2-user", "我是医生") {
     Ok(fs) => fs
@@ -402,7 +402,7 @@ test "qa2: max_facts=0被钳制为1(不产生空预算)" {
   let items = [qa2_fact("条目甲", "fact", "x"), qa2_fact("条目乙", "fact", "y"), qa2_fact("条目丙", "fact", "z")]
   let provider = Qa2SeqProvider::new([qa2_text_events(qa2_facts(items))])
   let p : &@llm.Provider = provider
-  let ext = LlmExtractor::new(p, max_facts=0)
+  let ext = @llm_extractor.LlmExtractor::new(p, max_facts=0)
   let e : &@src.Extractor = ext
   let facts = match e.extract("qa2-user", "多条内容") {
     Ok(fs) => fs
@@ -425,7 +425,7 @@ test "qa2: PropagateError下JSON重试仍失败 → Err含双重失败原因, �
     qa2_text_events("第二次垃圾"),
   ])
   let p : &@llm.Provider = provider
-  let ext = LlmExtractor::new(p, degrade=PropagateError)
+  let ext = @llm_extractor.LlmExtractor::new(p, degrade=PropagateError)
   let e : &@src.Extractor = ext
   let outcome = e.extract("qa2-user", "我在成都工作")
   let err = match outcome {
@@ -447,7 +447,7 @@ test "qa2: DegradePolicy两策略在store层的可见性差异锁定" {
   // ---- A: ReturnRaw → store 视为成功提取, 降级仅通过 last_failure_reason 可见 ----
   let pa = Qa2SeqProvider::new([qa2_fail_events("mock 503 service unavailable")])
   let pa_ref : &@llm.Provider = pa
-  let ext_a = LlmExtractor::new(pa_ref) // 默认 ReturnRaw
+  let ext_a = @llm_extractor.LlmExtractor::new(pa_ref) // 默认 ReturnRaw
   let ea : &@src.Extractor = ext_a
   let store_a = match qa2_store(ea, None) {
     Ok(s) => s
@@ -481,9 +481,9 @@ test "qa2: DegradePolicy两策略在store层的可见性差异锁定" {
   }
   inspect(entries_a.length(), content="1")
   inspect(entries_a[0].kind == @src.EntryKind::Unstructured, content="true")
-  inspect(entries_a[0].metadata.get("extractor"), content="Some(String(llm))")
+  inspect(entries_a[0].metadata.get("extractor") == Some(Json::string("llm")), content="true")
   // ReturnRaw 约定：store 层不标 extraction_degraded（设计差异点, 锁定防回归）
-  inspect(entries_a[0].metadata.get("extraction_degraded"), content="None")
+  inspect(entries_a[0].metadata.get("extraction_degraded") == None, content="true")
   let st_a = match store_a.stats() {
     Ok(s) => s
     Err(_) => {
@@ -496,7 +496,7 @@ test "qa2: DegradePolicy两策略在store层的可见性差异锁定" {
   // ---- B: PropagateError → store 统一降级, 全链路可见 ----
   let pb = Qa2SeqProvider::new([qa2_fail_events("mock 503 service unavailable")])
   let pb_ref : &@llm.Provider = pb
-  let ext_b = LlmExtractor::new(pb_ref, degrade=PropagateError)
+  let ext_b = @llm_extractor.LlmExtractor::new(pb_ref, degrade=PropagateError)
   let eb : &@src.Extractor = ext_b
   let store_b = match qa2_store(eb, None) {
     Ok(s) => s
@@ -529,8 +529,8 @@ test "qa2: DegradePolicy两策略在store层的可见性差异锁定" {
     }
   }
   inspect(entries_b.length(), content="1")
-  inspect(entries_b[0].metadata.get("extractor"), content="Some(String(llm))")
-  inspect(entries_b[0].metadata.get("extraction_degraded"), content="Some(String(true))")
+  inspect(entries_b[0].metadata.get("extractor") == Some(Json::string("llm")), content="true")
+  inspect(entries_b[0].metadata.get("extraction_degraded") == Some(Json::string("true")), content="true")
   ignore(store_b.close())
 }
 
@@ -547,7 +547,7 @@ test "qa2: judge同一id重复裁决 → 取第一个" {
     ])),
   ])
   let p : &@llm.Provider = provider
-  let judge = LlmConflictJudge::new(p)
+  let judge = @llm_extractor.LlmConflictJudge::new(p)
   let j : &@src.ConflictJudge = judge
   let fact = @src.ExtractedFact::{
     content : "用户搬到重庆了",
@@ -579,7 +579,7 @@ test "qa2: judge的decision大小写变体被丢弃, 部分合法保留" {
     ])),
   ])
   let p : &@llm.Provider = provider
-  let judge = LlmConflictJudge::new(p)
+  let judge = @llm_extractor.LlmConflictJudge::new(p)
   let j : &@src.ConflictJudge = judge
   let fact = @src.ExtractedFact::{
     content : "用户搬到重庆了",
@@ -609,7 +609,7 @@ test "qa2: judge裁决全部不可用(未知id) → 触发重试后成功, 恰2�
     ])),
   ])
   let p : &@llm.Provider = provider
-  let judge = LlmConflictJudge::new(p)
+  let judge = @llm_extractor.LlmConflictJudge::new(p)
   let j : &@src.ConflictJudge = judge
   let fact = @src.ExtractedFact::{
     content : "用户搬到重庆了",

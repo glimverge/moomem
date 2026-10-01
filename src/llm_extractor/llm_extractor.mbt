@@ -168,3 +168,5 @@ pub impl @src.Extractor for LlmExtractor with extract(self, _user_id, text) {
 pub impl @src.Extractor for LlmExtractor with mode(_) {
   "llm"
 }
+
+pub extend LlmExtractor with @src.Extractor::{extract, mode}

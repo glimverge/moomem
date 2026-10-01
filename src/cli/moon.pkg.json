@@ -2,7 +2,6 @@
   "import": [
     "heyq02/moomem/src",
     "moonbitlang/core/env",
-    "moonbitlang/core/json",
     "moonbitlang/core/string",
     "moonbitlang/x/fs"
   ],

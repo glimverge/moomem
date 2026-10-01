@@ -3,8 +3,5 @@
     "moonbitlang/core/json",
     "moonbitlang/core/math",
     "moonbitlang/x/fs"
-  ],
-  "test-import": [
-    "moonbitlang/x/fs"
   ]
 }

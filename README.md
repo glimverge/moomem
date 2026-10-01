@@ -77,8 +77,8 @@ $BIN import --db ./mem --file backup.jsonl
 ### 4) 运行测试
 
 ```bash
-moon test                    # native 后端，80 个黑盒测试全绿（核心 62 + llm_extractor 18）
-moon test --target wasm      # 四后端行为一致（AC-06）
+moon test                    # native 后端，97 个测试全绿（核心 58 + llm_extractor 35 + cli 4）
+moon test --target wasm      # 四后端行为一致（AC-06），各 90 个（native 专属的磁盘与 CLI 测试除外）
 moon test --target wasm-gc
 moon test --target js
 ```
@@ -258,9 +258,9 @@ src/
 ├── ranker.mbt        RRF 融合
 ├── persist.mbt       PersistenceBackend + FsBackend/MemoryBackend（唯一 fs 调用点）
 ├── store.mbt         MemoryStore 编排（open/add/recall/forget/stats/close）
-├── *_test.mbt        黑盒测试（62 个，覆盖 AC-01/02/04/05 与崩溃恢复）
+├── *_test.mbt        黑盒测试（58 个，覆盖 AC-01/02/04/05 与崩溃恢复；其中 3 个为 native 专属）
 ├── llm_extractor/    W2 LLM 适配包：LlmExtractor + LlmConflictJudge（依赖 mizchi/llm，
-│                     核心包不依赖；18 个零网络 mock 黑盒测试）
+│                     核心包不依赖；35 个零网络 mock 黑盒测试）
 └── cli/              CLI 工具（add/recall/list/stats/export/import）
 
 examples/             W2 可运行示例：moon run examples（mock 驱动，零网络）

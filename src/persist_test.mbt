@@ -4,7 +4,7 @@
 //（wasm/js 缺省后端为 MemoryBackend，无本地文件系统）。
 
 test "MemoryBackend: save / load roundtrip" {
-  let backend = MemoryBackend::new()
+  let backend = @src.MemoryBackend::new()
   // 空库
   let empty = match backend.load() {
     Ok(v) => v
@@ -31,7 +31,7 @@ test "MemoryBackend: save / load roundtrip" {
 }
 
 test "MemoryBackend: simulated save failure surfaces IoFailure" {
-  let backend = MemoryBackend::new()
+  let backend = @src.MemoryBackend::new()
   backend.set_fail_next_save(true)
   let failed = match backend.save("whatever") {
     Err(IoFailure(_)) => true
@@ -44,38 +44,38 @@ test "MemoryBackend: simulated save failure surfaces IoFailure" {
 
 test "crash recovery: partial write (killed mid-flush) truncates tail" {
   // 模拟：快照写了一半进程被杀 → 尾部半行损坏
-  let e1 : MemoryEntry = MemoryEntry::{
+  let e1 : @src.MemoryEntry = @src.MemoryEntry::{
     id : "000000000001-00aa",
     user_id : "user-42",
     content : "我对花生过敏",
     kind : Unstructured,
     embedding : [],
-    keywords : tokenize("我对花生过敏"),
+    keywords : @src.tokenize("我对花生过敏"),
     status : Active,
     created_at : 1L,
     superseded_by : None,
     seq : 1,
     metadata : Map([]),
   }
-  let e2 : MemoryEntry = MemoryEntry::{
+  let e2 : @src.MemoryEntry = @src.MemoryEntry::{
     id : "000000000002-00bb",
     user_id : "user-42",
     content : "我住在深圳",
     kind : Unstructured,
     embedding : [],
-    keywords : tokenize("我住在深圳"),
+    keywords : @src.tokenize("我住在深圳"),
     status : Active,
     created_at : 2L,
     superseded_by : None,
     seq : 2,
     metadata : Map([]),
   }
-  let full = build_snapshot_text(3, 2L, [e1, e2])
+  let full = @src.build_snapshot_text(3, 2L, [e1, e2])
   // 去掉尾部 10 个字符：必然切在最后一条 JSON 中间（半行）
   let cut = full.length() - 10
-  let partial = full.substring(end=cut)
+  let partial = full[:cut].to_owned()
   // 恢复：完整行保留，半行丢弃并计数
-  let result = match parse_snapshot_text(partial) {
+  let result = match @src.parse_snapshot_text(partial) {
     Ok(r) => r
     Err(e) => {
       inspect(e.message(), content="SHOULD NOT REACH")
@@ -247,7 +247,7 @@ test "FsBackend: snapshot tail corruption recovered on reopen" {
   let head = @fs.read_file_to_string("\{dir}/moomem/head")
   let slot_file = "\{dir}/moomem/slot\{head}.jsonl"
   let content = @fs.read_file_to_string(slot_file)
-  @fs.write_string_to_file(slot_file, content.substring(end=content.length() - 12))
+  @fs.write_string_to_file(slot_file, content[:content.length() - 12].to_owned())
   // 重新打开：尾部半行丢弃并计数（PRD 第 15 章）
   let store2 = match MemoryStore::open(dir) {
     Ok(s) => s

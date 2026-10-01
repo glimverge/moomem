@@ -39,6 +39,8 @@ pub impl Embedder for HashingEmbedder with dim(self) {
   self.dims
 }
 
+pub extend HashingEmbedder with Embedder::{embed, dim}
+
 fn hashing_embed_one(text : String, dims : Int) -> Array[Double] {
   let vec = Array::make(dims, 0.0)
   let tokens = tokenize(text)
@@ -105,6 +107,9 @@ pub impl Clock for LogicalClock with now_ms(self) {
   self.current = self.current + 1L
   self.current
 }
+
+pub extend LogicalClock with Clock::{now_ms}
+
 /// 固定时钟（测试用）：now_ms 恒返回初始值。
 pub struct FixedClock {
   value : Int64
@@ -115,3 +120,5 @@ pub fn FixedClock::new(value : Int64) -> FixedClock {
 }
 
 pub impl Clock for FixedClock with now_ms(self) { self.value }
+
+pub extend FixedClock with Clock::{now_ms}

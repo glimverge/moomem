@@ -8,7 +8,20 @@ pub(all) struct ExtractedFact {
   kind : EntryKind
   /// 原文依据 span（LLM 提取器填写；raw 模式为 None）
   source_span : String?
-} derive(Show)
+}
+
+/// 手写 Show（原 derive(Show) 输出格式保持不变：{content: ..., kind: ..., source_span: ...}）。
+pub impl Show for ExtractedFact with fn output(self, logger) {
+  let span = match self.source_span {
+    Some(s) => "Some(\{s})"
+    None => "None"
+  }
+  logger.write_string(
+    "{content: \{self.content}, kind: \{self.kind}, source_span: \{span}}",
+  )
+}
+
+pub extend ExtractedFact with Show::{to_string, output}
 
 /// 事实提取抽象。生产环境注入 mizchi/llm 等适配实现。
 pub(open) trait Extractor {
@@ -42,6 +55,8 @@ pub impl Extractor for RawExtractor with extract(_, _, text) {
 pub impl Extractor for RawExtractor with mode(_) {
   "raw"
 }
+
+pub extend RawExtractor with Extractor::{extract, mode}
 
 fn is_blank_text(text : String) -> Bool {
   text.trim().length() == 0

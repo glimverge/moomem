@@ -13,10 +13,10 @@
 
 ## Acceptance Criteria
 
-- [ ] AC1. doc 10 不再声称「迁移未执行」。
-- [ ] AC2. spec directory-structure / quality-guidelines 以新路径为权威现行命令。
-- [ ] AC3. 05 分层表入口命令为新路径；EX smoke 指向四场景。
-- [ ] AC4. `rg` 报告：workflows/scripts/README/spec 现行区无旧 ci 路径。
+- [x] AC1. doc 10 不再声称「迁移未执行」。
+- [x] AC2. spec directory-structure / quality-guidelines 以新路径为权威现行命令。
+- [x] AC3. 05 分层表入口命令为新路径；EX smoke 指向四场景。
+- [x] AC4. `rg` 报告：workflows/scripts/README/spec 现行区无旧 ci 路径。
 
 ## Depends
 

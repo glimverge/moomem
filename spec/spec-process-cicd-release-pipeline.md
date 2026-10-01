@@ -47,7 +47,7 @@ graph TD
 | Job Name | Purpose | Dependencies | Execution Context |
 |----------|---------|--------------|-------------------|
 | quality | Reuse Test Pipeline (check + 4 targets + example smoke); **no LLM secrets** | — | `workflow_call` → test-pipeline |
-| llm-live | Real DeepSeek extract/recall gate via `ci/llm_live` | quality | Linux; `DEEPSEEK_*` secret/vars; network |
+| llm-live | Real DeepSeek extract/recall gate via `ci/gates/live-llm` | quality | Linux; `DEEPSEEK_*` secret/vars; network |
 | release | Version assert → package/publish → GitHub Release | quality + llm-live | Linux; mooncakes secret; no toolchain credential cache |
 
 ## Requirements Matrix
@@ -58,7 +58,7 @@ graph TD
 |----|-------------|----------|-------------------|
 | REQ-R01 | Gate publish on full offline test pipeline | High | Release cannot start unless quality workflow succeeds |
 | REQ-R01b | Gate publish on real LLM live test | High | `llm-live` must print `LIVE_LLM_PASS`; failure blocks publish |
-| REQ-R01c | Keep push/PR CI offline | High | `test-pipeline` never receives `DEEPSEEK_*` or runs `ci/llm_live` |
+| REQ-R01c | Keep push/PR CI offline | High | `test-pipeline` never receives `DEEPSEEK_*` or runs `ci/gates/live-llm` |
 | REQ-R02 | Align git tag with `moon.mod` version | High | Tag `vX.Y.Z` requires `version = "X.Y.Z"` |
 | REQ-R03 | Publish module to mooncakes.io | High | `moon publish` exits 0; version appears on registry |
 | REQ-R04 | Support dry-run without registry mutation | Medium | Manual dispatch `dry_run=true` skips publish; quality + llm-live still run |
@@ -155,12 +155,12 @@ live_llm_status: boolean      # LIVE_LLM_PASS observed
 | Gate | Criteria | Bypass Conditions |
 |------|----------|-------------------|
 | Test Pipeline | All offline jobs green | None |
-| Live LLM Gate | `moon run ci/llm_live` exits 0 and logs `LIVE_LLM_PASS` | None (required even for dry_run) |
+| Live LLM Gate | `moon run ci/gates/live-llm` exits 0 and logs `LIVE_LLM_PASS` | None (required even for dry_run) |
 | Version Alignment | Tag semver == `moon.mod` version | Manual dry-run may skip tag check |
 | Auth | `moon whoami` succeeds | None for real publish |
 | Registry accept | `moon publish` 2xx / success | None |
 
-### Live LLM behavioral checks (`ci/llm_live`)
+### Live LLM behavioral checks (`ci/gates/live-llm`)
 
 | Check | Expectation |
 |-------|-------------|
@@ -235,7 +235,7 @@ live_llm_status: boolean      # LIVE_LLM_PASS observed
 - **VLD-R03**: Absent mooncakes/DeepSeek secret fails with actionable message
 - **VLD-R04**: Credentials file absent after job (`always` cleanup)
 - **VLD-R05**: Dry-run never creates registry version or GitHub Release; still runs llm-live
-- **VLD-R06**: Push to `main` does not invoke `ci/llm_live` or require `DEEPSEEK_*`
+- **VLD-R06**: Push to `main` does not invoke `ci/gates/live-llm` or require `DEEPSEEK_*`
 
 ## Change Management
 

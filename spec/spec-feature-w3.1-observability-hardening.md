@@ -9,6 +9,8 @@ executor: Cursor (AI coding agent)
 depends_on: docs/project/06-w3-qa-verification.md (发现 F1/F2/F3)
 ---
 
+> **历史路径注**：文中 `ci/tuning` 等为补丁当日路径；现行入口见 [`docs/project/10-testing-examples-architecture.md`](../docs/project/10-testing-examples-architecture.md)。
+
 # W3.1 补丁规格书：提取降级可观测性 + CLI 加固
 
 > 起因：W3 独立验证发现三项问题（详见 [06-w3-qa-verification.md](../docs/project/06-w3-qa-verification.md) §3）。本规格为修复依据。

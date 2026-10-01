@@ -11,7 +11,7 @@ readme = "README.md"
 
 repository = "https://github.com/glimverge/moomem"
 
-license = "Apache-2.0"
+license = "MIT"
 
 keywords = [ "memory", "agent", "rag", "bm25", "vector-search" ]
 

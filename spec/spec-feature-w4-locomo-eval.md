@@ -3,7 +3,7 @@
 > 目标：把 PRD 第 16 章的量化指标从「承诺」变成「可复现数字」，产出 PRD §18 的 W4 交付物
 > （LoCoMo 子集评测报告 + 三后端 CI + 文档 + README）。
 >
-> 定位：四层测试体系中的 **L3**（见 `docs/reports/05-test-suite.md`）——离线可复现为主，
+> 定位：四层测试体系中的 **L3**（见 `docs/project/05-test-suite.md`）——离线可复现为主，
 > 真实 LLM 档位随发版门禁执行，**不并入 push/PR 的 L0 门禁**（除离线部分）。
 >
 > 本规格书基于逐文件核实的代码事实（§1），执行者**不需要也不应**重新调研生态或 API。
@@ -25,7 +25,7 @@
 2. 真实嵌入 API 可选模式（环境变量驱动）
 3. `ci/locomo` 接入 `test-pipeline`（离线门禁）
 4. README / 04 进度 / 05 测试体系文档同步
-5. `docs/reports/08-w4-eval-report.md` —— **由产品侧依据 harness 输出撰写**，不在本任务范围
+5. `docs/project/08-w4-eval-report.md` —— **由产品侧依据 harness 输出撰写**，不在本任务范围
 
 ---
 
@@ -80,7 +80,7 @@
 
 ### W4-0（前置，core）R2 修复：闲聊不得中断连续失败计数的清零
 
-**问题**（见 `docs/reports/07-w3.1-verification.md` §5）：W3.1 把计数器清零从 `Ok(fs) =>` 分支
+**问题**（见 `docs/project/07-w3.1-verification.md` §5）：W3.1 把计数器清零从 `Ok(fs) =>` 分支
 （对所有 `Ok` 生效）移到了闲聊早返回**之后**，导致 `Ok([])`（提取成功但无事实）不再清零。
 
 复现：`失败 → 闲聊 → 失败 → 闲聊 → 失败`，第 3 次 `add` 返回 `ExtractionFailure`，而
@@ -246,8 +246,8 @@ if facts.length() == 0 {
      ```
      零密钥、零网络（`ci/locomo` 离线档不得触碰任何 `*_API_KEY`）。
 2. README：新增「评测」小节，说明 L3 的跑法与当前数字（数字以 harness 输出为准，不要预填）。
-3. `docs/reports/04-progress-and-roadmap.md`：W4 状态行改为完成，附 harness 实际输出数字。
-4. `docs/reports/05-test-suite.md`：把 L3 从「待建」改为「已实现」，补入口命令与用例 ID 表。
+3. `docs/project/04-progress-and-roadmap.md`：W4 状态行改为完成，附 harness 实际输出数字。
+4. `docs/project/05-test-suite.md`：把 L3 从「待建」改为「已实现」，补入口命令与用例 ID 表。
 
 ---
 
@@ -376,7 +376,7 @@ moon run src/cli --target native -- help            # 版本 0.2.2
 
 ## 8. 交付后由产品侧完成
 
-1. 依据 harness 实际输出撰写 `docs/reports/08-w4-eval-report.md`（含指标对照 PRD §16.1 目标值、未达标项如实说明）；
+1. 依据 harness 实际输出撰写 `docs/project/08-w4-eval-report.md`（含指标对照 PRD §16.1 目标值、未达标项如实说明）；
 2. FlowUs 云端镜像同步（PARA 结构：项目页挂评测报告）；
 3. v0.2.2 发版决策与 tag（含 `DEEPSEEK_MODEL` 变量核对——旧别名 `deepseek-chat` 已于 2026-07-24 退役）；
 4. 赛事申报材料中的指标引用核对。

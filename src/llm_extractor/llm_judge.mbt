@@ -1,7 +1,7 @@
 // moomem W2：基于 mizchi/llm 的冲突判定适配器（PRD 13.2 冲突判定契约）。
 //
 // 实现 ConflictJudge trait 的 LLM 裁决版：
-//   - replace：新事实与旧条目矛盾/更新旧条目（触发 supersede 状态机）；
+//   - replace：新事实与旧条目矛盾/更新旧条目，或语义等价复述（触发 supersede 状态机）；
 //   - coexist：相关但都有效（并存并标记 metadata）；
 //   - ignore：无关（不产生裁决）。
 //

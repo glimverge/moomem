@@ -103,7 +103,7 @@ python3 scripts/locomo/make_subset.py --input /path/to/locomo10.json
   缺省 `SimilarityJudge` + `HashingEmbedder` 下相似度可过 0.82 阈值，期望 `supersede`。
   离线可判，**进离线门禁**。
 - `semantic`（10 组）—— 语义型更新（住址/职业/关系变更），字面几乎无重叠。
-  实测住址式对相似度仅 0.263–0.471（见 `docs/reports/06-w3-qa-verification.md` §4），
+  实测住址式对相似度仅 0.263–0.471（见 `docs/project/06-w3-qa-verification.md` §4），
   缺省离线配置下期望 `ignore`；只有注入 `LlmConflictJudge`（L2 真实 LLM）才期望
   `supersede`。**离线只记录不计分**，避免用不成立的期望值伪造达标。
 
@@ -130,6 +130,6 @@ python3 scripts/locomo/make_subset.py --input /path/to/locomo10.json
 
 ## 6. 与前序文档的关系
 
-- 指标定义与目标值：`docs/reports/03-prd.md` §16.1
-- 四层测试体系中的定位（**L3**）：`docs/reports/05-test-suite.md`
-- 相似度实测数据（驱动 `semantic` 分组期望值）：`docs/reports/06-w3-qa-verification.md` §4
+- 指标定义与目标值：`docs/project/03-prd.md` §16.1
+- 四层测试体系中的定位（**L3**）：`docs/project/05-test-suite.md`
+- 相似度实测数据（驱动 `semantic` 分组期望值）：`docs/project/06-w3-qa-verification.md` §4

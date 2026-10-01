@@ -6,12 +6,12 @@ last_updated: 2026-10-01
 owner: glimverge
 tags: [patch, w3.1, observability, degrade, cli, hardening, qa-followup]
 executor: Cursor (AI coding agent)
-depends_on: docs/reports/06-w3-qa-verification.md (发现 F1/F2/F3)
+depends_on: docs/project/06-w3-qa-verification.md (发现 F1/F2/F3)
 ---
 
 # W3.1 补丁规格书：提取降级可观测性 + CLI 加固
 
-> 起因：W3 独立验证发现三项问题（详见 [06-w3-qa-verification.md](../docs/reports/06-w3-qa-verification.md) §3）。本规格为修复依据。
+> 起因：W3 独立验证发现三项问题（详见 [06-w3-qa-verification.md](../docs/project/06-w3-qa-verification.md) §3）。本规格为修复依据。
 > 执行顺序：W3.1-A（P1）→ W3.1-B（P3）→ W3.1-C（P3）。红线与验收命令沿用 [W3 规格 §8/§7](spec-feature-w3-retrieval-tuning-cli-llm.md)。
 
 ## 1. W3.1-A（P1）提取器 ReturnRaw 降级必须在三个通道可见
@@ -134,7 +134,7 @@ if fact.degraded {
 
 1. `README.md`「已知限制」第 4 条按实测改写（主理人已完成，勿重复改）；如 A1/A2 落地，在 `## W2 LLM 注入` 段落补一句：
    > 缺省 `DegradePolicy::ReturnRaw` 下提取失败会降级为原文入库，且降级在 `AddSummary.degraded`、`notes` 与条目 `metadata.extraction_degraded` 三处可见——不会静默。
-2. `docs/reports/05-test-suite.md`：L0/L1 计数与新增用例 ID（TC-A1~A5、TC-C4~C5）同步。
+2. `docs/project/05-test-suite.md`：L0/L1 计数与新增用例 ID（TC-A1~A5、TC-C4~C5）同步。
 
 ## 5. 验收（DoD）
 

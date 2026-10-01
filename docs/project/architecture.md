@@ -83,13 +83,18 @@ PRD 6/15 章原文为"追加写 JSONL"。`moonbitlang/x/fs` 实测 API（write_s
 
 ```
 moomem/
-├── moon.mod.json              # 模块定义；deps: moonbitlang/x
-├── moon.pkg.json              # （根包配置如需）
+├── moon.mod                   # 模块定义；deps: moonbitlang/x
 ├── README.md                  # 快速上手 + 性能 + 安全边界（15分钟跑通场景A）
-├── docs/
-│   ├── architecture.md        # 本文档
-│   ├── class-diagram.mermaid
-│   └── sequence-diagram.mermaid
+├── docs/                      # PARA 结构（对齐 FlowUs）
+│   ├── README.md              # 文档总索引
+│   ├── project/               # 项目主体文档
+│   │   ├── architecture.md    # 本文档
+│   │   ├── class-diagram.mermaid
+│   │   ├── sequence-diagram-add.mermaid
+│   │   ├── sequence-diagram-recall.mermaid
+│   │   └── 03~09 编号报告（PRD/进度/测试/验证/评测/交接）
+│   ├── resources/             # 调研与立项依据（选题/竞品）
+│   └── archive/               # 归档（赛季结束后迁入）
 ├── src/
 │   ├── moon.pkg.json          # 核心库包配置
 │   ├── lib.mbt                # 公开 re-export、MOOMEM_VERSION

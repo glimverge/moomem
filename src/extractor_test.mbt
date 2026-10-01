@@ -259,3 +259,20 @@ test "DedupIndex: register / lookup / unregister per user" {
   dedup.unregister("user-a", "我对花生过敏")
   inspect(dedup.lookup("user-a", "我对花生过敏") == None, content="true")
 }
+
+///|
+test "DedupIndex: subject-prefix / trailing-punct normalize as same fingerprint" {
+  let dedup = @src.DedupIndex::new()
+  dedup.register("user-a", "用户的工号是 A1024。", "id-emp")
+  // 「我的」主语与尾标点差异应命中同一指纹
+  inspect(
+    dedup.lookup("user-a", "我的工号是 A1024") == Some("id-emp"),
+    content="true",
+  )
+  inspect(
+    dedup.lookup("user-a", "工号是 A1024") == Some("id-emp"),
+    content="true",
+  )
+  // 不同槽位值不应误命中
+  inspect(dedup.lookup("user-a", "我的工号是 B2048") == None, content="true")
+}

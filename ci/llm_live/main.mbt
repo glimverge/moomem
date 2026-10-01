@@ -1,5 +1,5 @@
 // 发版专用真实 LLM 门禁（DeepSeek / OpenAI 兼容端点）。
-// 场景矩阵见 docs/reports/05-test-suite.md §4（L2-01~L2-12）。
+// 场景矩阵见 docs/project/05-test-suite.md §4（L2-01~L2-12）。
 //
 // 环境变量：DEEPSEEK_API_KEY / DEEPSEEK_BASE_URL / DEEPSEEK_MODEL
 // 运行：moon run ci/llm_live --target native
@@ -337,18 +337,27 @@ fn main {
     )
   }
 
-  // L2-08 近重复
+  // L2-08 近重复（抗 LLM 措辞漂移：指纹去重 / 未入库 / supersede 均可）
   section("L2-08", "near-duplicate suppression")
   let dup_text = "请记住：我的工号是 A1024。"
   expect_inserted(expect_add_ok(store, "user-dup", dup_text), "first-id")
   let dup2 = expect_add_ok(store, "user-dup", dup_text)
   println(
-    "  second: extracted=\{dup2.extracted} inserted=\{dup2.inserted} duplicates=\{dup2.duplicates}",
+    "  second: extracted=\{dup2.extracted} inserted=\{dup2.inserted} duplicates=\{dup2.duplicates} superseded=\{dup2.superseded}",
   )
-  if !(dup2.duplicates >= 1 || dup2.inserted == 0) {
+  let dup_ok = dup2.duplicates >= 1 ||
+    dup2.inserted == 0 ||
+    dup2.superseded >= 1
+  if !dup_ok {
     fail(
-      "L2-08: expected duplicate suppression, got inserted=\{dup2.inserted} duplicates=\{dup2.duplicates}",
+      "L2-08: expected duplicate/supersede suppression, got inserted=\{dup2.inserted} duplicates=\{dup2.duplicates} superseded=\{dup2.superseded}",
     )
+  }
+  // 无论走指纹跳过还是 replace supersede，Active 中工号事实至多 1 条
+  let active_id = active_mentioning(list_user(store, "user-dup"), ["A1024", "a1024"])
+  println("  active A1024 facts=\{active_id}")
+  if active_id > 1 {
+    fail("L2-08: expected ≤1 active employee-id fact, got \{active_id}")
   }
 
   // L2-09 跨用户隔离

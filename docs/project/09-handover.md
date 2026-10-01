@@ -17,7 +17,7 @@
 
 资产| 位置| 说明  
 ---|---|---  
-代码仓库(单一事实源)| github.com/glimverge/moomem| main 分支;含 docs/(架构 + 8 份编号报告)、spec/(4 份工程规格书)、ci/(tuning / llm_live / locomo)、.github/workflows(测试 + 发布流水线)  
+代码仓库(单一事实源)| github.com/glimverge/moomem| main 分支;含 docs/(PARA 结构:project 主体文档 + resources 调研 + archive 归档)、spec/(4 份工程规格书)、ci/(tuning / llm_live / locomo)、.github/workflows(测试 + 发布流水线)  
 包发布| mooncakes.io/docs/heyq02/moomem@0.2.1| 模块名 heyq02/moomem(owner 段必须 = mooncakes 用户名 heyq02,改名曾踩坑)  
 FlowUs 工作区| 「临界微光」(id 08cef79b-6e4e-47a1-996d-ba0e4d256143)| PARA 四层:1 · 项目 → 容器页「moomem · MoonBit 黑客松(十月赛)」(d32231d7)→ PRD / 进度 / 竞品 / 选题各页;3 · 资源、4 · 归档另有骨架  
 本地工作区| ~/WorkBuddy/2026-09-30-23-46-23/| moomem/ 代码仓 + outputs/ 四份 HTML 报告原件 + .workbuddy/memory/(逐日工作日志,含全部坑位记录)  
@@ -99,9 +99,9 @@ FlowUs CLI| ~/.local/bin/flowus v0.3.11(绝对路径);OAuth 凭证 ~/.flowus/cre
   
 ## 九、协作模式与文档体系(交接对象的行事规则)
 
-  * **分工** :产品/规格/验证/文档归本席(AI 助手侧,产出 spec/ 与 docs/reports/);编码执行归 Cursor(按 spec/ 规格书)。三份规格书(spec-feature-w3 / w3.1 / w4)是这一模式的完整范本:§1 行号级代码事实表 + 红线 + DoD 命令 + grep 断言。
+  * **分工** :产品/规格/验证/文档归本席(AI 助手侧,产出 spec/ 与 docs/);编码执行归 Cursor(按 spec/ 规格书)。三份规格书(spec-feature-w3 / w3.1 / w4)是这一模式的完整范本:§1 行号级代码事实表 + 红线 + DoD 命令 + grep 断言。
   * **验证文化** :执行方报告一律不采信,逐条独立复跑;三份独立验证报告(06/07/08)即证据链,也是赛事「AI 可解释」验收标准的材料。
-  * **单一事实源** :仓库 docs/reports/(01–08 编号报告 + README 索引);FlowUs 是云端镜像(PARA:1 · 项目下);两处数字以仓库为准,改动先改仓库再同步 FlowUs。
+  * **单一事实源** :仓库 docs/(PARA:project 主体 + resources 资源 + archive 归档,README 总索引);FlowUs 是云端镜像(PARA:1 · 项目下);两处数字以仓库为准,改动先改仓库再同步 FlowUs。
   * **提交纪律** :文档与代码分离提交;commit message 用 conventional 前缀(docs(spec)/fix(core)/ci(eval) 等);不混入无关改动(工作区曾出现 release-pipeline.yml 遗留改动,单独处理)。
   * **许可红线** :仓库 Apache-2.0;ci/locomo/data/ 的 LoCoMo 派生切片是 CC BY-NC 4.0 —— 不可删 data/README.md 署名段、不可提交完整数据集。
 

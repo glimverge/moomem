@@ -90,15 +90,18 @@ fn judge_system_prompt() -> String {
     "给定一条新事实与若干既有记忆条目，判断二者的语义关系：\n",
   )
   buf.write_string(
-    "- replace：新事实与该条目矛盾，或是对同一主题的更新（旧值已过时）；\n",
+    "- replace：新事实与该条目矛盾，或是对同一主题的更新（旧值已过时）；",
   )
   buf.write_string(
-    "- coexist：二者相关但都仍然有效（如同一主题的不同侧面）；\n",
+    "也包括语义等价的复述/改写（同一信息换了主语或措辞，如「我的工号是 A1024」与「用户的工号是 A1024」）——用新表述覆盖旧表述；\n",
+  )
+  buf.write_string(
+    "- coexist：二者相关但都仍然有效（如同一主题的不同侧面，且信息并不重复）；\n",
   )
   buf.write_string("- ignore：二者无关。\n")
   buf.write_char('\n')
   buf.write_string(
-    "判定纪律：宁少勿错——拿不准是否矛盾时选 coexist 或 ignore，不要误删仍有效的记忆。\n",
+    "判定纪律：宁少勿错——拿不准是否矛盾时选 coexist 或 ignore，不要误删仍有效的记忆；但语义等价的复述必须 replace，禁止把同一事实存成两条。\n",
   )
   buf.write_char('\n')
   buf.write_string(

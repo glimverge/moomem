@@ -1,15 +1,65 @@
 // 精确去重：同 user + 内容指纹（归一化后哈希）。
 // PRD 第 9 章：完全重复的事实不重复入库，跳过并返回已存在条目 id。
+// 归一化含主语前缀/尾标点折叠，吸收 LLM 提取常见的「我/用户」措辞漂移。
 
 ///|
-/// 归一化内容（去首尾空白 + 小写）的内容指纹（FNV-1a）。
+/// 归一化内容（去首尾空白 + 小写 + 主语前缀/尾标点）的内容指纹（FNV-1a）。
 pub fn content_fingerprint(content : String) -> Int {
   fnv1a(normalize_content(content))
 }
 
 ///|
+/// 归一化：trim → lower → 剥常见主语前缀（LLM 提取常在「我/用户」间摇摆）→ 去尾标点。
+/// 使「我的工号是 A1024」与「用户的工号是 A1024」落到同一指纹。
 fn normalize_content(s : String) -> String {
-  s.trim().to_owned().to_lower()
+  let lowered = s.trim().to_owned().to_lower()
+  strip_trailing_punct(strip_subject_prefix(lowered))
+}
+
+///|
+/// 剥句首主语前缀（长前缀优先）：用户的 / 用户 / 我的 / 我。
+fn strip_subject_prefix(s : String) -> String {
+  let prefixes = ["用户的", "用户", "我的", "我"]
+  for p in prefixes {
+    if s.has_prefix(p) {
+      match s.strip_prefix(p) {
+        Some(rest) => return rest.trim_start().to_owned()
+        None => ()
+      }
+    }
+  }
+  s
+}
+
+///|
+/// 去掉末尾常见中英文标点，避免「……A1024」与「……A1024。」指纹分叉。
+fn strip_trailing_punct(s : String) -> String {
+  fn is_punct(c : Char) -> Bool {
+    c == '.' ||
+    c == '!' ||
+    c == '?' ||
+    c == ',' ||
+    c == ';' ||
+    c == ':' ||
+    c == '。' ||
+    c == '！' ||
+    c == '？' ||
+    c == '，' ||
+    c == '；' ||
+    c == '：'
+  }
+  let chars : Array[Char] = []
+  for c in s.iter() {
+    chars.push(c)
+  }
+  while chars.length() > 0 && is_punct(chars[chars.length() - 1]) {
+    chars.remove(chars.length() - 1) |> ignore
+  }
+  let buf = StringBuilder()
+  for c in chars {
+    buf.write_char(c)
+  }
+  buf.to_string()
 }
 
 ///|

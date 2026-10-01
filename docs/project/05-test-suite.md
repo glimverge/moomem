@@ -157,7 +157,7 @@ graph LR
 | L2-05 | metadata / stats | `extractor_mode` 含 llm；条目 metadata 可解释 |
 | L2-06 | 召回 | query「花生过敏」hits≥1 |
 | L2-07 | 冲突更正（同 user，共享关键词） | 新住址可召回；若 `superseded≥1` 则旧址不可 recall |
-| L2-08 | 近重复去重 | 第二次相同语义 `duplicates≥1` 或 `inserted=0` |
+| L2-08 | 近重复去重 | 第二次相同语义：`duplicates≥1` / `inserted=0` / `superseded≥1` 任一成立，且 Active 中关键事实 ≤1 |
 | L2-09 | 跨用户隔离 | A 的事实不会出现在 B 的 recall |
 | L2-10 | forget 软删 | forget 后 recall 不回；list 仍可见 Deleted |
 | L2-11 | export 非空 | 有记忆时 export_jsonl 非空 |

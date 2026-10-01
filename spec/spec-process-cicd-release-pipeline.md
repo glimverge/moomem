@@ -255,6 +255,6 @@ live_llm_status: boolean      # LIVE_LLM_PASS observed
 ## Related Specifications
 
 - [Test Pipeline](./spec-process-cicd-test-pipeline.md)
-- [Architecture](../docs/architecture.md)
+- [Architecture](../docs/project/architecture.md)
 - [README](../README.md)
 - Implementation: [`.github/workflows/release-pipeline.yml`](../.github/workflows/release-pipeline.yml)

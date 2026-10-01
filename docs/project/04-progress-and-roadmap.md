@@ -16,11 +16,11 @@
 
 资料| 位置| 说明  
 ---|---|---  
-产品需求文档 PRD v1.1| 本仓库 [docs/reports/03-prd.md](03-prd.md);云端镜像 FlowUs(https://flowus.cn/e6eee4de-a777-48a6-b709-b55616dff7f0)| 21 章完整 PRD + 第 22 章 v1.1 决议记录;FR-01~10、AC-01~07 验收标准、4 周里程碑、风险登记册  
-架构设计文档| GitHub:moomem/docs/architecture.md| 模块划分、注入点设计、双槽快照持久化、三份 Mermaid 图(类图/add 时序/recall 时序)  
+产品需求文档 PRD v1.1| 本仓库 [docs/project/03-prd.md](03-prd.md);云端镜像 FlowUs(https://flowus.cn/e6eee4de-a777-48a6-b709-b55616dff7f0)| 21 章完整 PRD + 第 22 章 v1.1 决议记录;FR-01~10、AC-01~07 验收标准、4 周里程碑、风险登记册  
+架构设计文档| GitHub:moomem/docs/project/architecture.md| 模块划分、注入点设计、双槽快照持久化、三份 Mermaid 图(类图/add 时序/recall 时序)  
 项目 README| GitHub:moomem/README.md| 15 分钟上手、API 表、注入点表、持久化布局、安全边界、v0.1 已知限制 9 条、W2 LLM 注入章节  
-语言与竞品调研| 本仓库 [docs/reports/02-competitive-analysis.md](02-competitive-analysis.md);云端镜像 FlowUs(https://flowus.cn/18665d35-c382-42b3-a3b4-5c46c9e719b7)| MoonBit vs Rust/Go/TS 四语言对比、mooncakes 生态 21,087 包复核、八轮查重全景  
-选题调研报告(已修订)| 本仓库 [docs/reports/01-topic-research.md](01-topic-research.md);云端镜像 FlowUs(https://flowus.cn/30ae917b-b493-4050-a983-e72d0e230d8f)| 历史文档,moonpatch 推荐已被修订撤回,仅作选题方法论参考  
+语言与竞品调研| 本仓库 [docs/resources/02-competitive-analysis.md](../resources/02-competitive-analysis.md);云端镜像 FlowUs(https://flowus.cn/18665d35-c382-42b3-a3b4-5c46c9e719b7)| MoonBit vs Rust/Go/TS 四语言对比、mooncakes 生态 21,087 包复核、八轮查重全景  
+选题调研报告(已修订)| 本仓库 [docs/resources/01-topic-research.md](../resources/01-topic-research.md);云端镜像 FlowUs(https://flowus.cn/30ae917b-b493-4050-a983-e72d0e230d8f)| 历史文档,moonpatch 推荐已被修订撤回,仅作选题方法论参考  
 赛事章程| https://bxup9uklfcb.feishu.cn/wiki/Dx4Bwd6D1i3GfHkajQCcF7SznEd| 官方飞书 Wiki:赛制、奖金、验收六条标准  
   
 ## 二、当前进度(全部里程碑)

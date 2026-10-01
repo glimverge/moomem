@@ -366,7 +366,7 @@ $MOON run examples --target native                   # 原有示例仍可跑
 
 ## 10. 参考文档
 
-- 架构设计：`docs/architecture.md`（注入点与状态机）
-- PRD v1.1：`docs/reports/03-prd.md`（FR/AC 编号）
-- 测试体系：`docs/reports/05-test-suite.md`（L0-L3 分层与门禁）
-- 进度与规划：`docs/reports/04-progress-and-roadmap.md` §三（本 W3 范围的出处）
+- 架构设计：`docs/project/architecture.md`（注入点与状态机）
+- PRD v1.1：`docs/project/03-prd.md`（FR/AC 编号）
+- 测试体系：`docs/project/05-test-suite.md`（L0-L3 分层与门禁）
+- 进度与规划：`docs/project/04-progress-and-roadmap.md` §三（本 W3 范围的出处）

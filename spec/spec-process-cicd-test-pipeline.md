@@ -278,7 +278,7 @@ test_counts: string  # e.g. native=97 passed
 
 ## Related Specifications
 
-- [Architecture](../docs/architecture.md) — AC/FR mapping, backend matrix, test principles
+- [Architecture](../docs/project/architecture.md) — AC/FR mapping, backend matrix, test principles
 - [README](../README.md) — local commands, expected test counts, toolchain floor
 - Sequence / class diagrams under `docs/` — behavioral reference for e2e expectations
 - Implementation: [`.github/workflows/test-pipeline.yml`](../.github/workflows/test-pipeline.yml) + [`.github/actions/setup-moonbit`](../.github/actions/setup-moonbit/action.yml)

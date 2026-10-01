@@ -34,7 +34,7 @@
 10-01| git 仓库初始化(commit b929e3e)+ mooncakes 发布 v0.1.0,生态时间戳抢占| ✅ 完成  
 10-01| W2 里程碑:基于 mizchi/llm 0.3.2 的 LlmExtractor + LlmConflictJudge 适配器(独立包,核心零依赖铁律保持);新增 35 用例,QA 判定 PASS 零源码 bug| ✅ 完成  
 10-01| 警告清理:299 → 0(零行为变更,derive(Show) 手写替换经字节级对照验证);GitHub 推送 + mooncakes 发布 v0.2.0 / v0.2.1| ✅ 完成  
-—| W3:混合检索调优(冲突阈值/RRF 参数)、CLI 接线 LLM 提取| ⏸ 用户指示暂缓  
+—| W3:混合检索调优(冲突阈值/RRF 参数)、CLI 接线 LLM 提取| 🚧 规格已产出,交 Cursor 执行(见 [spec/spec-feature-w3-retrieval-tuning-cli-llm.md](../../spec/spec-feature-w3-retrieval-tuning-cli-llm.md))| 
 —| W4:LoCoMo 评测集接入与量化指标(Recall@5、提取 Precision、supersede 正确率)| ⏳ 待启动  
   
 进度结论

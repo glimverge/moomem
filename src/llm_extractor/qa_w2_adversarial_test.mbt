@@ -611,6 +611,8 @@ test "qa2: judge同一id重复裁决 → 取第一个" {
     content: "用户搬到重庆了",
     kind: @src.EntryKind::Event,
     source_span: None,
+    degraded: false,
+    degrade_reason: None,
   }
   let verdicts = match j.judge(fact, cands) {
     Ok(vs) => vs
@@ -649,6 +651,8 @@ test "qa2: judge的decision大小写变体被丢弃, 部分合法保留" {
     content: "用户搬到重庆了",
     kind: @src.EntryKind::Event,
     source_span: None,
+    degraded: false,
+    degrade_reason: None,
   }
   let verdicts = match j.judge(fact, cands) {
     Ok(vs) => vs
@@ -684,6 +688,8 @@ test "qa2: judge裁决全部不可用(未知id) → 触发重试后成功, 恰2�
     content: "用户搬到重庆了",
     kind: @src.EntryKind::Event,
     source_span: None,
+    degraded: false,
+    degrade_reason: None,
   }
   let verdicts = match j.judge(fact, cands) {
     Ok(vs) => vs

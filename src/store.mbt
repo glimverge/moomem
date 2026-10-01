@@ -275,10 +275,7 @@ pub fn MemoryStore::add(
   let mut extraction_failed = false
   let facts : Array[ExtractedFact] = match
     self.extractor.extract(user_id, text) {
-    Ok(fs) => {
-      self.extraction_failures = 0
-      fs
-    }
+    Ok(fs) => fs
     Err(e) => {
       self.extraction_failures = self.extraction_failures + 1
       let failures = self.extraction_failures
@@ -295,7 +292,15 @@ pub fn MemoryStore::add(
       notes.push(
         "extraction degraded to raw unstructured (failure \{failures}/\{MAX_EXTRACTION_FAILURES}): \{err_text}",
       )
-      [ExtractedFact::{ content: text, kind: Unstructured, source_span: None, }]
+      [
+        ExtractedFact::{
+          content: text,
+          kind: Unstructured,
+          source_span: None,
+          degraded: true,
+          degrade_reason: Some(err_text),
+        },
+      ]
     }
   }
   if facts.length() == 0 {
@@ -309,11 +314,37 @@ pub fn MemoryStore::add(
       notes: ["extracted 0 facts; nothing stored (chitchat filtered)"],
     })
   }
+  // 成功且无自报降级 → 清零连续失败计数（ReturnRaw 自报降级不得清零）
+  if !extraction_failed {
+    let mut any_self_degrade = false
+    for f in facts {
+      if f.degraded {
+        any_self_degrade = true
+      }
+    }
+    if !any_self_degrade {
+      self.extraction_failures = 0
+    }
+  }
   let extraction_degraded_flag = extraction_failed
   let mut inserted = 0
   let mut duplicates = 0
   let mut superseded = 0
   for fact in facts {
+    // 提取器自报降级（ReturnRaw：extractor 不返回 Err，只能由此通道感知）
+    // Err 路径已在上方计数/记 note，避免双重递增
+    if fact.degraded && !extraction_failed {
+      degraded = true
+      self.extraction_failures = self.extraction_failures + 1
+      let why = match fact.degrade_reason {
+        Some(r) => r
+        None => "reason not reported"
+      }
+      let streak = self.extraction_failures
+      notes.push(
+        "extraction degraded to raw (streak \{streak}/\{MAX_EXTRACTION_FAILURES}): \{why}",
+      )
+    }
     // ---- 精确去重（同 user 内容指纹）----
     match self.dedup.lookup(user_id, fact.content) {
       Some(existing_id) => {
@@ -398,7 +429,7 @@ pub fn MemoryStore::add(
       metadata: Map([]),
     }
     entry.metadata.set("extractor", Json::string(self.extractor.mode()))
-    if extraction_degraded_flag {
+    if extraction_degraded_flag || fact.degraded {
       entry.metadata.set("extraction_degraded", Json::string("true"))
     }
     if embedding_failed {

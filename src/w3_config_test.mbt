@@ -333,6 +333,8 @@ test "W3-A5: coexist_band=0.30 expands Coexist window" {
     content: new_key,
     kind: @src.EntryKind::Fact,
     source_span: None,
+    degraded: false,
+    degrade_reason: None,
   }
   let wide = @src.SimilarityJudge::new(0.82, e, coexist_band=0.30)
   let wide_j : &@src.ConflictJudge = wide
@@ -384,6 +386,8 @@ test "W3-A6: SimilarityJudge::new default coexist_band is 0.15" {
     content: new_key,
     kind: @src.EntryKind::Fact,
     source_span: None,
+    degraded: false,
+    degrade_reason: None,
   }
   let cand = @src.MemoryEntry::{
     id: "cand-a6",

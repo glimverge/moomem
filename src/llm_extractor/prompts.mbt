@@ -246,7 +246,15 @@ fn parse_one_fact(fj : Json) -> @src.ExtractedFact? {
     Some(String(v)) => if v.trim().length() == 0 { None } else { Some(v) }
     _ => None
   }
-  Some(@src.ExtractedFact::{ content, kind, source_span: span, })
+  Some(
+    @src.ExtractedFact::{
+      content,
+      kind,
+      source_span: span,
+      degraded: false,
+      degrade_reason: None,
+    },
+  )
 }
 
 // ---------------------------------------------------------------------------

@@ -95,7 +95,9 @@ fn LlmExtractor::request(
   self.provider.stream(messages, [], handler)
   match failure.length() > 0 {
     true =>
-      Err("llm provider '\{self.provider.name()}' stream error: \{failure[0]}")
+      Err(
+        "transport error: llm provider '\{self.provider.name()}' stream error: \{failure[0]}",
+      )
     false => Ok(buf.to_string())
   }
 }
@@ -115,6 +117,8 @@ fn LlmExtractor::degrade_to(
           content: text,
           kind: @src.EntryKind::Unstructured,
           source_span: None,
+          degraded: true,
+          degrade_reason: Some(reason),
         },
       ])
     PropagateError =>

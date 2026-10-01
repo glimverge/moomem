@@ -207,6 +207,8 @@ test "SimilarityJudge: replace / coexist / ignore bands" {
     content: "用户住北京",
     kind: Fact,
     source_span: None,
+    degraded: false,
+    degrade_reason: None,
   }
   let verdicts = match judge.judge(fact, [cand_same, cand_partial, cand_far]) {
     Ok(vs) => vs

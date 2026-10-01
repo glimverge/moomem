@@ -637,6 +637,8 @@ test "LlmConflictJudge: 无候选时零调用" {
     content: "我搬到上海了",
     kind: @src.EntryKind::Event,
     source_span: None,
+    degraded: false,
+    degrade_reason: None,
   }
   let verdicts = match j.judge(fact, []) {
     Ok(vs) => vs
@@ -681,6 +683,8 @@ test "LlmConflictJudge: replace/coexist/ignore 裁决映射正确" {
     content: "用户搬到上海了",
     kind: @src.EntryKind::Event,
     source_span: None,
+    degraded: false,
+    degrade_reason: None,
   }
   let verdicts = match j.judge(fact, cands) {
     Ok(vs) => vs
@@ -721,6 +725,8 @@ test "LlmConflictJudge: 非法 JSON 重试 1 次后成功" {
     content: "用户搬到上海了",
     kind: @src.EntryKind::Event,
     source_span: None,
+    degraded: false,
+    degrade_reason: None,
   }
   let verdicts = match j.judge(fact, cands) {
     Ok(vs) => vs

@@ -38,12 +38,12 @@
 
 ## Acceptance Criteria
 
-- [ ] AC1. `10-testing-examples-architecture.md` 为架构权威；仅凭该页可知新能力落点、命令、CI。
-- [ ] AC2. `directory-structure` + `quality-guidelines` 与架构对齐（含决策表）。
-- [ ] AC3. 含现状→目标态对照（含 D7 三路径与 D10 四 examples），并写明迁移归子任务。
-- [ ] AC4. 含可执行子任务拆分建议（slug / 边界）。
-- [ ] AC5. 无无故破坏 `moon test` / 现有 workflow 入口。
-- [ ] AC6. `05` 与 docs 索引回链到 10；无互相矛盾的第二套架构叙述。
+- [x] AC1. `10-testing-examples-architecture.md` 为架构权威；仅凭该页可知新能力落点、命令、CI。
+- [x] AC2. `directory-structure` + `quality-guidelines` 与架构对齐（含决策表）。
+- [x] AC3. 含现状→目标态对照（含 D7 三路径与 D10 四 examples），并写明迁移归子任务。
+- [x] AC4. 含可执行子任务拆分建议（slug / 边界）。
+- [x] AC5. 无无故破坏 `moon test` / 现有 workflow 入口。
+- [x] AC6. `05` 与 docs 索引回链到 10；无互相矛盾的第二套架构叙述。
 
 ## Out of Scope
 

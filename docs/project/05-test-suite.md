@@ -1,5 +1,7 @@
 # moomem 测试用例体系(2026-10-01)
 
+> **落点 / CI / 决策树（架构权威）** → [10-testing-examples-architecture](10-testing-examples-architecture.md)。本文只做 L0–L3 **用例编目与 AC 映射**；能力边界与目标目录以 10 为准。
+
 对照 [04-progress-and-roadmap](04-progress-and-roadmap.md) 与 [PRD v1.1](03-prd.md)（FR-01~10 / AC-01~07），把现有与发版门禁测试收成**四层体系**。目标：日常 CI 零网络全绿；发版必须过真实 LLM；W4 LoCoMo 指标另册。
 
 ## 0. 分层一览
@@ -109,11 +111,13 @@ graph LR
 |----|------|------|
 | L0-C01~04 | `--all` 位置、标准选项、非法选项 | FR-07 |
 
-### 2.8 示例冒烟（CI）
+### 2.8 示例冒烟（CI 清单；非包旁 L0）
+
+> 角色属 **E2 example**（教学演示 / smoke），**不是**包旁 `*_test.mbt`。落点与迁移后四场景见 [10](10-testing-examples-architecture.md)。此处仅编目现网 CI 冒烟入口。
 
 | ID | 入口 | 覆盖 |
 |----|------|------|
-| L0-X01 | `moon run examples --target native` | mock Provider 演示，零网络 |
+| EX-X01 | `moon run examples --target native` | mock Provider 演示，零网络（现状单包；目标 `examples/<scene>`） |
 
 ---
 
@@ -235,3 +239,4 @@ moon run ci/llm_live --target native
 | 2026-10-01 | 指纹归一化加固（0eee88c，随 docs 重组混入）：`normalize_content` 剥主语前缀（用户的/用户/我的/我）与尾标点，吸收 LLM 提取措辞漂移；judge prompt 增补「语义等价复述判 replace」；native 114→115 |
 | 2026-10-01 | W3.1-C：`StreamEvent::Error` 原因统一 `transport error:` 前缀；解析失败保留 `invalid JSON:`（断言最小修补） |
 | 2026-10-01 | W3.1 独立复验：112/99×3 与全部 DoD 复现；新增两项 P3 残留（代理环境传输失败分类、闲聊不清零计数），见 [07 报告](07-w3.1-verification.md) |
+| 2026-10-01 | 文首回链 [10](10-testing-examples-architecture.md)；§2.8 示例冒烟标明 E2（EX-X01），避免与包旁 L0 混淆 |

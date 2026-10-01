@@ -9,6 +9,7 @@
 | 你要找… | 去哪里 | 不是… |
 |---------|--------|-------|
 | 产品叙事、架构设计、PRD、进度、验证/评测报告、交接 | [`docs/project/`](project/)（本树） | 编码细则或 CI 验收条款 |
+| 测试 / 门禁 / 评测 / 调参 / 示例**落点**（决策树、目标目录） | [`project/10-testing-examples-architecture.md`](project/10-testing-examples-architecture.md) | [`05-test-suite`](project/05-test-suite.md) 用例编目 |
 | 功能/流程验收契约（W3/W4 AC、CI·发布流水线规格） | [`spec/`](../spec/) | Trellis AI 改代码规则 |
 | AI / 维护者改 `src/` 前的包层约定与编码规范 | [`.trellis/spec/`](../.trellis/spec/)（尤其 `library/`） | 产品 PRD 正文 |
 
@@ -35,6 +36,7 @@
 | 07 | [W3.1 独立验证报告](project/07-w3.1-verification.md) | project |
 | 08 | [W4 LoCoMo L3 评测报告](project/08-w4-eval-report.md) | project |
 | 09 | [项目交接总结](project/09-handover.md) | project |
+| 10 | [测试与示例能力架构](project/10-testing-examples-architecture.md) | project |
 | — | [架构设计](project/architecture.md)（含类图 / add·recall 时序图） | project |
 
 ## docs 之外的文档类资产

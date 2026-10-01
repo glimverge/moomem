@@ -4,14 +4,18 @@
 
 ## Repository packages
 
-| Path | Role | Key deps |
+目标态角色描述如下。**物理迁移尚未执行**：括号内为现行路径；权威蓝图与对照表见 [`docs/project/10-testing-examples-architecture.md`](../../../docs/project/10-testing-examples-architecture.md)。
+
+| Path (target · current if different) | Role | Key deps |
 |------|------|----------|
-| `src/` | Core library (`MemoryStore` aggregate) | `moonbitlang/x/fs`, `moonbitlang/core/json` |
-| `src/llm_extractor/` | Optional LLM extract/judge adapters | `heyq02/moomem/src`, `mizchi/llm` |
-| `src/cli/` | Native CLI binary (`is-main`) | core + llm_extractor + `mizchi/llm/openai` + `x/fs` + `env` |
-| `ci/locomo/`, `ci/tuning/`, `ci/llm_live/` | Eval / tuning / live LLM gates | separate packages |
-| `examples/` | Demos (e.g. LLM extractor with mocks) | — |
-| `docs/project/` | Architecture, PRD reports | — |
+| `src/` | Core library (`MemoryStore` aggregate); L0 包旁测试 | `moonbitlang/x/fs`, `moonbitlang/core/json` |
+| `src/llm_extractor/` | Optional LLM extract/judge adapters; L1 包旁测试 | `heyq02/moomem/src`, `mizchi/llm` |
+| `src/cli/` | Native CLI binary (`is-main`); L0 `cli_wbtest` | core + llm_extractor + `mizchi/llm/openai` + `x/fs` + `env` |
+| `ci/gates/live-llm/` *(current: `ci/llm_live/`)* | L2 Live LLM release gate | separate package |
+| `ci/eval/locomo/` *(current: `ci/locomo/`)* | L3 LoCoMo eval harness + `data/` | separate package |
+| `ci/tools/retrieval-tuning/` *(current: `ci/tuning/`)* | Offline retrieval tuning tool (U1; **not in CI**) | separate package |
+| `examples/<scene>/` *(current: flat `examples/` demo)* | E2 scene demos: `basic-store`, `llm-extractor`, `conflict-supersede`, `cli-smoke` | — |
+| `docs/project/` | Architecture, PRD reports; testing/examples architecture = doc **10** | — |
 | `spec/` | Feature/process specs (CI pipelines, W3/W4) — **not** Trellis coding specs | — |
 | `.trellis/spec/` | AI coding guidelines (this tree) | — |
 
@@ -35,7 +39,7 @@ Layering matches `docs/project/architecture.md` §1.3:
 
 ## Tests
 
-Black-box tests sit beside sources as `*_test.mbt`; white-box as `*_wbtest.mbt`:
+Black-box tests sit beside sources as `*_test.mbt`; white-box as `*_wbtest.mbt` (**T1**：包旁测试不外迁):
 
 - `types_test.mbt` — codec, `validate_user_id`
 - `extractor_test.mbt` — injection / raw mode + pub diagnostic helpers
@@ -43,6 +47,8 @@ Black-box tests sit beside sources as `*_test.mbt`; white-box as `*_wbtest.mbt`:
 - `persist_test.mbt` — dual-slot, head corruption, `MemoryBackend` crash inject
 - `store_e2e_test.mbt` — AC-01..05 end-to-end
 - `qa_adversarial_test.mbt`, `w3_config_test.mbt` — edge / config validation
+
+L1 mock-LLM tests live beside adapters: `src/llm_extractor/*_test.mbt`. Gates / eval / tools are **not** package-side tests — see decision table below.
 
 ## Package config reality
 
@@ -63,9 +69,26 @@ Black-box tests sit beside sources as `*_test.mbt`; white-box as `*_wbtest.mbt`:
 | LLM prompts / OpenAI client | `src/llm_extractor/` — never core |
 | CLI flags / env | `src/cli/main.mbt`, `llm_wiring*.mbt` |
 
+## Where new tests / examples / gates go
+
+Align with [doc 10 decision tree](../../../docs/project/10-testing-examples-architecture.md). Prefer **target** paths in new design docs; until migration lands, create under **current** paths.
+
+| Need | Put it in (target) | Current path (pre-migration) |
+|------|--------------------|------------------------------|
+| Asserted offline regression (core) | Package-side `src/*_test.mbt` / `*_wbtest.mbt` (L0) | same |
+| Asserted mock-LLM contract | `src/llm_extractor/*_test.mbt` (L1) | same |
+| Real LLM blocking release | `ci/gates/live-llm/` (L2) | `ci/llm_live/` |
+| Benchmark / corpus eval | `ci/eval/locomo/` (L3) | `ci/locomo/` |
+| Sweep / calibrate Config, not a gate | `ci/tools/retrieval-tuning/` (tool) | `ci/tuning/` |
+| Teachable runnable demo (no AC suite) | `examples/<scene>/` (E2) | flat `examples/` |
+
+**Forbidden**: live key paths inside examples; treating tools as default L0; stuffing eval corpora into package-side unit tests.
+
 ## Anti-patterns
 
 - Do **not** add React/web/ORM-style folders; this repo has no frontend.
 - Do **not** put `@fs.*` calls in non-test core outside `persist.mbt` (allowlist: `persist_test.mbt`, `src/cli/`).
 - Do **not** put `@json.parse` / entry serializers outside `json_codec.mbt` (CLI import reuses store helpers that call the codec).
 - Do **not** grow a second aggregate alongside `MemoryStore`; it is the sole stateful orchestrator.
+- Do **not** move package-side `*_test.mbt` out of `src/` (T1).
+- Do **not** wire `retrieval-tuning` into CI by default (U1 tool).

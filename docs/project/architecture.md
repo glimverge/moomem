@@ -94,18 +94,18 @@ moomem/
 │   │   ├── class-diagram.mermaid
 │   │   ├── sequence-diagram-add.mermaid
 │   │   ├── sequence-diagram-recall.mermaid
-│   │   └── 03~09 编号报告
+│   │   └── 03~10 编号报告（测试/示例架构权威 = 10）
 │   ├── resources/             # 调研与立项依据（选题/竞品）
 │   └── archive/               # 归档（赛季结束后迁入）
 ├── spec/                      # 功能/流程验收契约（W3/W4、CI 流水线）— 非 Trellis 编码规范
 ├── .trellis/spec/             # AI 编码约定（改 src/ 前读 library/）
-├── examples/
+├── examples/                  # 现状：单包 demo；目标态见 [10-testing-examples-architecture](10-testing-examples-architecture.md)
 │   ├── moon.pkg
-│   └── llm_extractor_demo.mbt # LLM 提取演示（可 mock）
-├── ci/
-│   ├── locomo/                # LoCoMo L3 评测 harness（moon.pkg + *.mbt）
-│   ├── tuning/                # 离线调参台
-│   └── llm_live/              # Live LLM 门禁（发版流水线）
+│   └── llm_extractor_demo.mbt # LLM 提取演示（可 mock）→ 目标迁入 examples/llm-extractor/
+├── ci/                        # 现状路径如下；目标态 N2 角色子树见文档 10（gates/eval/tools）
+│   ├── locomo/                # LoCoMo L3 评测 harness（moon.pkg + *.mbt）→ ci/eval/locomo/
+│   ├── tuning/                # 离线调参台（不进 CI）→ ci/tools/retrieval-tuning/
+│   └── llm_live/              # Live LLM 门禁（发版流水线）→ ci/gates/live-llm/
 ├── src/                       # 核心库（13 个非测试 .mbt）
 │   ├── moon.pkg               # 核心库包配置（import moonbitlang/x/fs；调用点仍须隔离在 persist.mbt）
 │   ├── lib.mbt                # 公开常量、MOOMEM_VERSION / SNAPSHOT_VERSION

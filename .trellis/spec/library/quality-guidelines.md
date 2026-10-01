@@ -23,12 +23,46 @@ Align with MoonBit core style (`read_file_to_string`, etc.).
 | Isolation / adversarial QA suites | `qa_adversarial_test.mbt` |
 | Multi-backend | `moon test --target wasm` (native-only FS/CLI excluded) |
 
-Verification commands (from `README.md`):
+Architecture authority for layers, CI iron rules, and where gates/eval/tools/examples land: [`docs/project/10-testing-examples-architecture.md`](../../../docs/project/10-testing-examples-architecture.md).
+
+### Examples vs gates vs tools
+
+| Kind | Role | Assertions? | CI |
+|------|------|-------------|-----|
+| Package-side `*_test.mbt` | L0/L1 regression | Yes | push 阻塞 |
+| `ci/gates/*` | L2 live LLM release gate | Live scenarios | **仅** release |
+| `ci/eval/*` | L3 benchmark / corpus | Metrics | 离线 push；live 手工 |
+| `ci/tools/*` | Developer tuning (U1) | Sweep / report | **不进 CI** |
+| `examples/<scene>` | Teachable demos (E2) | No (smoke only post-migration) | smoke 矩阵，非 L0 |
+
+Iron rules: L0/L1 never read `DEEPSEEK_*`; L2 never joins push CI; examples never depend on live keys.
+
+### Verification commands
+
+**Current (run these today — pre-migration paths):**
 
 ```bash
 moon test
 moon test --target wasm
-moon run ci/tuning --target native
+moon run ci/tuning --target native            # tool（无 CI 调用）
+# optional local / release-only / smoke:
+# moon run ci/llm_live --target native        # L2 gate
+# moon run ci/locomo --target native          # L3 eval
+# moon run examples --target native           # 现状单包 demo
+```
+
+**Target (post-migration — paths do not exist yet; do not use until migrate-ci-role-tree / expand-examples-e2 land):**
+
+```bash
+moon test
+moon test --target wasm
+moon run ci/tools/retrieval-tuning --target native
+moon run ci/gates/live-llm --target native
+moon run ci/eval/locomo --target native
+moon run examples/basic-store --target native
+moon run examples/llm-extractor --target native
+moon run examples/conflict-supersede --target native
+moon run examples/cli-smoke --target native
 ```
 
 ## Code reuse checklist
@@ -63,6 +97,8 @@ Do not invent a parallel log subsystem unless product requirements change.
 | Second stateful orchestrator | `MemoryStore` only; long `add` stages stay as package-private helpers on the same aggregate |
 | “Fix” retrieval fusion by exploding / splitting the store API | Keep `MemoryStore` facade; fusion is Config/eval work (P7/W5), not a module-interface deepen |
 | Frontend/ORM templates | N/A — this is a MoonBit library |
+| Live keys / `DEEPSEEK_*` in L0/L1 or examples | gates only (`ci/gates/live-llm`; current `ci/llm_live`) |
+| Default CI for retrieval-tuning | keep as `ci/tools/*` (current `ci/tuning`) |
 
 ## When changing public behavior
 
@@ -70,3 +106,4 @@ Do not invent a parallel log subsystem unless product requirements change.
 - Keep `MOOMEM_VERSION` / `SNAPSHOT_VERSION` coherent with format bumps (`lib.mbt`).
 - Add or extend black-box tests for AC-style guarantees (isolation, restart, degrade).
 - If a new invariant is discovered, add it to `.trellis/spec/library/` — do not leave it only in chat.
+- If changing test/gate/example **placement**, update doc 10 and this file’s command tables together — do not invent a second architecture narrative in 05.

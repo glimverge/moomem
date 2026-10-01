@@ -11,12 +11,12 @@ These guidelines describe what the code actually does today.
 
 | Guide | Description | Status |
 |-------|-------------|--------|
-| [Directory Structure](./directory-structure.md) | Package layout, module boundaries, where files go | Filled |
+| [Directory Structure](./directory-structure.md) | Package layout, module boundaries, where files / tests / examples go (target vs current; see also [doc 10](../../../docs/project/10-testing-examples-architecture.md)) | Filled |
 | [Public API and Types](./public-api-and-types.md) | Host `MemoryStore` surface vs internal/test/CI indexes & helpers; types; `user_id` contract | Filled |
 | [Error Handling](./error-handling.md) | `MoomemError`, `Result`, no panic | Filled |
 | [Persistence](./persistence.md) | Dual-slot snapshot, FS package-import vs call-site isolation, backends | Filled |
 | [Trait Injection](./trait-injection.md) | Embedder / Extractor / ConflictJudge / PersistenceBackend / Clock | Filled |
-| [Quality Guidelines](./quality-guidelines.md) | Testing, naming, anti-patterns, verification | Filled |
+| [Quality Guidelines](./quality-guidelines.md) | Testing, naming, anti-patterns, verification (current vs post-migration commands) | Filled |
 
 ---
 

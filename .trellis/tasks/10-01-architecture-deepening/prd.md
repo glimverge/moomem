@@ -24,7 +24,16 @@ moomem is an embedded MoonBit agent-memory library. Intended layering lives in `
 
 ## Decision (user)
 
-- **This task is review-only.** Deliver research + design backlog. Implementation of any deepening slice is a follow-up task.
+- Review phase: research + backlog only (AC1–AC5 done).
+- Implementation of backlog slices runs in **child tasks** (ordered):
+
+| Order | Child | Backlog |
+|------:|-------|---------|
+| 1 | `10-01-sync-docs-routing` | P2 + P5 |
+| 2 | `10-01-host-internal-fs-spec` | P1 Option A + P4 |
+| 3 | `10-01-split-clock-module` | P3 |
+
+- Deferred (not children yet): P1 Option B, P6, P7.
 
 ## Requirements
 

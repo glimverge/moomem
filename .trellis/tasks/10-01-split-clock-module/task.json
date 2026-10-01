@@ -1,9 +1,9 @@
 {
-  "id": "architecture-deepening",
-  "name": "architecture-deepening",
-  "title": "Architecture deepening review",
-  "description": "",
-  "status": "in_progress",
+  "id": "split-clock-module",
+  "name": "split-clock-module",
+  "title": "Split Clock module into clock.mbt",
+  "description": "P3: move Clock/LogicalClock/FixedClock from embedder.mbt to clock.mbt without API change",
+  "status": "planning",
   "dev_type": null,
   "scope": null,
   "package": null,
@@ -18,12 +18,8 @@
   "commit": null,
   "pr_url": null,
   "subtasks": [],
-  "children": [
-    "10-01-sync-docs-routing",
-    "10-01-host-internal-fs-spec",
-    "10-01-split-clock-module"
-  ],
-  "parent": null,
+  "children": [],
+  "parent": "10-01-architecture-deepening",
   "relatedFiles": [],
   "notes": "",
   "meta": {}

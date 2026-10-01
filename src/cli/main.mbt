@@ -21,6 +21,14 @@ struct CliOptions {
   top_k : Int
   show_all : Bool
   file : String?
+  /// 启用 LLM 事实提取（需 MOOMEM_LLM_API_KEY，除非 localhost）
+  llm : Bool
+  /// 同时启用 LLM 冲突判定（隐含 --llm）
+  llm_judge : Bool
+  /// 模型 id；空串 = 未指定，走 env / 缺省
+  model : String
+  /// OpenAI 兼容 base_url；空串 = 未指定，走 env / 官方端点
+  base_url : String
 }
 
 ///|
@@ -33,11 +41,15 @@ fn default_options() -> CliOptions {
     top_k: 5,
     show_all: false,
     file: None,
+    llm: false,
+    llm_judge: false,
+    model: "",
+    base_url: "",
   }
 }
 
 ///|
-/// 从参数列表解析 --key value 形式的选项；--all 为布尔开关，不消费值
+/// 从参数列表解析 --key value 形式的选项；布尔开关不消费值
 fn parse_options(
   args : Array[String],
   opts : CliOptions,
@@ -46,13 +58,31 @@ fn parse_options(
     return Ok(opts)
   }
   let key = args[0]
-  // 布尔开关 --all：可独立出现在任意位置（含参数末尾），不消费后续 token
+  // 布尔开关：可独立出现在任意位置（含参数末尾），不消费后续 token
   if key == "--all" {
     let rest : Array[String] = []
     for i = 1; i < args.length(); i = i + 1 {
       rest.push(args[i])
     }
     return parse_options(rest, CliOptions::{ ..opts, show_all: true, })
+  }
+  if key == "--llm" {
+    let rest : Array[String] = []
+    for i = 1; i < args.length(); i = i + 1 {
+      rest.push(args[i])
+    }
+    return parse_options(rest, CliOptions::{ ..opts, llm: true, })
+  }
+  if key == "--llm-judge" {
+    let rest : Array[String] = []
+    for i = 1; i < args.length(); i = i + 1 {
+      rest.push(args[i])
+    }
+    // --llm-judge 隐含 --llm
+    return parse_options(
+      rest,
+      CliOptions::{ ..opts, llm: true, llm_judge: true, },
+    )
   }
   if args.length() < 2 {
     return Err("missing value for option '\{key}'")
@@ -68,6 +98,8 @@ fn parse_options(
     "--text" => parse_options(rest, CliOptions::{ ..opts, text: value, })
     "--query" => parse_options(rest, CliOptions::{ ..opts, query: value, })
     "--file" => parse_options(rest, CliOptions::{ ..opts, file: Some(value), })
+    "--model" => parse_options(rest, CliOptions::{ ..opts, model: value, })
+    "--base-url" => parse_options(rest, CliOptions::{ ..opts, base_url: value, })
     "--top-k" => {
       let parsed : Result[Int, String] = Ok(@string.parse_int(value)) catch {
         _ => Err("--top-k expects an integer, got '\{value}'")
@@ -86,7 +118,9 @@ fn print_usage() -> Unit {
   println("moomem \{@src.MOOMEM_VERSION} - embedded agent memory layer CLI")
   println("")
   println("Usage:")
-  println("  moomem add    --db <dir> --user <id> --text <content>")
+  println(
+    "  moomem add    --db <dir> --user <id> --text <content> [--llm] [--llm-judge] [--model <id>] [--base-url <url>]",
+  )
   println("  moomem recall --db <dir> --user <id> --query <query> [--top-k N]")
   println("  moomem list   --db <dir> --user <id> [--all]")
   println("  moomem stats  --db <dir>")
@@ -101,12 +135,45 @@ fn print_usage() -> Unit {
   println("  --top-k <n>    result count for recall (default 5, max 50)")
   println("  --all          list all statuses incl. deleted/superseded")
   println("  --file <path>  JSONL file to import")
+  println(
+    "  --llm           enable LLM fact extraction (needs MOOMEM_LLM_API_KEY unless localhost)",
+  )
+  println(
+    "  --llm-judge     also use LLM conflict judging (implies --llm)",
+  )
+  println(
+    "  --model <id>    LLM model id (env: MOOMEM_LLM_MODEL, default gpt-4o-mini)",
+  )
+  println(
+    "  --base-url <u>  OpenAI-compatible endpoint (env: MOOMEM_LLM_BASE_URL)",
+  )
 }
 
 ///|
 fn die(msg : String) -> Unit {
   println("error: \{msg}")
   println("run 'moomem help' for usage")
+}
+
+///|
+fn run_add(store : @src.MemoryStore, opts : CliOptions) -> Unit {
+  match store.add(opts.user, opts.text) {
+    Err(e) => die(e.message())
+    Ok(summary) => {
+      let extracted = summary.extracted
+      let inserted = summary.inserted
+      let duplicates = summary.duplicates
+      let superseded = summary.superseded
+      let degraded = summary.degraded
+      println(
+        "added: extracted=\{extracted} inserted=\{inserted} duplicates=\{duplicates} superseded=\{superseded} degraded=\{degraded}",
+      )
+      for note in summary.notes {
+        println("  note: \{note}")
+      }
+      ignore(store.close())
+    }
+  }
 }
 
 ///|
@@ -158,26 +225,20 @@ fn main {
       match parse_options(rest, default_options()) {
         Err(msg) => die(msg)
         Ok(opts) =>
-          match @src.MemoryStore::open(opts.db) {
-            Err(e) => die(e.message())
-            Ok(store) =>
-              match store.add(opts.user, opts.text) {
-                Err(e) => die(e.message())
-                Ok(summary) => {
-                  let extracted = summary.extracted
-                  let inserted = summary.inserted
-                  let duplicates = summary.duplicates
-                  let superseded = summary.superseded
-                  let degraded = summary.degraded
-                  println(
-                    "added: extracted=\{extracted} inserted=\{inserted} duplicates=\{duplicates} superseded=\{superseded} degraded=\{degraded}",
-                  )
-                  for note in summary.notes {
-                    println("  note: \{note}")
-                  }
-                  ignore(store.close())
+          if opts.llm || opts.llm_judge {
+            match build_llm_config(opts) {
+              Err(msg) => die(msg)
+              Ok(cfg) =>
+                match @src.MemoryStore::open(opts.db, config=Some(cfg)) {
+                  Err(e) => die(e.message())
+                  Ok(store) => run_add(store, opts)
                 }
-              }
+            }
+          } else {
+            match @src.MemoryStore::open(opts.db) {
+              Err(e) => die(e.message())
+              Ok(store) => run_add(store, opts)
+            }
           }
       }
     "recall" =>

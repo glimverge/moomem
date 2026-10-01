@@ -1029,3 +1029,123 @@ test "W3.1-A3: successful LLM extract clears degrade state" {
   inspect(streak1, content="true")
   ignore(store.close())
 }
+
+// ---------------------------------------------------------------------------
+// W4-0：闲聊 Ok([]) 须清零连续失败计数
+// ---------------------------------------------------------------------------
+
+///|
+test "W4-0-1: chitchat Ok([]) resets failure streak between Fail events" {
+  // Fail → Ok([]) 闲聊 → Fail：第二次失败 streak 应为 1/3（非 2/3），且不熔断
+  let provider = ScriptedProvider::new([
+    Fail("e1"),
+    Text("{\"facts\":[]}"),
+    Fail("e2"),
+  ])
+  let p : &@llm.Provider = provider
+  let ext = @llm_extractor.LlmExtractor::new(p)
+  let e : &@src.Extractor = ext
+  let store = match mk_store(e, None) {
+    Ok(s) => s
+    Err(err) => {
+      inspect(err.message(), content="SHOULD NOT REACH")
+      return
+    }
+  }
+  let s1 = match store.add("user-42", "失败原文一") {
+    Ok(s) => s
+    Err(err) => {
+      inspect(err.message(), content="SHOULD NOT REACH")
+      return
+    }
+  }
+  inspect(s1.degraded, content="true")
+  let chat = match store.add("user-42", "哈哈今天天气不错") {
+    Ok(s) => s
+    Err(err) => {
+      inspect(err.message(), content="SHOULD NOT REACH")
+      return
+    }
+  }
+  inspect(chat.extracted, content="0")
+  inspect(chat.inserted, content="0")
+  let s2 = match store.add("user-42", "失败原文二") {
+    Ok(s) => s
+    Err(err) => {
+      // 不得在第 2 次失败时熔断
+      inspect(err.message(), content="SHOULD NOT REACH")
+      return
+    }
+  }
+  inspect(s2.degraded, content="true")
+  let mut streak1 = false
+  for n in s2.notes {
+    if n.contains("streak 1/3") {
+      streak1 = true
+    }
+  }
+  inspect(streak1, content="true")
+  ignore(store.close())
+}
+
+///|
+test "W4-0-2: success fact clears streak; degraded fact does not" {
+  let provider = ScriptedProvider::new([
+    Fail("before-success"),
+    Text(
+      "{\"facts\":[{\"content\":\"用户对花生过敏\",\"kind\":\"fact\",\"span\":\"过敏\"}]}",
+    ),
+    Fail("after-success"),
+    Fail("degrade-keep"),
+  ])
+  let p : &@llm.Provider = provider
+  let ext = @llm_extractor.LlmExtractor::new(p)
+  let e : &@src.Extractor = ext
+  let store = match mk_store(e, None) {
+    Ok(s) => s
+    Err(err) => {
+      inspect(err.message(), content="SHOULD NOT REACH")
+      return
+    }
+  }
+  ignore(store.add("user-42", "先失败"))
+  let ok = match store.add("user-42", "我对花生过敏") {
+    Ok(s) => s
+    Err(err) => {
+      inspect(err.message(), content="SHOULD NOT REACH")
+      return
+    }
+  }
+  inspect(ok.degraded, content="false")
+  inspect(ok.inserted, content="1")
+  let d1 = match store.add("user-42", "再失败一") {
+    Ok(s) => s
+    Err(err) => {
+      inspect(err.message(), content="SHOULD NOT REACH")
+      return
+    }
+  }
+  let mut streak1 = false
+  for n in d1.notes {
+    if n.contains("streak 1/3") {
+      streak1 = true
+    }
+  }
+  inspect(streak1, content="true")
+  // 连续自报降级不得清零：第二次 degraded 应为 streak 2/3
+  let d2 = match store.add("user-42", "再失败二") {
+    Ok(s) => s
+    Err(err) => {
+      inspect(err.message(), content="SHOULD NOT REACH")
+      return
+    }
+  }
+  let mut streak2 = false
+  for n in d2.notes {
+    if n.contains("streak 2/3") {
+      streak2 = true
+    }
+  }
+  inspect(streak2, content="true")
+  ignore(store.close())
+}

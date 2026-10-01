@@ -304,7 +304,8 @@ pub fn MemoryStore::add(
     }
   }
   if facts.length() == 0 {
-    // 提取结果为空（纯闲聊）→ 不入库（PRD 第 9 章）
+    // 提取成功但无事实（纯闲聊）同样属于成功，须清零连续失败计数（W4-0）
+    self.extraction_failures = 0
     return Ok(AddSummary::{
       extracted: 0,
       inserted: 0,

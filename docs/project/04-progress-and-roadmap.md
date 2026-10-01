@@ -49,7 +49,7 @@ PRD 四周里程碑全部落地（W1–W4）；PRD §16.1 五项指标 4 达标 
   * **P0 · 赛事申报(截止 10-31)** :飞书表单完成十月赛报名(最多 3 次提交,以最后一次有效提交为准);确认已加入赛事交流群且群昵称为 GitHub ID(奖金发放硬性条件);仓库需保持连续提交记录。
   * **P1 · 官方测试套件交叉验证** : 四层体系见 [05-test-suite.md](05-test-suite.md)（L0 离线 + L1 Mock LLM 进 test-pipeline；L2 Live LLM 进 release-pipeline）；持续用 moonbitlang/core 范式复核并保持 GitHub Action 绿标。
   * ~~**P1 · W4 评测闭环**~~ :✅ 全部完成（三档实测见 [08 报告](08-w4-eval-report.md)：提取 0.880 / 冲突 0.950 / 持久化 1/1 / 隔离 0 达标；检索 −12% 未达标且已归因）。
-  * **P1 · W5 检索融合改进（新立项候选）** :RRF k=60 在短轮次语料上系统性稀释 BM25 强命中（08 §2.2）；改进路径见 08 §2.3，须配独立开发集，禁止在 LoCoMo 计分子集上调参。
+  * **P1 · P7/W5 检索融合（产品/评测跟进，非架构拆分）** :LoCoMo api 档 hybrid vs BM25 **−12%**（证据 [08-w4-eval-report.md](08-w4-eval-report.md) §2.2–2.3）；属 W5-class **eval/product** 跟进（融合策略/独立开发集），**不要为此拆分或加深 `MemoryStore` 模块接口**。改进路径见 08 §2.3；禁止在 LoCoMo 计分子集上调参。
   * ~~**P1 · W3.1 补丁(独立验证发现)**~~ :✅ 已完成(10-01,A/B/C 三项落地并独立复验通过,见 [07 报告](07-w3.1-verification.md))。
   * **P2 · W3.1 残留收敛** :R1 代理环境下传输失败分类(建议先向 mizchi/llm 上游提 issue,不在本项目内改)。R2 已随 W4-0 修复。
   * **P2 · 工程债** :moon.mod.json → moon.mod 格式迁移(工具链已通告弃用,migrate 会重构模块配置布局,单独立项);向 mizchi/llm 上游提 MockProvider impl 未导出的小 PR;评估 v0.2.2 发布(含 W3 / W3.1 全部改动)。

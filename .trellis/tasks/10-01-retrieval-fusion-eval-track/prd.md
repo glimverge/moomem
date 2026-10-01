@@ -15,9 +15,9 @@ Record LoCoMo hybrid-vs-BM25 underperformance as a **product/eval** follow-up (W
 
 ## Acceptance Criteria
 
-- [ ] AC1. Roadmap/handover (or equivalent) names P7/W5 retrieval fusion as eval follow-up with link to evidence.
-- [ ] AC2. Explicit “do not split MemoryStore for fusion” note exists.
-- [ ] AC3. No product code diffs under `src/` for this task.
+- [x] AC1. Roadmap/handover (or equivalent) names P7/W5 retrieval fusion as eval follow-up with link to evidence.
+- [x] AC2. Explicit “do not split MemoryStore for fusion” note exists.
+- [x] AC3. No product code diffs under `src/` for this task.
 
 ## Out of scope
 

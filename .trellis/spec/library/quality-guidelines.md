@@ -61,6 +61,7 @@ Do not invent a parallel log subsystem unless product requirements change.
 | Core depending on `mizchi/llm` | `src/llm_extractor/` |
 | Append-only JSONL persistence | dual-slot + head |
 | Second stateful orchestrator | `MemoryStore` only; long `add` stages stay as package-private helpers on the same aggregate |
+| “Fix” retrieval fusion by exploding / splitting the store API | Keep `MemoryStore` facade; fusion is Config/eval work (P7/W5), not a module-interface deepen |
 | Frontend/ORM templates | N/A — this is a MoonBit library |
 
 ## When changing public behavior

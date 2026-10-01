@@ -14,9 +14,9 @@ Execute the remaining deepening backlog items deferred from wave 1 (`archive/202
 
 ## Parent acceptance
 
-- [ ] All three children completed or explicitly deferred with reason in child notes.
-- [ ] No new public facade beside `MemoryStore`.
-- [ ] Wave 1 keep-as-is items still respected (trait seams, dual-slot, llm_extractor package).
+- [x] All three children completed or explicitly deferred with reason in child notes.
+- [x] No new public facade beside `MemoryStore`.
+- [x] Wave 1 keep-as-is items still respected (trait seams, dual-slot, llm_extractor package).
 
 ## Out of scope for parent
 

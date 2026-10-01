@@ -3,7 +3,7 @@
   "name": "retrieval-fusion-eval-track",
   "title": "Track retrieval fusion as product/eval work (P7)",
   "description": "Document P7 as W5/eval follow-up; no architecture module split",
-  "status": "planning",
+  "status": "in_progress",
   "dev_type": null,
   "scope": null,
   "package": null,

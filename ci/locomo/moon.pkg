@@ -1,0 +1,18 @@
+// L3 LoCoMo evaluation harness (W4).
+// Offline path: zero-network, zero-secret.
+// --live / --embedder api: opt-in only.
+import {
+  "heyq02/moomem/src",
+  "heyq02/moomem/src/llm_extractor",
+  "mizchi/llm",
+  "mizchi/llm/openai",
+  "mizchi/llm/ffi",
+  "moonbitlang/core/json",
+  "moonbitlang/core/env",
+  "moonbitlang/core/string",
+  "moonbitlang/x/fs",
+}
+
+options(
+  "is-main": true,
+)

@@ -44,14 +44,14 @@
 
 ## Acceptance Criteria
 
-- [ ] AC1. 正式发版后流程产出并落盘与版本绑定的三档结果记录。
-- [ ] AC2. 结果文件可被站点 SSG 读取；文件内无密钥。
-- [ ] AC3. `site/` 有独立 benchmark 页：最新三档、分项、相对上一版 diff；≥1 条历史时可区分版本。
-- [ ] AC4. `moon run ci/eval/locomo --target native` 仍可跑通；push `eval-locomo` 不引入密钥依赖。
-- [ ] AC5. 语料许可与 `data/README.md` 署名未被破坏。
-- [ ] AC6. Release 环境可解析 embedding（QWEN→`MOOMEM_EMBED_*`）与 DeepSeek；文档说明本地 `.env` 映射。
-- [ ] AC7. api 档已知未达标时，归档仍写出结果且不升级为发版失败。
-- [ ] AC8. 归档成功后 main 出现 `chore(benchmark):` 提交；Pages 可展示该版本。
+- [x] AC1. 正式发版后流程产出并落盘与版本绑定的三档结果记录。
+- [x] AC2. 结果文件可被站点 SSG 读取；文件内无密钥。
+- [x] AC3. `site/` 有独立 benchmark 页：最新三档、分项、相对上一版 diff；≥1 条历史时可区分版本。
+- [x] AC4. `moon run ci/eval/locomo --target native` 仍可跑通；push `eval-locomo` 不引入密钥依赖。
+- [x] AC5. 语料许可与 `data/README.md` 署名未被破坏。
+- [x] AC6. Release 环境可解析 embedding（QWEN→`MOOMEM_EMBED_*`）与 DeepSeek；文档说明本地 `.env` 映射。
+- [x] AC7. api 档已知未达标时，归档仍写出结果且不升级为发版失败。
+- [x] AC8. 归档成功后 main 出现 `chore(benchmark):` 提交；Pages 可展示该版本。
 
 ## Out of Scope
 

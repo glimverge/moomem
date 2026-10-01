@@ -35,7 +35,10 @@ These types/fns are **not** `pub`. They live inside `MemoryStore` (`priv vec_ind
 | `DedupIndex` (+ methods) | `dedup.mbt` | Per-user content fingerprints |
 | `content_fingerprint` | `dedup.mbt` | Normalized content hash for dedup |
 | `BM25_K1` / `BM25_B` | `index_keyword.mbt` | BM25 constants |
-| `rrf` | `ranker.mbt` | Reciprocal rank fusion (recall path) |
+| `rrf` | `ranker.mbt` | Equal-weight RRF (EqualRrf / rollback path) |
+| `rrf_weighted` | `ranker.mbt` | Weighted RRF (AdaptiveLexical soft path) |
+| `lexical_strong` | `ranker.mbt` | BM25-score lexical confidence gate |
+| `protect_bm25_topk` | `ranker.mbt` | Adaptive recall: keep BM25 top-k membership |
 
 Do **not** re-export these as a host “IndexStore” API. Do not treat abstract type names that may still appear in tooling as a second facade.
 
@@ -63,9 +66,22 @@ Diagnostic caller outside the core package: `ci/eval/locomo/conflict_eval.mbt` (
 | `AddSummary` | `extracted/inserted/duplicates/superseded/degraded/notes` |
 | `StoreStats` | Status counts + `bytes_on_disk` + `truncated_recovered` + `extractor_mode` |
 | `RecallBackfill` | `NoBackfill` \| `BackfillRecency` (default) |
+| `FusionPolicy` | `EqualRrf` \| `AdaptiveLexical` (default) — Config-only; no new recall method |
 | `Config` | Optional trait objects + tuning knobs; `Config::default()` |
 
-Constants with real defaults: `DEFAULT_DIM = 256`, `DEFAULT_RRF_K = 60`, `DEFAULT_SUPERSEDE_THRESHOLD = 0.82`, `CONFLICT_CANDIDATES = 8`, `COEXIST_BAND = 0.15`, `MAX_EXTRACTION_FAILURES = 3`, `MAX_USER_ID_LEN = 64`.
+`Config` fusion knobs (AdaptiveLexical only; validated at `open`):
+
+| Field | Default | Constraint |
+|-------|---------|------------|
+| `fusion_policy` | `AdaptiveLexical` | `EqualRrf` rollback |
+| `lexical_floor` | `DEFAULT_LEXICAL_FLOOR` (0.8) | `>= 0` |
+| `lexical_gap` | `DEFAULT_LEXICAL_GAP` (1.1) | `>= 1` |
+| `vec_weight_when_lexical` | `DEFAULT_VEC_WEIGHT_LEXICAL` (0.05) | `(0, 1]`; `≤0.05` → BM25-only when lexical-strong |
+| `vec_weight_when_semantic` | `DEFAULT_VEC_WEIGHT_SEMANTIC` (0.45) | `(0, 1]` |
+
+Adaptive recall path: score-aware `kw_hits`/`vec_hits` → `lexical_strong` → weighted/`BM25-only` → `protect_bm25_topk`. Do **not** split `MemoryStore` for fusion; tune on `ci/tools/retrieval-tuning` only (never LoCoMo scored QA).
+
+Constants with real defaults: `DEFAULT_DIM = 256`, `DEFAULT_RRF_K = 60`, `DEFAULT_SUPERSEDE_THRESHOLD = 0.82`, `CONFLICT_CANDIDATES = 8`, `COEXIST_BAND = 0.15`, `MAX_EXTRACTION_FAILURES = 3`, `MAX_USER_ID_LEN = 64`, `DEFAULT_LEXICAL_FLOOR = 0.8`, `DEFAULT_LEXICAL_GAP = 1.1`, `DEFAULT_VEC_WEIGHT_LEXICAL = 0.05`, `DEFAULT_VEC_WEIGHT_SEMANTIC = 0.45`.
 
 ## `user_id` contract
 
@@ -113,3 +129,5 @@ Invariant: `recall` only returns recallable statuses; superseded/deleted remain 
 - Changing `MOOMEM_VERSION` without aligning `moon.mod` (release pipeline owns mod version; constant is manual sync — see comment in `lib.mbt`).
 - Treating package-private indexes / `rrf` / diagnostic helpers as the host API, or inventing a parallel IndexStore facade for callers.
 - Re-`pub`ing `VectorIndex` / `KeywordIndex` / `DedupIndex` without a Trellis decision (Option B already narrowed them).
+- Splitting `MemoryStore` or adding a second recall API to “fix” fusion — fusion is `Config` + `ranker.mbt` only.
+- Tuning adaptive thresholds on LoCoMo scored QA (use `ci/tools/retrieval-tuning` independent set).

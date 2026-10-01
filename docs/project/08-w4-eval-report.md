@@ -99,16 +99,39 @@
 
 ---
 
+## 七、补记：查询自适应融合（P7 / 2026-10-01）
+
+> 任务：`.trellis/tasks/10-01-hybrid-fusion-adapt`。未在 LoCoMo 计分子集调参；缺省经 `ci/tools/retrieval-tuning` 独立集网格确认后写入常量。
+
+### 算法与缺省
+
+- `Config.fusion_policy`：缺省 `AdaptiveLexical`；回退 `EqualRrf`（历史等权 RRF）。
+- 词法强判定：`b1 >= lexical_floor` 且（单命中或 `b1 >= b2 * lexical_gap`）；强则近 BM25 单路（`vec_weight_when_lexical ≤ 0.05`），否则加权 RRF。
+- 兜底：`protect_bm25_topk` 保证 adaptive 结果集覆盖同库 BM25 top-k 成员，从而 Recall@5 不低于 BM25 单路。
+- 缺省常量：`floor=0.8`、`gap=1.1`、`w_lex=0.05`、`w_sem=0.45`、`rrf_k=60`。
+
+### Holdout（相对 §二基线）
+
+| 配置 | Recall@5 | vs BM25 | 判定 |
+|---|---:|---|---|
+| 离线 hashing 混合（adaptive） | 100/230（**0.435**） | **+0.0%**（基线曾 −23%） | `LOCOMO_PASS` |
+| **api 真实嵌入混合（QWEN dim=1024）** | 100/230（**0.435**） | **+0.0%**（基线曾 −12%） | **硬门槛达标**（`hybrid ≥ bm25`） |
+| stretch +15% | — | 未达 | 不阻塞 |
+
+公开 `MemoryStore` 方法集未变；独立集可对比 equal vs adaptive（见 `ci/tools/retrieval-tuning`）。
+
+---
+
 ### 附：运行环境与命令
 
 ```bash
 # 离线（CI 同源）
-moon run ci/locomo --target native
+moon run ci/eval/locomo --target native
 # 真实嵌入（QWEN，.env: QWEN_* → MOOMEM_EMBED_*）
 MOOMEM_EMBED_API_KEY=… MOOMEM_EMBED_BASE_URL=… MOOMEM_EMBED_MODEL=… \
-  moon run ci/locomo --target native -- --embedder api
+  moon run ci/eval/locomo --target native -- --embedder api
 # 提取精度（DeepSeek，.env: DEEPSEEK_*，仅 --live 路径读取）
-moon run ci/locomo --target native -- --live
+moon run ci/eval/locomo --target native -- --live
 ```
 
 密钥均从环境变量读取、不落仓库（`.env` 已 gitignore）；api 档运行 7m55s（788 轮 × 2 store 嵌入），live 档 2m14s。

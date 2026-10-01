@@ -100,7 +100,7 @@ Do not invent a parallel log subsystem unless product requirements change.
 | Core depending on `mizchi/llm` | `src/llm_extractor/` |
 | Append-only JSONL persistence | dual-slot + head |
 | Second stateful orchestrator | `MemoryStore` only; long `add` stages stay as package-private helpers on the same aggregate |
-| “Fix” retrieval fusion by exploding / splitting the store API | Keep `MemoryStore` facade; fusion is Config/eval work (P7/W5), not a module-interface deepen |
+| “Fix” retrieval fusion by exploding / splitting the store API | Keep `MemoryStore` facade; fusion is `Config` + `ranker.mbt` (AdaptiveLexical default); tune via `ci/tools/retrieval-tuning` only |
 | Frontend/ORM templates | N/A — this is a MoonBit library |
 | Live keys / `DEEPSEEK_*` in L0/L1 or examples | gates only (`ci/gates/live-llm`) |
 | `DEEPSEEK_*` / mooncakes secrets on push `test-pipeline` | release `llm-live` / publish jobs only |

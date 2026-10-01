@@ -15,7 +15,7 @@ LLM Agent 每次推理只依赖本轮上下文，进程结束即失忆。**moome
 
 - **两行接入** — `MemoryStore::open` + `add` / `recall`；聚合根仅 6 个公开方法
 - **默认零 API Key** — 嵌入 / 提取 / 冲突均为可注入 trait，缺省离线确定性实现
-- **混合检索** — 向量 + BM25，RRF 融合；索引按 `user_id` 物理分片
+- **混合检索** — 向量 + BM25；缺省查询自适应融合（`AdaptiveLexical`，可回退等权 RRF）；索引按 `user_id` 物理分片
 - **崩溃安全持久化** — 双槽 JSONL 快照 + `head` 指针
 - **结构级用户隔离** — 检索强制带 `user_id`，无全库召回接口
 - **可选 LLM 路径** — `src/llm_extractor` 对接 OpenAI 兼容端点（核心包零 LLM 依赖）

@@ -20,7 +20,7 @@ features:
     details: MemoryStore::open + add / recall；聚合根仅 6 个公开方法，默认零 API Key。
     link: /guide/start/getting-started
   - title: 混合检索与隔离
-    details: 向量 + BM25，RRF 融合；索引按 user_id 物理分片，无全库召回接口。
+    details: 向量 + BM25，缺省自适应融合（可回退等权 RRF）；索引按 user_id 物理分片，无全库召回接口。
     link: /guide/start/introduction
   - title: 崩溃安全持久化
     details: 双槽 JSONL 快照 + head 指针；进程被杀后 open 同一目录即可恢复。

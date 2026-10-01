@@ -84,7 +84,7 @@ E2 示例| `examples/{basic-store,llm-extractor,conflict-supersede,cli-smoke}`(m
 ---|---|---  
 P0| **赛事申报**(10-31 截止)| 飞书表单;确认已加交流群且群昵称 = GitHub ID(heyq02);仓库保持连续提交记录(现状满足)  
 P1| v0.2.2 发版| ⏸ 用户指示暂缓,随时可发:当前 114/101×3 全绿 + 四项指标达标;发版前确认 CI secrets 的 DEEPSEEK_API_KEY(L2 门禁)与 DEEPSEEK_MODEL=deepseek-flash  
-P1| **P7/W5 检索融合**（产品/评测跟进）| hybrid vs BM25 **−12%**，证据 [08](08-w4-eval-report.md) §2.2–2.3；**勿拆分 `MemoryStore` 接口**。三条路径见 08 §2.3:rrf_k/权重在独立开发集扫描 / 查询自适应融合 / 评测口径改「多轮抽取后建库」；禁止在 LoCoMo 计分子集调参  
+P1| **P7/W5 检索融合** | ✅ **查询自适应融合已落地**（缺省 `AdaptiveLexical`；`EqualRrf` 回退）。api holdout hybrid Recall@5 **= BM25（0.435）**，硬门槛达标；stretch +15% 未达。证据 [08](08-w4-eval-report.md) §七。后续可选：评测口径改「多轮抽取后建库」或独立集上继续抬语义增益；**勿拆分 `MemoryStore`**；禁止在 LoCoMo 计分子集调参  
 P2| W4.1 harness 小改 + R1 上游 issue| 见 §6  
 P3| 赛后动作| 评估向 moon-agent 提集成 PR(记忆层替代其 BufferMemory);十一月赛可滚动参赛  
   

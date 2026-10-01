@@ -6,8 +6,19 @@ on:
     tags: ["v*"]
   workflow_dispatch:
     inputs:
+      bump:
+        description: "Version bump type (manual dispatch only)"
+        type: choice
+        required: true
+        default: patch
+        options:
+          - major
+          - minor
+          - patch
+          - alpha
+          - beta
       dry_run:
-        description: "Skip mooncakes publish and GitHub Release (quality + live LLM still run)"
+        description: "Skip mooncakes publish, git tag/commit, and GitHub Release (quality + live LLM still run)"
         type: boolean
         default: false
 
@@ -86,9 +97,15 @@ jobs:
     env:
       # workflow_dispatch boolean inputs are strings on github.event.inputs
       DRY_RUN: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.dry_run == 'true' }}
+      BUMP: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.bump || '' }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          # Needed so manual bump can push commit + tag with GITHUB_TOKEN
+          # (token-authored events do not re-trigger this workflow).
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Setup MoonBit (no cache)
         uses: ./.github/actions/setup-moonbit
@@ -98,15 +115,70 @@ jobs:
 
       - name: Resolve and validate version
         id: ver
+        env:
+          BUMP: ${{ env.BUMP }}
         run: |
           set -euo pipefail
+
+          parse_version() {
+            local v="$1"
+            if [[ "${v}" =~ ^([0-9]+)\.([0-9]+)\.([0-9]+)(-(alpha|beta)\.([0-9]+))?$ ]]; then
+              MAJOR="${BASH_REMATCH[1]}"
+              MINOR="${BASH_REMATCH[2]}"
+              PATCH="${BASH_REMATCH[3]}"
+              PRE_KIND="${BASH_REMATCH[5]:-}"
+              PRE_NUM="${BASH_REMATCH[6]:-0}"
+            else
+              echo "Unsupported version format: ${v} (want X.Y.Z or X.Y.Z-alpha.N / X.Y.Z-beta.N)" >&2
+              exit 1
+            fi
+          }
+
+          bump_version() {
+            local kind="$1"
+            case "${kind}" in
+              major)
+                echo "$((MAJOR + 1)).0.0"
+                ;;
+              minor)
+                echo "${MAJOR}.$((MINOR + 1)).0"
+                ;;
+              patch)
+                echo "${MAJOR}.${MINOR}.$((PATCH + 1))"
+                ;;
+              alpha)
+                if [[ "${PRE_KIND}" == "alpha" ]]; then
+                  echo "${MAJOR}.${MINOR}.${PATCH}-alpha.$((PRE_NUM + 1))"
+                elif [[ "${PRE_KIND}" == "beta" ]]; then
+                  echo "${MAJOR}.${MINOR}.${PATCH}-alpha.1"
+                else
+                  echo "${MAJOR}.${MINOR}.$((PATCH + 1))-alpha.1"
+                fi
+                ;;
+              beta)
+                if [[ "${PRE_KIND}" == "beta" ]]; then
+                  echo "${MAJOR}.${MINOR}.${PATCH}-beta.$((PRE_NUM + 1))"
+                elif [[ "${PRE_KIND}" == "alpha" ]]; then
+                  echo "${MAJOR}.${MINOR}.${PATCH}-beta.1"
+                else
+                  echo "${MAJOR}.${MINOR}.$((PATCH + 1))-beta.1"
+                fi
+                ;;
+              *)
+                echo "Unknown bump type: ${kind}" >&2
+                exit 1
+                ;;
+            esac
+          }
+
           mod_version="$(sed -nE 's/^version[[:space:]]*=[[:space:]]*"([^"]+)".*/\1/p' moon.mod | head -n1)"
           if [[ -z "${mod_version}" ]]; then
             echo "Could not parse version from moon.mod" >&2
             exit 1
           fi
-          echo "mod_version=${mod_version}" >> "$GITHUB_OUTPUT"
-          echo "Module ${MODULE_NAME}@${mod_version}"
+          parse_version "${mod_version}"
+
+          is_prerelease=false
 
           if [[ "${GITHUB_REF_TYPE}" == "tag" ]]; then
             tag="${GITHUB_REF_NAME}"
@@ -119,11 +191,36 @@ jobs:
               echo "Version mismatch: tag=${tag_version} moon.mod=${mod_version}" >&2
               exit 1
             fi
+            echo "mod_version=${mod_version}" >> "$GITHUB_OUTPUT"
             echo "tag_version=${tag_version}" >> "$GITHUB_OUTPUT"
+            if [[ "${mod_version}" == *"-alpha."* || "${mod_version}" == *"-beta."* ]]; then
+              is_prerelease=true
+            fi
+            echo "Module ${MODULE_NAME}@${mod_version} (from tag)"
           else
-            echo "Manual dispatch: publishing moon.mod version ${mod_version}"
-            echo "tag_version=${mod_version}" >> "$GITHUB_OUTPUT"
+            if [[ -z "${BUMP}" ]]; then
+              echo "Manual dispatch requires bump input (major|minor|patch|alpha|beta)" >&2
+              exit 1
+            fi
+            new_version="$(bump_version "${BUMP}")"
+            parse_version "${new_version}"
+            if [[ "${new_version}" == *"-alpha."* || "${new_version}" == *"-beta."* ]]; then
+              is_prerelease=true
+            fi
+
+            # Rewrite moon.mod version in-place for package/publish
+            tmp="$(mktemp)"
+            sed -E "s/^version[[:space:]]*=[[:space:]]*\"[^\"]+\"/version = \"${new_version}\"/" moon.mod > "${tmp}"
+            mv "${tmp}" moon.mod
+
+            echo "Manual dispatch: bump=${BUMP} ${mod_version} → ${new_version}"
+            echo "mod_version=${new_version}" >> "$GITHUB_OUTPUT"
+            echo "tag_version=${new_version}" >> "$GITHUB_OUTPUT"
+            echo "bumped=true" >> "$GITHUB_OUTPUT"
+            echo "base_version=${mod_version}" >> "$GITHUB_OUTPUT"
           fi
+
+          echo "prerelease=${is_prerelease}" >> "$GITHUB_OUTPUT"
 
       - name: Package module
         run: moon package -v
@@ -153,12 +250,40 @@ jobs:
         if: env.DRY_RUN != 'true'
         run: moon publish -v
 
+      - name: Commit version bump and push tag
+        if: env.DRY_RUN != 'true' && github.event_name == 'workflow_dispatch' && steps.ver.outputs.bumped == 'true'
+        env:
+          NEW_VERSION: ${{ steps.ver.outputs.mod_version }}
+          BASE_VERSION: ${{ steps.ver.outputs.base_version }}
+          BUMP: ${{ env.BUMP }}
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          tag="v${NEW_VERSION}"
+          if git rev-parse "${tag}" >/dev/null 2>&1; then
+            echo "Tag ${tag} already exists" >&2
+            exit 1
+          fi
+
+          git add moon.mod
+          git commit -m "chore: release ${tag} (${BUMP} from ${BASE_VERSION})"
+          git tag "${tag}"
+
+          # Push branch tip + tag; GITHUB_TOKEN pushes do not re-trigger workflows
+          git push origin "HEAD:${GITHUB_REF_NAME}"
+          git push origin "${tag}"
+
       - name: Dry-run summary
         if: env.DRY_RUN == 'true'
         run: |
           set -euo pipefail
           echo "Dry-run complete for ${MODULE_NAME}@${{ steps.ver.outputs.mod_version }}"
-          echo "Skipped: moon publish, GitHub Release"
+          if [[ -n "${{ steps.ver.outputs.base_version }}" ]]; then
+            echo "Would bump: ${{ steps.ver.outputs.base_version }} → ${{ steps.ver.outputs.mod_version }} (${{ env.BUMP }})"
+          fi
+          echo "Skipped: moon publish, git commit/tag, GitHub Release"
           echo "Completed gates: quality + live LLM"
 
       - name: Cleanup mooncakes credentials
@@ -166,12 +291,13 @@ jobs:
         run: rm -f "$HOME/.moon/credentials.json"
 
       - name: Create GitHub Release
-        if: env.DRY_RUN != 'true' && github.ref_type == 'tag'
+        if: env.DRY_RUN != 'true' && (github.ref_type == 'tag' || github.event_name == 'workflow_dispatch')
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{ github.ref_name }}
+          tag_name: v${{ steps.ver.outputs.mod_version }}
           name: ${{ env.MODULE_NAME }} ${{ steps.ver.outputs.mod_version }}
           generate_release_notes: true
+          prerelease: ${{ steps.ver.outputs.prerelease == 'true' }}
           body: |
             Published to mooncakes.io as `${{ env.MODULE_NAME }}@${{ steps.ver.outputs.mod_version }}`.
 

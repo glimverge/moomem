@@ -7,6 +7,7 @@
 #   SKIP_COMMIT   if "1", write files but do not git commit/push
 #   SKIP_API      if "1", skip --embedder api (record error/skipped)
 #   SKIP_LIVE     if "1", skip --live
+#   LIVE_EXTRACT_LIMIT  extraction gold cases for --live (default 20; 0 = all 100)
 #
 # Secrets (never written to JSON):
 #   DEEPSEEK_* for --live
@@ -70,7 +71,10 @@ else
     > "${TMP_DIR}/api.json"
 fi
 if [[ "${SKIP_LIVE:-0}" != "1" ]]; then
-  run_mode live --live
+  # Archive smoke subset (full 100-case live remains a manual command; see docs/project/08).
+  LIVE_EXTRACT_LIMIT="${LIVE_EXTRACT_LIMIT:-20}"
+  export MOOMEM_LOCOMO_EXTRACT_LIMIT="${LIVE_EXTRACT_LIMIT}"
+  run_mode live --live --extract-limit "${LIVE_EXTRACT_LIMIT}"
 else
   echo '{"mode":"live","run":{"embedder":"hashing","model":null,"dim":null,"extractor_model":null,"metrics":{},"gates":{"overall":"skipped"},"status":"skipped"}}' \
     > "${TMP_DIR}/live.json"

@@ -70,6 +70,8 @@
         "extraction_precision": { "type": ["number", "null"] },
         "extraction_hit": { "type": ["integer", "null"] },
         "extraction_denom": { "type": ["integer", "null"] },
+        "extraction_cases_scored": { "type": ["integer", "null"] },
+        "extraction_cases_total": { "type": ["integer", "null"] },
         "extraction_status": {
           "type": "string",
           "enum": ["scored", "skipped", "error"]

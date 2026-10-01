@@ -21,16 +21,21 @@ import { BenchmarkPage } from '../../components/BenchmarkPage';
 moon run ci/eval/locomo --target native
 moon run ci/eval/locomo --target native -- --report /tmp/offline.json
 
-# 可选 live 档（不进 push CI）
-moon run ci/eval/locomo --target native -- --embedder api   # 需 MOOMEM_EMBED_*
-moon run ci/eval/locomo --target native -- --live           # 需 DEEPSEEK_*
+# api 档（需 MOOMEM_EMBED_*；可由 QWEN_* 映射）
+moon run ci/eval/locomo --target native -- --embedder api
 
-# 发版归档试跑（写 0.0.0-dev，不 push）
+# live 提取 — 发版归档默认只跑 20/100 条金标准（快）
+moon run ci/eval/locomo --target native -- --live --extract-limit 20
+
+# live 全量 100 条（手工复现 W4 §三；需 DEEPSEEK_*；约数分钟～十余分钟）
+moon run ci/eval/locomo --target native -- --live
+
+# 发版归档试跑（写 0.0.0-dev，不 push；live 默认 LIVE_EXTRACT_LIMIT=20）
 set -a && source .env && set +a
 NEW_VERSION=0.0.0-dev SKIP_COMMIT=1 bash scripts/ci/run-locomo-benchmark-archive.sh
 ```
 
-api 档环境映射：`QWEN_API_KEY` / `QWEN_BASE_URL` / `QWEN_MODEL` → `MOOMEM_EMBED_API_KEY` / `MOOMEM_EMBED_BASE_URL` / `MOOMEM_EMBED_MODEL`。live 档只读 `DEEPSEEK_*`。结果 JSON 永不写入 API Key。
+api 档环境映射：`QWEN_API_KEY` / `QWEN_BASE_URL` / `QWEN_MODEL` → `MOOMEM_EMBED_API_KEY` / `MOOMEM_EMBED_BASE_URL` / `MOOMEM_EMBED_MODEL`。live 档只读 `DEEPSEEK_*`。结果 JSON 永不写入 API Key。流水线 `benchmark-archive` 的 live 为 **20 条子集**；全量 Precision 数字以手工 `--live`（无 `--extract-limit`）与 [08 §三](https://github.com/glimverge/moomem/blob/main/docs/project/08-w4-eval-report.md) 为准。
 
 :::important
 LoCoMo 数据许可见仓库 [`ci/eval/locomo/data/README.md`](https://github.com/glimverge/moomem/blob/main/ci/eval/locomo/data/README.md)（CC BY-NC 4.0）。缺省 `AdaptiveLexical` 下离线/api 混合 Recall@5 不低于 BM25（见 [08 §七](https://github.com/glimverge/moomem/blob/main/docs/project/08-w4-eval-report.md)）；stretch ≥15% 增益仅在 `--embedder api` 下评估且不阻塞。

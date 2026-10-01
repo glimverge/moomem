@@ -8,6 +8,10 @@ struct ExtractionReport {
   hit : Int
   denom : Int
   model : String
+  /// Gold cases actually scored this run (after --extract-limit).
+  cases_scored : Int
+  /// Full gold set size (100); 0 when skipped.
+  cases_total : Int
 }
 
 ///|
@@ -86,11 +90,19 @@ fn build_mode_report_json(r : ModeReport) -> Json {
     metrics["extraction_hit"] = json_null()
     metrics["extraction_denom"] = json_null()
     metrics["extraction_status"] = Json::string("skipped")
+    metrics["extraction_cases_scored"] = json_null()
+    metrics["extraction_cases_total"] = json_null()
   } else {
     metrics["extraction_precision"] = Json::number(r.extraction.precision)
     metrics["extraction_hit"] = Json::number(r.extraction.hit.to_double())
     metrics["extraction_denom"] = Json::number(r.extraction.denom.to_double())
     metrics["extraction_status"] = Json::string("scored")
+    metrics["extraction_cases_scored"] = Json::number(
+      r.extraction.cases_scored.to_double(),
+    )
+    metrics["extraction_cases_total"] = Json::number(
+      r.extraction.cases_total.to_double(),
+    )
   }
 
   let gates : Map[String, Json] = Map([])

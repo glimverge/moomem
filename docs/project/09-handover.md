@@ -93,7 +93,7 @@ P3| 赛后动作| 评估向 moon-agent 提集成 PR(记忆层替代其 BufferMem
 工具| 调用方式| 坑位  
 ---|---|---  
 moon CLI| ~/.moon/bin/moon(绝对路径)| 缺省 target 是 wasm 非 native;磁盘测试用 #cfg(target="native") 门控  
-常用命令| moon test --target native\|wasm\|wasm-gc\|js;moon run ci/tools/retrieval-tuning\|ci/eval/locomo --target native;moon run examples/\<scene\> --target native;moon check --target all| 评测三档:裸跑(离线)/ --embedder api(QWEN)/ --live(DeepSeek);L2:`ci/gates/live-llm`  
+常用命令| moon test --target native\|wasm\|wasm-gc\|js;moon run ci/tools/retrieval-tuning\|ci/eval/locomo --target native;moon run examples/\<scene\> --target native;moon check --target all| 评测三档:裸跑(离线)/ --embedder api(QWEN)/ --live(DeepSeek,全量100条手工)/发版归档 live 默认 `--extract-limit 20`;L2:`ci/gates/live-llm`  
 密钥| moomem/.env;QWEN_* 需映射为 MOOMEM_EMBED_*;DEEPSEEK_* 直读| 跑 api/live 前先 curl 单次探针验证端点再全量(嵌入 788 轮 ×2 约 8 分钟)  
 FlowUs CLI| ~/.local/bin/flowus v0.3.11(绝对路径);OAuth 凭证 ~/.flowus/credentials.json| 无 markdown 写入,只有块级 JSON;分批 ≤90 块;table_row 只能追加不能改;落盘用技能 html-to-flowus(含通用转换器与完整坑位清单)  
 沙箱环境| 本机 shell| HTTP_PROXY 生效(死端口测试会被代理拦截返回 200,须 env -u 或 NO_PROXY='*');grep 对部分 UTF-8 文件行为异常,优先用专用检索工具  

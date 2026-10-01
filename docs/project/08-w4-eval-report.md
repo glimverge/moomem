@@ -130,8 +130,10 @@ moon run ci/eval/locomo --target native
 # 真实嵌入（QWEN，.env: QWEN_* → MOOMEM_EMBED_*）
 MOOMEM_EMBED_API_KEY=… MOOMEM_EMBED_BASE_URL=… MOOMEM_EMBED_MODEL=… \
   moon run ci/eval/locomo --target native -- --embedder api
-# 提取精度（DeepSeek，.env: DEEPSEEK_*，仅 --live 路径读取）
+# 提取精度 · 全量 100 条（手工 / W4 §三 口径；DEEPSEEK_*，仅 --live 读取）
 moon run ci/eval/locomo --target native -- --live
+# 提取精度 · 发版归档子集（默认 20；与 release benchmark-archive 一致）
+moon run ci/eval/locomo --target native -- --live --extract-limit 20
 ```
 
-密钥均从环境变量读取、不落仓库（`.env` 已 gitignore）；api 档运行 7m55s（788 轮 × 2 store 嵌入），live 档 2m14s。
+密钥均从环境变量读取、不落仓库（`.env` 已 gitignore）；api 档运行 7m55s（788 轮 × 2 store 嵌入），live 全量约 2m14s（视端点而定）。**发版流水线 live 只跑 20/100**，全量结果不自动进 `benchmarks/locomo/`，以本报告 §三与手工 `--live` 为准。

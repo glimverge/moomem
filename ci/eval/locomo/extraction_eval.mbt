@@ -19,11 +19,35 @@ fn run_extraction_offline_skip() -> ExtractionReport {
     hit: 0,
     denom: 0,
     model: "",
+    cases_scored: 0,
+    cases_total: 0,
   }
 }
 
 ///|
-fn run_extraction_live(cases : Array[ExtractionCase]) -> ExtractionReport {
+fn take_extract_cases(
+  cases : Array[ExtractionCase],
+  extract_limit : Int,
+) -> Array[ExtractionCase] {
+  if extract_limit <= 0 || extract_limit >= cases.length() {
+    return cases
+  }
+  let out : Array[ExtractionCase] = []
+  let mut i = 0
+  while i < extract_limit {
+    out.push(cases[i])
+    i = i + 1
+  }
+  out
+}
+
+///|
+fn run_extraction_live(
+  cases : Array[ExtractionCase],
+  extract_limit : Int,
+) -> ExtractionReport {
+  let cases_total = cases.length()
+  let cases = take_extract_cases(cases, extract_limit)
   // Read DeepSeek env only in --live path
   let api_key = require_env("DEEPSEEK_API_KEY")
   let base_url = normalize_base_url(require_env("DEEPSEEK_BASE_URL"))
@@ -52,6 +76,9 @@ fn run_extraction_live(cases : Array[ExtractionCase]) -> ExtractionReport {
   let mut hits = 0
   let mut denom = 0
   let fps : Array[String] = []
+  println(
+    "extraction cases: \{cases.length()}/\{cases_total} (extract_limit=\{extract_limit})",
+  )
   for c in cases {
     let user = "ex-\{c.id}"
     ignore(store.add(user, c.text))
@@ -103,6 +130,7 @@ fn run_extraction_live(cases : Array[ExtractionCase]) -> ExtractionReport {
   println("")
   println("| metric | value |")
   println("|---|---|")
+  println("| cases scored | \{cases.length()}/\{cases_total} |")
   println("| hits (must_extract) | \{hits} |")
   println("| denom (stored facts) | \{denom} |")
   println("| Precision | \{format_mrr(precision)} |")
@@ -126,5 +154,7 @@ fn run_extraction_live(cases : Array[ExtractionCase]) -> ExtractionReport {
     hit: hits,
     denom,
     model,
+    cases_scored: cases.length(),
+    cases_total,
   }
 }

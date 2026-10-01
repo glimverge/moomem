@@ -84,7 +84,8 @@ struct CliOpts {
   fixture : String
   embedder : String // hashing | api
   live : Bool
-  limit : Int // 0 = no limit
+  limit : Int // 0 = no limit (retrieval QA)
+  extract_limit : Int // 0 = no limit (extraction gold cases); archive uses 20
   report : String // "" = no report file
   report_only_exit : Bool // write report then exit 0 even if gates fail
   help : Bool
@@ -97,6 +98,7 @@ fn parse_args() -> CliOpts {
   let mut embedder = "hashing"
   let mut live = false
   let mut limit = 0
+  let mut extract_limit = 0
   let mut report = ""
   let mut report_only_exit = false
   let mut help = false
@@ -130,6 +132,15 @@ fn parse_args() -> CliOpts {
         fail("--limit requires an integer")
       }
       limit = parse_int_arg(args[i], "--limit")
+    } else if a == "--extract-limit" {
+      i = i + 1
+      if i >= args.length() {
+        fail("--extract-limit requires an integer")
+      }
+      extract_limit = parse_int_arg(args[i], "--extract-limit")
+      if extract_limit < 0 {
+        fail("--extract-limit must be >= 0")
+      }
     } else if a == "--report" {
       i = i + 1
       if i >= args.length() {
@@ -141,7 +152,31 @@ fn parse_args() -> CliOpts {
     }
     i = i + 1
   }
-  CliOpts::{ fixture, embedder, live, limit, report, report_only_exit, help, }
+  // Env override when flag omitted (archive / ops).
+  if extract_limit == 0 {
+    match @env.get_env_var("MOOMEM_LOCOMO_EXTRACT_LIMIT") {
+      Some(raw) => {
+        let t = raw.trim().to_owned()
+        if t.length() > 0 {
+          extract_limit = parse_int_arg(t, "MOOMEM_LOCOMO_EXTRACT_LIMIT")
+          if extract_limit < 0 {
+            fail("MOOMEM_LOCOMO_EXTRACT_LIMIT must be >= 0")
+          }
+        }
+      }
+      None => ()
+    }
+  }
+  CliOpts::{
+    fixture,
+    embedder,
+    live,
+    limit,
+    extract_limit,
+    report,
+    report_only_exit,
+    help,
+  }
 }
 
 ///|
@@ -151,6 +186,10 @@ fn print_help() -> Unit {
   println("  --embedder hashing|api   default hashing (offline)")
   println("  --live               run extraction precision with DeepSeek")
   println("  --limit <n>          score at most n retrieval QA items")
+  println(
+    "  --extract-limit <n>  score at most n extraction gold cases (0=all 100)",
+  )
+  println("                       (or env MOOMEM_LOCOMO_EXTRACT_LIMIT)")
   println("  --report <path>      write machine-readable JSON for this mode")
   println("                       (or env MOOMEM_LOCOMO_REPORT)")
   println("  --report-only-exit   after writing report, exit 0 even if gates fail")

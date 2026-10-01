@@ -20,7 +20,7 @@ fn main {
   println("# moomem L3 LoCoMo evaluation")
   println("")
   println(
-    "mode: embedder=\{opts.embedder} live=\{opts.live} limit=\{opts.limit}",
+    "mode: embedder=\{opts.embedder} live=\{opts.live} limit=\{opts.limit} extract_limit=\{opts.extract_limit}",
   )
   println("")
 
@@ -74,7 +74,7 @@ fn main {
   println("")
   let extraction = if opts.live {
     let gold = load_extraction_gold("ci/eval/locomo/data/extraction_gold.json")
-    run_extraction_live(gold)
+    run_extraction_live(gold, opts.extract_limit)
   } else {
     run_extraction_offline_skip()
   }

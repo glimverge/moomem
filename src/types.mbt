@@ -185,6 +185,27 @@ pub impl Show for StoreStats with fn output(self, logger) {
 pub extend StoreStats with Show::{to_string, output}
 
 ///|
+/// recall 命中数不足 top_k 时的补齐策略。
+pub(all) enum RecallBackfill {
+  /// 不补齐：命中多少返回多少（零命中行为不受影响，恒为空列表）
+  NoBackfill
+  /// 按插入序倒序补最新可检索条目（v0.2.1 现行为，缺省）
+  BackfillRecency
+}
+
+///|
+/// 手写 Show（构造器名，与 ConflictDecision 惯例一致）。
+pub impl Show for RecallBackfill with fn output(self, logger) {
+  match self {
+    NoBackfill => logger.write_string("NoBackfill")
+    BackfillRecency => logger.write_string("BackfillRecency")
+  }
+}
+
+///|
+pub extend RecallBackfill with Show::{to_string, output}
+
+///|
 /// 打开 MemoryStore 的配置。所有注入点均为 Option，None 时使用缺省确定性实现。
 pub(all) struct Config {
   /// None → HashingEmbedder(dim)
@@ -205,6 +226,12 @@ pub(all) struct Config {
   recall_candidates : Int
   /// 冲突判定 Replace 阈值，缺省 0.82
   supersede_threshold : Double
+  /// add 链路冲突检测每路候选窗口，缺省 8（合法域 >= 1）
+  conflict_candidates : Int
+  /// SimilarityJudge 的 Coexist 下界间距，缺省 0.15（合法域 [0, 1)）
+  coexist_band : Double
+  /// recall 补齐策略，缺省 BackfillRecency
+  backfill : RecallBackfill
 }
 
 ///|
@@ -220,6 +247,9 @@ pub fn Config::default() -> Config {
     rrf_k: DEFAULT_RRF_K,
     recall_candidates: 0,
     supersede_threshold: DEFAULT_SUPERSEDE_THRESHOLD,
+    conflict_candidates: CONFLICT_CANDIDATES,
+    coexist_band: COEXIST_BAND,
+    backfill: BackfillRecency,
   }
 }
 

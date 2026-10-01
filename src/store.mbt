@@ -24,6 +24,12 @@ pub struct MemoryStore {
   rrf_k : Int
   recall_candidates : Int
   supersede_threshold : Double
+  /// add 链路冲突检测每路候选窗口
+  conflict_candidates : Int
+  /// SimilarityJudge Coexist 下界间距（仅在缺省 judge 构造时消费）
+  coexist_band : Double
+  /// recall 命中不足 top_k 时的补齐策略
+  backfill : RecallBackfill
   /// 全部条目（含 Superseded / Deleted，审计与导出可见）
   entries : Map[String, MemoryEntry]
   /// 每 user 的 entry id 插入序（含全部状态）
@@ -83,6 +89,18 @@ pub fn MemoryStore::open(
       ),
     )
   }
+  if cfg.conflict_candidates < 1 {
+    return Err(
+      MoomemError::InvalidOperation(
+        "config.conflict_candidates must be >= 1",
+      ),
+    )
+  }
+  if cfg.coexist_band < 0.0 || cfg.coexist_band >= 1.0 {
+    return Err(
+      MoomemError::InvalidOperation("config.coexist_band must be in [0, 1)"),
+    )
+  }
   // 解析持久化后端
   let persistence : &PersistenceBackend = match cfg.persistence {
     Some(p) => p
@@ -132,7 +150,11 @@ pub fn MemoryStore::open(
   let judge : &ConflictJudge = match cfg.judge {
     Some(j) => j
     None =>
-      SimilarityJudge::new(cfg.supersede_threshold, embedder) as &ConflictJudge
+      SimilarityJudge::new(
+        cfg.supersede_threshold,
+        embedder,
+        coexist_band=cfg.coexist_band,
+      ) as &ConflictJudge
   }
   let clock : &Clock = match cfg.clock {
     Some(c) => c
@@ -150,6 +172,9 @@ pub fn MemoryStore::open(
     rrf_k: cfg.rrf_k,
     recall_candidates: cfg.recall_candidates,
     supersede_threshold: cfg.supersede_threshold,
+    conflict_candidates: cfg.conflict_candidates,
+    coexist_band: cfg.coexist_band,
+    backfill: cfg.backfill,
     entries: Map([]),
     by_user: Map([]),
     vec_index: VectorIndex::new(),
@@ -308,16 +333,24 @@ pub fn MemoryStore::add(
       }
     }
     let embedding_failed = vec.length() != self.dim
-    // ---- 冲突候选（向量 + 关键词各取 CONFLICT_CANDIDATES，仅本 user 分片）----
+    // ---- 冲突候选（向量 + 关键词各取 conflict_candidates，仅本 user 分片）----
     let candidate_ids : Array[String] = []
     if vec.length() == self.dim {
-      for pair in self.vec_index.search(user_id, vec, CONFLICT_CANDIDATES) {
+      for pair in self.vec_index.search(
+        user_id,
+        vec,
+        self.conflict_candidates,
+      ) {
         if !candidate_ids.contains(pair.0) {
           candidate_ids.push(pair.0)
         }
       }
     }
-    for pair in self.kw_index.search(user_id, fact.content, CONFLICT_CANDIDATES) {
+    for pair in self.kw_index.search(
+      user_id,
+      fact.content,
+      self.conflict_candidates,
+    ) {
       if !candidate_ids.contains(pair.0) {
         candidate_ids.push(pair.0)
       }
@@ -488,29 +521,33 @@ pub fn MemoryStore::recall(
     }
   }
   // 补齐到 top_k（仅当已有命中；零命中返回空列表，不编造）
-  if results.length() > 0 && results.length() < k {
-    let in_results : Map[String, Bool] = Map([])
-    for e in results {
-      in_results.set(e.id, true)
-    }
-    match self.by_user.get(user_id) {
-      Some(ids) => {
-        // 最新优先（插入序倒序）
-        let mut i = ids.length() - 1
-        while i >= 0 && results.length() < k {
-          match self.entries.get(ids[i]) {
-            Some(e) =>
-              if e.is_recallable() && !in_results.contains(e.id) {
-                in_results.set(e.id, true)
-                results.push(e)
+  match self.backfill {
+    BackfillRecency =>
+      if results.length() > 0 && results.length() < k {
+        let in_results : Map[String, Bool] = Map([])
+        for e in results {
+          in_results.set(e.id, true)
+        }
+        match self.by_user.get(user_id) {
+          Some(ids) => {
+            // 最新优先（插入序倒序）
+            let mut i = ids.length() - 1
+            while i >= 0 && results.length() < k {
+              match self.entries.get(ids[i]) {
+                Some(e) =>
+                  if e.is_recallable() && !in_results.contains(e.id) {
+                    in_results.set(e.id, true)
+                    results.push(e)
+                  }
+                None => ()
               }
-            None => ()
+              i = i - 1
+            }
           }
-          i = i - 1
+          None => ()
         }
       }
-      None => ()
-    }
+    NoBackfill => ()
   }
   Ok(results)
 }

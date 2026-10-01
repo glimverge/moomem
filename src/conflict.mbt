@@ -46,20 +46,22 @@ pub(open) trait ConflictJudge {
 ///|
 /// 缺省判定器：对每个 candidate 计算
 ///   sim = max(cosine(new_fact 嵌入, candidate 嵌入), 关键词 Jaccard)
-///   sim >= threshold              → Replace
-///   [threshold - 0.15, threshold) → Coexist
-///   否则                           → Ignore（不产生裁决）
+///   sim >= threshold                    → Replace
+///   [threshold - coexist_band, threshold) → Coexist
+///   否则                                 → Ignore（不产生裁决）
 pub struct SimilarityJudge {
   threshold : Double
   embedder : &Embedder
+  coexist_band : Double
 }
 
 ///|
 pub fn SimilarityJudge::new(
   threshold : Double,
   embedder : &Embedder,
+  coexist_band? : Double = COEXIST_BAND,
 ) -> SimilarityJudge {
-  SimilarityJudge::{ threshold, embedder, }
+  SimilarityJudge::{ threshold, embedder, coexist_band, }
 }
 
 ///|
@@ -79,7 +81,7 @@ pub impl ConflictJudge for SimilarityJudge with fn judge(
     let sim = if cos > jac { cos } else { jac }
     if sim >= self.threshold {
       verdicts.push(ConflictVerdict::{ existing: cand, decision: Replace, })
-    } else if sim >= self.threshold - COEXIST_BAND {
+    } else if sim >= self.threshold - self.coexist_band {
       verdicts.push(ConflictVerdict::{ existing: cand, decision: Coexist, })
     }
   }

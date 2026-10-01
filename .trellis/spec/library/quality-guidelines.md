@@ -60,7 +60,7 @@ Do not invent a parallel log subsystem unless product requirements change.
 | Cross-user recall / unscoped index scan | always pass `user_id` |
 | Core depending on `mizchi/llm` | `src/llm_extractor/` |
 | Append-only JSONL persistence | dual-slot + head |
-| Second stateful orchestrator | `MemoryStore` only |
+| Second stateful orchestrator | `MemoryStore` only; long `add` stages stay as package-private helpers on the same aggregate |
 | Frontend/ORM templates | N/A — this is a MoonBit library |
 
 ## When changing public behavior

@@ -16,10 +16,10 @@ Improve **locality** inside the `MemoryStore` **implementation** by extracting p
 
 ## Acceptance Criteria
 
-- [ ] AC1. `add` body is shorter / staged via private helpers; public method still `add(user_id, text)`.
-- [ ] AC2. No new `pub` orchestration types required for hosts.
-- [ ] AC3. Native `moon test` green (baseline still matches project docs).
-- [ ] AC4. Trellis `directory-structure` / quality notes mention private helpers if useful.
+- [x] AC1. `add` body is shorter / staged via private helpers; public method still `add(user_id, text)`.
+- [x] AC2. No new `pub` orchestration types required for hosts.
+- [x] AC3. Native `moon test` green (baseline still matches project docs).
+- [x] AC4. Trellis `directory-structure` / quality notes mention private helpers if useful.
 
 ## Out of scope
 

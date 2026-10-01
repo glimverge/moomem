@@ -31,7 +31,7 @@ Layering matches `docs/project/architecture.md` §1.3:
 | Dedup | `dedup.mbt` | Per-user content fingerprints |
 | Indexes | `index_vector.mbt`, `index_keyword.mbt`, `ranker.mbt` | Per-user shards + BM25 + RRF |
 | Persistence | `persist.mbt` | `PersistenceBackend`, `FsBackend`, `MemoryBackend` — **only non-test core `@fs` call site** (`moon.pkg` may still import `x/fs`) |
-| Orchestration | `store.mbt` | `MemoryStore` aggregate root (host API); indexes/dedup/`rrf` are package-private; `tokenize` / similarity helpers stay `pub` for CI — see [Public API and Types](./public-api-and-types.md) |
+| Orchestration | `store.mbt` | `MemoryStore` aggregate root (host API); indexes/dedup/`rrf` are package-private; `tokenize` / similarity helpers stay `pub` for CI — see [Public API and Types](./public-api-and-types.md). `add` is a thin orchestrator over package-private stage helpers (extract/degrade, dedup, conflict/supersede, embed+index insert, flush) — not a second aggregate. |
 
 ## Tests
 

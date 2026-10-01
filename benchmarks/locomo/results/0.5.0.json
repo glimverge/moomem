@@ -1,0 +1,118 @@
+{
+  "schema_version": 1,
+  "module": "heyq02/moomem",
+  "version": "0.5.0",
+  "git_tag": "v0.5.0",
+  "committed_at": "2026-10-01T16:57:08Z",
+  "fixture": {
+    "path": "ci/eval/locomo/data/locomo_subset.json",
+    "note": "CC BY-NC 4.0 subset"
+  },
+  "runs": {
+    "offline": {
+      "embedder": "hashing",
+      "model": null,
+      "dim": null,
+      "extractor_model": null,
+      "metrics": {
+        "hybrid_recall_at_5": 0.43478260869565216,
+        "hybrid_mrr_at_5": 0.2942753623188407,
+        "bm25_recall_at_5": 0.43478260869565216,
+        "bm25_mrr_at_5": 0.30971014492753635,
+        "vs_bm25_pct": 0,
+        "target_15pct": "n_a",
+        "near_dup_supersede_rate": 0.95,
+        "near_dup_ok": 19,
+        "near_dup_total": 20,
+        "cross_user_leaks": 0,
+        "reopen_ok": 1,
+        "extraction_precision": null,
+        "extraction_hit": null,
+        "extraction_denom": null,
+        "extraction_status": "skipped",
+        "extraction_cases_scored": null,
+        "extraction_cases_total": null
+      },
+      "gates": {
+        "isolation": "pass",
+        "persistence": "pass",
+        "conflict": "pass",
+        "hybrid_ge_bm25": "n_a",
+        "target_15pct": "n_a",
+        "extraction_precision": "skipped",
+        "overall": "pass"
+      },
+      "status": "pass"
+    },
+    "api": {
+      "embedder": "api",
+      "model": "qwen3.7-text-embedding-flash",
+      "dim": 1024,
+      "extractor_model": null,
+      "metrics": {
+        "hybrid_recall_at_5": 0.43478260869565216,
+        "hybrid_mrr_at_5": 0.29826086956521747,
+        "bm25_recall_at_5": 0.43478260869565216,
+        "bm25_mrr_at_5": 0.30971014492753635,
+        "vs_bm25_pct": 0,
+        "target_15pct": "missed",
+        "near_dup_supersede_rate": 0.95,
+        "near_dup_ok": 19,
+        "near_dup_total": 20,
+        "cross_user_leaks": 0,
+        "reopen_ok": 1,
+        "extraction_precision": null,
+        "extraction_hit": null,
+        "extraction_denom": null,
+        "extraction_status": "skipped",
+        "extraction_cases_scored": null,
+        "extraction_cases_total": null
+      },
+      "gates": {
+        "isolation": "pass",
+        "persistence": "pass",
+        "conflict": "pass",
+        "hybrid_ge_bm25": "pass",
+        "target_15pct": "fail",
+        "extraction_precision": "skipped",
+        "overall": "pass"
+      },
+      "status": "pass"
+    },
+    "live": {
+      "embedder": "hashing",
+      "model": null,
+      "dim": null,
+      "extractor_model": "deepseek-flash",
+      "metrics": {
+        "hybrid_recall_at_5": 0.43478260869565216,
+        "hybrid_mrr_at_5": 0.2942753623188407,
+        "bm25_recall_at_5": 0.43478260869565216,
+        "bm25_mrr_at_5": 0.30971014492753635,
+        "vs_bm25_pct": 0,
+        "target_15pct": "n_a",
+        "near_dup_supersede_rate": 0.95,
+        "near_dup_ok": 19,
+        "near_dup_total": 20,
+        "cross_user_leaks": 0,
+        "reopen_ok": 1,
+        "extraction_precision": 0.8589743589743589,
+        "extraction_hit": 67,
+        "extraction_denom": 78,
+        "extraction_status": "scored",
+        "extraction_cases_scored": 100,
+        "extraction_cases_total": 100
+      },
+      "gates": {
+        "isolation": "pass",
+        "persistence": "pass",
+        "conflict": "pass",
+        "hybrid_ge_bm25": "n_a",
+        "target_15pct": "n_a",
+        "extraction_precision": "pass",
+        "overall": "pass"
+      },
+      "status": "pass"
+    }
+  }
+}

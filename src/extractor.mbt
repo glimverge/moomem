@@ -27,7 +27,7 @@ pub impl Show for ExtractedFact with fn output(self, logger) {
 pub extend ExtractedFact with Show::{to_string, output}
 
 ///|
-/// 事实提取抽象。生产环境注入 mizchi/llm 等适配实现。
+/// 事实提取抽象。生产环境注入独立适配包中的 LLM 实现。
 pub(open) trait Extractor {
   /// 提取纪律（PRD 13.1）：只保留可复用信息；不改写事实本身；宁少勿错。
   /// 返回空数组 = 纯闲聊，不入库。

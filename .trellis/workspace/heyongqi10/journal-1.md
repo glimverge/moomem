@@ -158,3 +158,37 @@ P1 Option B: package-private indexes/dedup; P6: private helpers for MemoryStore.
 ### Next Steps
 
 - None - task complete
+
+
+## Session 5: README 分流与 LoCoMo 基准归档收口
+
+**Date**: 2026-10-01
+**Task**: README 分流与 LoCoMo 基准归档收口
+**Branch**: `main`
+
+### Summary
+
+归档 readme-value-narrative 与 locomo-benchmark；push main。
+
+### Main Changes
+
+Archived remaining in-progress tasks after AC verification; pushing main.
+
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `cfdf2e7` | (see git log) |
+
+### Testing
+
+- Validation was not recorded for this session.
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- None - task complete

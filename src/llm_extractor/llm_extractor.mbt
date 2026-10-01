@@ -6,6 +6,7 @@
 // 生产注入 OpenAIProvider / AnthropicProvider（mizchi/llm/openai 等子包），
 // 测试注入任意 Provider 实现（本包测试用脚本化 mock，零网络）。
 
+///|
 /// 提取失败降级策略（PRD 13.3）。
 pub(all) enum DegradePolicy {
   /// 降级：extract 返回原文的 unstructured 事实（不抛错），
@@ -17,6 +18,7 @@ pub(all) enum DegradePolicy {
   PropagateError
 }
 
+///|
 /// LLM 事实提取适配器：实现核心包的 Extractor trait（PRD 13.1 提取契约）。
 ///
 /// 稳定性（PRD 13.3）：
@@ -36,6 +38,7 @@ pub struct LlmExtractor {
   mut last_failure : String?
 }
 
+///|
 /// 构造 LLMExtractor。
 /// provider：任意 mizchi/llm Provider 实现（真实 provider 或测试 mock）。
 /// max_facts：单次提取接受的事实条数上限（默认 16）。
@@ -43,42 +46,45 @@ pub struct LlmExtractor {
 pub fn LlmExtractor::new(
   provider : &@llm.Provider,
   max_facts? : Int = 16,
-  degrade? : DegradePolicy = ReturnRaw
+  degrade? : DegradePolicy = ReturnRaw,
 ) -> LlmExtractor {
   let cap = if max_facts < 1 { 1 } else { max_facts }
   LlmExtractor::{
     provider,
-    max_facts : cap,
+    max_facts: cap,
     degrade,
-    llm_calls : 0,
-    last_failure : None,
+    llm_calls: 0,
+    last_failure: None,
   }
 }
 
+///|
 /// 累计 LLM 调用次数（观测：验证单次 add 提取链路 ≤ 2 次调用）。
 pub fn LlmExtractor::llm_call_count(self : LlmExtractor) -> Int {
   self.llm_calls
 }
 
+///|
 /// 最近一次失败原因；None = 最近一次提取成功。
 /// 降级发生后宿主可读取此值上报/落日志（PRD 12.3 可解释）。
 pub fn LlmExtractor::last_failure_reason(self : LlmExtractor) -> String? {
   self.last_failure
 }
 
+///|
 /// 单次 LLM 调用：驱动 provider.stream，收集文本与流错误。
 /// 网络失败、鉴权失败等以 StreamEvent::Error 形式上报（mizchi/llm 约定），
 /// 本函数将其转为 Err(可读原因)；正常完成返回全部 TextDelta 拼接。
 fn LlmExtractor::request(
   self : LlmExtractor,
-  messages : Array[@llm.Message]
+  messages : Array[@llm.Message],
 ) -> Result[String, String] {
   self.llm_calls = self.llm_calls + 1
   let buf = StringBuilder()
   // 用数组而非可变局部做闭包捕获，避免跨闭包可变捕获的语义歧义
   let failure : Array[String] = []
   let handler : @llm.StreamHandler = @llm.StreamHandler::{
-    on_event : fn(event : @llm.StreamEvent) {
+    on_event: fn(event : @llm.StreamEvent) {
       match event {
         @llm.StreamEvent::TextDelta(s) => buf.write_string(s)
         @llm.StreamEvent::Error(msg) => failure.push(msg)
@@ -88,37 +94,38 @@ fn LlmExtractor::request(
   }
   self.provider.stream(messages, [], handler)
   match failure.length() > 0 {
-    true => Err(
-      "llm provider '\{self.provider.name()}' stream error: \{failure[0]}",
-    )
+    true =>
+      Err("llm provider '\{self.provider.name()}' stream error: \{failure[0]}")
     false => Ok(buf.to_string())
   }
 }
 
+///|
 /// 按策略降级：返回原文 unstructured（不抛错）或 Err(原因)。
 fn LlmExtractor::degrade_to(
   self : LlmExtractor,
   text : String,
-  reason : String
+  reason : String,
 ) -> Result[Array[@src.ExtractedFact], @src.MoomemError] {
   self.last_failure = Some(reason)
   match self.degrade {
     ReturnRaw =>
       Ok([
         @src.ExtractedFact::{
-          content : text,
-          kind : @src.EntryKind::Unstructured,
-          source_span : None,
+          content: text,
+          kind: @src.EntryKind::Unstructured,
+          source_span: None,
         },
       ])
     PropagateError =>
-      Err(@src.MoomemError::ExtractionFailure(
-        "llm extractor degraded: \{reason}",
-      ))
+      Err(
+        @src.MoomemError::ExtractionFailure("llm extractor degraded: \{reason}"),
+      )
   }
 }
 
-pub impl @src.Extractor for LlmExtractor with extract(self, _user_id, text) {
+///|
+pub impl @src.Extractor for LlmExtractor with fn extract(self, _user_id, text) {
   // 空白文本：不消耗 LLM 调用，直接视为纯闲聊（与 RawExtractor 语义对齐）
   if text.trim().length() == 0 {
     return Ok([])
@@ -165,8 +172,10 @@ pub impl @src.Extractor for LlmExtractor with extract(self, _user_id, text) {
   }
 }
 
-pub impl @src.Extractor for LlmExtractor with mode(_) {
+///|
+pub impl @src.Extractor for LlmExtractor with fn mode(_) {
   "llm"
 }
 
+///|
 pub extend LlmExtractor with @src.Extractor::{extract, mode}

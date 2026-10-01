@@ -6,35 +6,48 @@
 // 测试辅助(前缀 qa_ 避免与既有测试文件的符号冲突)
 // ---------------------------------------------------------------------------
 
+///|
 /// 恒 Replace 裁决(独立于 store_e2e_test 的 AlwaysReplaceJudge 定义)
 struct QaAlwaysReplaceJudge {}
 
-impl ConflictJudge for QaAlwaysReplaceJudge with judge(_, _, candidates) {
-  Ok(candidates.map(c => @src.ConflictVerdict::{ existing : c, decision : Replace }))
+///|
+impl ConflictJudge for QaAlwaysReplaceJudge with fn judge(_, _, candidates) {
+  Ok(
+    candidates.map(c => @src.ConflictVerdict::{
+      existing: c,
+      decision: Replace,
+    }),
+  )
 }
 
+///|
 /// 单热点嵌入器:一切文本映射到同一单位向量(构造确定性 supersede 链)
 struct QaOneHotEmbedder {}
 
+///|
 fn qa_onehot_vec() -> Array[Double] {
   let v = Array::make(@src.DEFAULT_DIM, 0.0)
   v[0] = 1.0
   v
 }
 
-impl Embedder for QaOneHotEmbedder with embed(_self, texts) {
+///|
+impl Embedder for QaOneHotEmbedder with fn embed(_self, texts) {
   Ok(texts.map(_ => qa_onehot_vec()))
 }
 
-impl Embedder for QaOneHotEmbedder with dim(_self) {
+///|
+impl Embedder for QaOneHotEmbedder with fn dim(_self) {
   @src.DEFAULT_DIM
 }
 
+///|
 /// 唯一维度嵌入器:按文本末尾数字 N 映射到第 (N mod 256) 维 one-hot。
 /// 规模测试注入用:规避 HashingEmbedder 256 桶生日碰撞(约 6 对/55 token,
 /// 碰撞对 cos=1.0 会触发缺省 judge 的合法 supersede,干扰"全部 active"前提)。
 struct QaUniqueEmbedder {}
 
+///|
 fn qa_trailing_number(text : String) -> Int {
   let mut acc = 0
   for c in text.iter() {
@@ -47,45 +60,53 @@ fn qa_trailing_number(text : String) -> Int {
   acc
 }
 
+///|
 fn qa_unique_vec(text : String) -> Array[Double] {
   let v = Array::make(@src.DEFAULT_DIM, 0.0)
   v[qa_trailing_number(text) % @src.DEFAULT_DIM] = 1.0
   v
 }
 
-impl Embedder for QaUniqueEmbedder with embed(_self, texts) {
+///|
+impl Embedder for QaUniqueEmbedder with fn embed(_self, texts) {
   Ok(texts.map(t => qa_unique_vec(t)))
 }
 
-impl Embedder for QaUniqueEmbedder with dim(_self) {
+///|
+impl Embedder for QaUniqueEmbedder with fn dim(_self) {
   @src.DEFAULT_DIM
 }
 
+///|
 fn qa_open(
   backend : &@src.PersistenceBackend,
   judge : &@src.ConflictJudge?,
   extractor : &@src.Extractor?,
   clock : &@src.Clock?,
-  embedder : &@src.Embedder?
+  embedder : &@src.Embedder?,
 ) -> Result[@src.MemoryStore, @src.MoomemError] {
   let cfg : @src.Config = @src.Config::{
     embedder,
     extractor,
     judge,
-    persistence : Some(backend),
+    persistence: Some(backend),
     clock,
-    dim : @src.DEFAULT_DIM,
-    rrf_k : @src.DEFAULT_RRF_K,
-    recall_candidates : 0,
-    supersede_threshold : @src.DEFAULT_SUPERSEDE_THRESHOLD,
+    dim: @src.DEFAULT_DIM,
+    rrf_k: @src.DEFAULT_RRF_K,
+    recall_candidates: 0,
+    supersede_threshold: @src.DEFAULT_SUPERSEDE_THRESHOLD,
   }
   @src.MemoryStore::open("memory://qa", config=cfg)
 }
 
-fn qa_open_default(backend : &@src.PersistenceBackend) -> Result[@src.MemoryStore, @src.MoomemError] {
+///|
+fn qa_open_default(
+  backend : &@src.PersistenceBackend,
+) -> Result[@src.MemoryStore, @src.MoomemError] {
   qa_open(backend, None, None, None, None)
 }
 
+///|
 /// 两位零填充序号(01..99)
 fn qa_nn(n : Int) -> String {
   if n < 10 {
@@ -99,6 +120,7 @@ fn qa_nn(n : Int) -> String {
 // 空库与未知用户
 // ---------------------------------------------------------------------------
 
+///|
 test "QA: empty store recall returns empty; unknown user returns empty" {
   let backend = @src.MemoryBackend::new()
   let store = match qa_open_default(backend) {
@@ -148,6 +170,7 @@ test "QA: empty store recall returns empty; unknown user returns empty" {
 // top_k 边界
 // ---------------------------------------------------------------------------
 
+///|
 test "QA: top_k boundaries (0 / negative / 3 / default / 51)" {
   let backend = @src.MemoryBackend::new()
   let store = match qa_open_default(backend) {
@@ -217,10 +240,11 @@ test "QA: top_k boundaries (0 / negative / 3 / default / 51)" {
 // 同用户 55+ 条目:索引正确性 / MAX_RECALL_TOP_K / 规模下隔离
 // ---------------------------------------------------------------------------
 
+///|
 test "QA: 55+ entries BM25/vector correctness, top_k cap 50, isolation at scale" {
   let backend = @src.MemoryBackend::new()
   // 注入唯一维度嵌入器,保证 55 条互不相似(全部保持 active)
-  let embedder : &@src.Embedder = QaUniqueEmbedder::{}
+  let embedder : &@src.Embedder = QaUniqueEmbedder::{ }
   let store = match qa_open(backend, None, None, None, Some(embedder)) {
     Ok(s) => s
     Err(e) => {
@@ -310,10 +334,11 @@ test "QA: 55+ entries BM25/vector correctness, top_k cap 50, isolation at scale"
 // supersede 链:A→B→C,恢复后不可复活,链可延续
 // ---------------------------------------------------------------------------
 
+///|
 test "QA: supersede chain A->B->C; restore keeps superseded invisible" {
   let backend = @src.MemoryBackend::new()
-  let embedder : &@src.Embedder = QaOneHotEmbedder::{}
-  let judge : &@src.ConflictJudge = QaAlwaysReplaceJudge::{}
+  let embedder : &@src.Embedder = QaOneHotEmbedder::{ }
+  let judge : &@src.ConflictJudge = QaAlwaysReplaceJudge::{ }
   let store = match qa_open(backend, Some(judge), None, None, Some(embedder)) {
     Ok(s) => s
     Err(e) => {
@@ -372,7 +397,8 @@ test "QA: supersede chain A->B->C; restore keeps superseded invisible" {
   }
   for e in old_hit {
     inspect(e.is_recallable(), content="true")
-    if e.content == "东城区一号老住址" || e.content == "西城区二号新住址" {
+    if e.content == "东城区一号老住址" ||
+      e.content == "西城区二号新住址" {
       inspect("superseded entry recalled", content="SHOULD NOT REACH")
     }
   }
@@ -468,6 +494,7 @@ test "QA: supersede chain A->B->C; restore keeps superseded invisible" {
 // forget 后同内容重写不被去重拦截
 // ---------------------------------------------------------------------------
 
+///|
 test "QA: forget unregisters dedup fingerprint; re-add works" {
   let backend = @src.MemoryBackend::new()
   let store = match qa_open_default(backend) {
@@ -536,6 +563,7 @@ test "QA: forget unregisters dedup fingerprint; re-add works" {
 // 超长条目(PRD 15 章):内容完整性
 // ---------------------------------------------------------------------------
 
+///|
 test "QA: very long entry stored intact, survives restart" {
   let backend = @src.MemoryBackend::new()
   let store = match qa_open_default(backend) {
@@ -605,6 +633,7 @@ test "QA: very long entry stored intact, survives restart" {
 // 去重为"归一化指纹 + 按 user 分片"
 // ---------------------------------------------------------------------------
 
+///|
 test "QA: duplicate detection is normalization-based and per-user" {
   let backend = @src.MemoryBackend::new()
   let store = match qa_open_default(backend) {
@@ -657,6 +686,7 @@ test "QA: duplicate detection is normalization-based and per-user" {
 // 零命中不补齐(不变量:无结果返回空列表,不编造)
 // ---------------------------------------------------------------------------
 
+///|
 test "QA: zero-hit query returns empty even when user has entries" {
   let backend = @src.MemoryBackend::new()
   let store = match qa_open_default(backend) {
@@ -689,24 +719,20 @@ test "QA: zero-hit query returns empty even when user has entries" {
 // 配置校验
 // ---------------------------------------------------------------------------
 
+///|
 test "QA: config validation rejects illegal values" {
   let backend : &@src.PersistenceBackend = @src.MemoryBackend::new()
-  let mk_cfg = (
-    dim : Int,
-    rrf_k : Int,
-    rc : Int,
-    thr : Double,
-  ) => {
+  let mk_cfg = (dim : Int, rrf_k : Int, rc : Int, thr : Double) => {
     let cfg : @src.Config = @src.Config::{
-      embedder : None,
-      extractor : None,
-      judge : None,
-      persistence : Some(backend),
-      clock : None,
+      embedder: None,
+      extractor: None,
+      judge: None,
+      persistence: Some(backend),
+      clock: None,
       dim,
       rrf_k,
-      recall_candidates : rc,
-      supersede_threshold : thr,
+      recall_candidates: rc,
+      supersede_threshold: thr,
     }
     cfg
   }
@@ -722,7 +748,8 @@ test "QA: config validation rejects illegal values" {
   inspect(rejected(mk_cfg(256, 60, 0, 0.0)), content="true")
   inspect(rejected(mk_cfg(256, 60, 0, 1.01)), content="true")
   // 边界值 1.0 合法
-  let ok_at_one = match @src.MemoryStore::open("memory://qa", config=mk_cfg(256, 60, 0, 1.0)) {
+  let ok_at_one = match
+    @src.MemoryStore::open("memory://qa", config=mk_cfg(256, 60, 0, 1.0)) {
     Ok(_) => true
     Err(_) => false
   }
@@ -733,6 +760,7 @@ test "QA: config validation rejects illegal values" {
 // 时钟单调性:LogicalClock 跨重启续接;FixedClock 恒定
 // ---------------------------------------------------------------------------
 
+///|
 test "QA: LogicalClock strictly monotonic across reopen; FixedClock constant" {
   let backend = @src.MemoryBackend::new()
   let store = match qa_open_default(backend) {
@@ -825,6 +853,7 @@ test "QA: LogicalClock strictly monotonic across reopen; FixedClock constant" {
 // user_id 边界(经 store 入口)
 // ---------------------------------------------------------------------------
 
+///|
 test "QA: user_id boundaries through store entrance" {
   let backend = @src.MemoryBackend::new()
   let store = match qa_open_default(backend) {
@@ -896,6 +925,7 @@ test "QA: user_id boundaries through store entrance" {
 // 导入容错与维度失配恢复
 // ---------------------------------------------------------------------------
 
+///|
 test "QA: import tolerates corrupted lines; dim-mismatched entry keyword-recallable" {
   let backend = @src.MemoryBackend::new()
   let store = match qa_open_default(backend) {
@@ -905,25 +935,18 @@ test "QA: import tolerates corrupted lines; dim-mismatched entry keyword-recalla
       return
     }
   }
-  let mk_entry = (
-    id : String,
-    seq : Int,
-    emb : Array[Double],
-    content : String,
-  ) => {
-    @src.MemoryEntry::{
-      id,
-      user_id : "qa-io",
-      content,
-      kind : Unstructured,
-      embedding : emb,
-      keywords : @src.tokenize(content),
-      status : Active,
-      created_at : seq.to_int64(),
-      superseded_by : None,
-      seq,
-      metadata : Map([]),
-    }
+  let mk_entry = (id : String, seq : Int, emb : Array[Double], content : String) => @src.MemoryEntry::{
+    id,
+    user_id: "qa-io",
+    content,
+    kind: Unstructured,
+    embedding: emb,
+    keywords: @src.tokenize(content),
+    status: Active,
+    created_at: seq.to_int64(),
+    superseded_by: None,
+    seq,
+    metadata: Map([]),
   }
   let good1 = mk_entry("000000000001-0001", 1, [], "导入有效条目一")
   let good2 = mk_entry("000000000002-0002", 2, [], "导入有效条目二")
@@ -950,7 +973,12 @@ test "QA: import tolerates corrupted lines; dim-mismatched entry keyword-recalla
   }
   inspect(st.total, content="2")
   // 嵌入维度与配置不符(如配置变更后导入):仅入关键词索引,仍可召回
-  let odd = mk_entry("000000000100-0064", 100, [0.5, 0.5, 0.5], "维度锚点记忆")
+  let odd = mk_entry(
+    "000000000100-0064",
+    100,
+    [0.5, 0.5, 0.5],
+    "维度锚点记忆",
+  )
   let backend2 = @src.MemoryBackend::new()
   let store2 = match qa_open_default(backend2) {
     Ok(s) => s
@@ -959,9 +987,8 @@ test "QA: import tolerates corrupted lines; dim-mismatched entry keyword-recalla
       return
     }
   }
-  let (imported2, skipped2) = match store2.import_jsonl(
-      @src.entry_to_json(odd).stringify(),
-    ) {
+  let (imported2, skipped2) = match
+    store2.import_jsonl(@src.entry_to_json(odd).stringify()) {
     Ok(pair) => pair
     Err(e) => {
       inspect(e.message(), content="SHOULD NOT REACH")
@@ -1022,6 +1049,7 @@ test "QA: import tolerates corrupted lines; dim-mismatched entry keyword-recalla
 // 导入必须拒绝非法 user_id(PRD 15 章:"user_id 含路径穿越字符 → 拒绝")
 // ---------------------------------------------------------------------------
 
+///|
 test "QA: import must not silently accept entries with illegal user_id" {
   let backend = @src.MemoryBackend::new()
   let store = match qa_open_default(backend) {
@@ -1032,20 +1060,21 @@ test "QA: import must not silently accept entries with illegal user_id" {
     }
   }
   let evil : @src.MemoryEntry = @src.MemoryEntry::{
-    id : "000000000009-00ff",
-    user_id : "../evil",
-    content : "越权条目",
-    kind : Unstructured,
-    embedding : [],
-    keywords : @src.tokenize("越权条目"),
-    status : Active,
-    created_at : 9L,
-    superseded_by : None,
-    seq : 9,
-    metadata : Map([]),
+    id: "000000000009-00ff",
+    user_id: "../evil",
+    content: "越权条目",
+    kind: Unstructured,
+    embedding: [],
+    keywords: @src.tokenize("越权条目"),
+    status: Active,
+    created_at: 9L,
+    superseded_by: None,
+    seq: 9,
+    metadata: Map([]),
   }
   // 契约:非法 user_id 的条目不得进入记忆库(逐行跳过或整体报错均可接受)
-  let imported = match store.import_jsonl(@src.entry_to_json(evil).stringify()) {
+  let imported = match
+    store.import_jsonl(@src.entry_to_json(evil).stringify()) {
     Ok((n, _)) => n
     Err(_) => 0
   }
@@ -1065,6 +1094,7 @@ test "QA: import must not silently accept entries with illegal user_id" {
 // 导出→导入与既有内容重叠:按内容指纹跳过
 // ---------------------------------------------------------------------------
 
+///|
 test "QA: export/import overlapping content skipped via dedup" {
   let backend_a = @src.MemoryBackend::new()
   let store_a = match qa_open_default(backend_a) {
@@ -1117,6 +1147,7 @@ test "QA: export/import overlapping content skipped via dedup" {
 // 空导出 / 空导入
 // ---------------------------------------------------------------------------
 
+///|
 test "QA: empty export and empty import are no-ops" {
   let backend = @src.MemoryBackend::new()
   let store = match qa_open_default(backend) {
@@ -1158,6 +1189,7 @@ test "QA: empty export and empty import are no-ops" {
 // close 后一切入口拒绝(补全覆盖:forget/stats/export/import/list)
 // ---------------------------------------------------------------------------
 
+///|
 test "QA: closed store rejects forget/stats/export/import/list too" {
   let backend = @src.MemoryBackend::new()
   let store = match qa_open_default(backend) {

@@ -11,6 +11,7 @@
 //
 // 退出码：0 成功；用法错误 / 库错误打印 error 前缀信息。
 
+///|
 /// 命令行选项解析结果
 struct CliOptions {
   db : String
@@ -22,22 +23,24 @@ struct CliOptions {
   file : String?
 }
 
+///|
 fn default_options() -> CliOptions {
   CliOptions::{
-    db : "./moomem-data",
-    user : "default",
-    text : "",
-    query : "",
-    top_k : 5,
-    show_all : false,
-    file : None,
+    db: "./moomem-data",
+    user: "default",
+    text: "",
+    query: "",
+    top_k: 5,
+    show_all: false,
+    file: None,
   }
 }
 
+///|
 /// 从参数列表解析 --key value 形式的选项；--all 为布尔开关，不消费值
 fn parse_options(
   args : Array[String],
-  opts : CliOptions
+  opts : CliOptions,
 ) -> Result[CliOptions, String] {
   if args.length() == 0 {
     return Ok(opts)
@@ -49,7 +52,7 @@ fn parse_options(
     for i = 1; i < args.length(); i = i + 1 {
       rest.push(args[i])
     }
-    return parse_options(rest, CliOptions::{ ..opts, show_all : true })
+    return parse_options(rest, CliOptions::{ ..opts, show_all: true, })
   }
   if args.length() < 2 {
     return Err("missing value for option '\{key}'")
@@ -60,19 +63,17 @@ fn parse_options(
     rest.push(args[i])
   }
   match key {
-    "--db" => parse_options(rest, CliOptions::{ ..opts, db : value })
-    "--user" => parse_options(rest, CliOptions::{ ..opts, user : value })
-    "--text" => parse_options(rest, CliOptions::{ ..opts, text : value })
-    "--query" => parse_options(rest, CliOptions::{ ..opts, query : value })
-    "--file" => parse_options(rest, CliOptions::{ ..opts, file : Some(value) })
+    "--db" => parse_options(rest, CliOptions::{ ..opts, db: value, })
+    "--user" => parse_options(rest, CliOptions::{ ..opts, user: value, })
+    "--text" => parse_options(rest, CliOptions::{ ..opts, text: value, })
+    "--query" => parse_options(rest, CliOptions::{ ..opts, query: value, })
+    "--file" => parse_options(rest, CliOptions::{ ..opts, file: Some(value), })
     "--top-k" => {
-      let parsed : Result[Int, String] = try {
-        Ok(@string.parse_int(value))
-      } catch {
+      let parsed : Result[Int, String] = Ok(@string.parse_int(value)) catch {
         _ => Err("--top-k expects an integer, got '\{value}'")
       }
       match parsed {
-        Ok(n) => parse_options(rest, CliOptions::{ ..opts, top_k : n })
+        Ok(n) => parse_options(rest, CliOptions::{ ..opts, top_k: n, })
         Err(msg) => Err(msg)
       }
     }
@@ -80,6 +81,7 @@ fn parse_options(
   }
 }
 
+///|
 fn print_usage() -> Unit {
   println("moomem \{@src.MOOMEM_VERSION} - embedded agent memory layer CLI")
   println("")
@@ -101,11 +103,13 @@ fn print_usage() -> Unit {
   println("  --file <path>  JSONL file to import")
 }
 
+///|
 fn die(msg : String) -> Unit {
   println("error: \{msg}")
   println("run 'moomem help' for usage")
 }
 
+///|
 fn is_command(s : String) -> Bool {
   s == "add" ||
   s == "recall" ||
@@ -118,11 +122,10 @@ fn is_command(s : String) -> Bool {
   s == "-h"
 }
 
+///|
 /// 读取文本文件，错误转为可读消息（CLI 的 fs 调用点，见架构文档第 6 章）
 fn read_text_file(path : String) -> Result[String, String] {
-  try {
-    Ok(@fs.read_file_to_string(path))
-  } catch {
+  Ok(@fs.read_file_to_string(path)) catch {
     e => {
       let detail = match e {
         @fs.IOError(msg) => msg
@@ -132,6 +135,7 @@ fn read_text_file(path : String) -> Result[String, String] {
   }
 }
 
+///|
 fn main {
   let argv = @env.args()
   // 跳过程序名（native 下 args 首元素为可执行文件路径；js 下可能没有）
@@ -150,7 +154,7 @@ fn main {
   }
   match cmd {
     "help" | "--help" | "-h" => print_usage()
-    "add" => {
+    "add" =>
       match parse_options(rest, default_options()) {
         Err(msg) => die(msg)
         Ok(opts) =>
@@ -176,8 +180,7 @@ fn main {
               }
           }
       }
-    }
-    "recall" => {
+    "recall" =>
       match parse_options(rest, default_options()) {
         Err(msg) => die(msg)
         Ok(opts) =>
@@ -200,8 +203,7 @@ fn main {
               }
           }
       }
-    }
-    "list" => {
+    "list" =>
       match parse_options(rest, default_options()) {
         Err(msg) => die(msg)
         Ok(opts) =>
@@ -216,7 +218,9 @@ fn main {
                       let status = e.status.to_string()
                       let id = e.id
                       let seq = e.seq
-                      println("[\{status}] \{e.content} (id: \{id}, seq: \{seq})")
+                      println(
+                        "[\{status}] \{e.content} (id: \{id}, seq: \{seq})",
+                      )
                     }
                   }
                   ignore(store.close())
@@ -224,8 +228,7 @@ fn main {
               }
           }
       }
-    }
-    "stats" => {
+    "stats" =>
       match parse_options(rest, default_options()) {
         Err(msg) => die(msg)
         Ok(opts) =>
@@ -254,8 +257,7 @@ fn main {
               }
           }
       }
-    }
-    "export" => {
+    "export" =>
       match parse_options(rest, default_options()) {
         Err(msg) => die(msg)
         Ok(opts) =>
@@ -271,8 +273,7 @@ fn main {
               }
           }
       }
-    }
-    "import" => {
+    "import" =>
       match parse_options(rest, default_options()) {
         Err(msg) => die(msg)
         Ok(opts) =>
@@ -296,7 +297,6 @@ fn main {
               }
           }
       }
-    }
     _ => die("unknown command '\{cmd}'")
   }
 }

@@ -2,6 +2,7 @@
 // 缺省实现 SimilarityJudge：嵌入余弦 + 关键词 Jaccard 的确定性规则判定。
 // 生产环境注入 LLM 版 judge（replace/merge/ignore + 判定依据写入 metadata）。
 
+///|
 /// 冲突裁决：Replace 触发 supersede；Coexist 并存并标记；Ignore 无裁决。
 pub(all) enum ConflictDecision {
   Replace
@@ -9,6 +10,7 @@ pub(all) enum ConflictDecision {
   Ignore
 } derive(Eq)
 
+///|
 /// 手写 Show（原 derive(Show) 输出格式保持不变：构造器名）。
 pub impl Show for ConflictDecision with fn output(self, logger) {
   match self {
@@ -18,24 +20,30 @@ pub impl Show for ConflictDecision with fn output(self, logger) {
   }
 }
 
+///|
 pub extend ConflictDecision with Show::{to_string, output}
+
+///|
 pub extend ConflictDecision with Eq::{not_equal, equal}
 
+///|
 /// 单个候选条目的裁决。
 pub(all) struct ConflictVerdict {
   existing : MemoryEntry
   decision : ConflictDecision
 }
 
+///|
 /// 冲突判定抽象。仅对判定为 Replace / Coexist 的候选返回裁决。
 pub(open) trait ConflictJudge {
-  judge(
+  fn judge(
     self : Self,
     new_fact : ExtractedFact,
-    candidates : Array[MemoryEntry]
+    candidates : Array[MemoryEntry],
   ) -> Result[Array[ConflictVerdict], MoomemError]
 }
 
+///|
 /// 缺省判定器：对每个 candidate 计算
 ///   sim = max(cosine(new_fact 嵌入, candidate 嵌入), 关键词 Jaccard)
 ///   sim >= threshold              → Replace
@@ -46,14 +54,20 @@ pub struct SimilarityJudge {
   embedder : &Embedder
 }
 
+///|
 pub fn SimilarityJudge::new(
   threshold : Double,
-  embedder : &Embedder
+  embedder : &Embedder,
 ) -> SimilarityJudge {
-  SimilarityJudge::{ threshold, embedder }
+  SimilarityJudge::{ threshold, embedder, }
 }
 
-pub impl ConflictJudge for SimilarityJudge with judge(self, new_fact, candidates) {
+///|
+pub impl ConflictJudge for SimilarityJudge with fn judge(
+  self,
+  new_fact,
+  candidates,
+) {
   let verdicts : Array[ConflictVerdict] = []
   let new_vec = match self.embedder.embed([new_fact.content]) {
     Ok(vecs) => if vecs.length() > 0 { vecs[0] } else { [] }
@@ -64,23 +78,24 @@ pub impl ConflictJudge for SimilarityJudge with judge(self, new_fact, candidates
     let jac = keyword_jaccard(new_fact.content, cand.keywords)
     let sim = if cos > jac { cos } else { jac }
     if sim >= self.threshold {
-      verdicts.push(
-        ConflictVerdict::{ existing : cand, decision : Replace },
-      )
+      verdicts.push(ConflictVerdict::{ existing: cand, decision: Replace, })
     } else if sim >= self.threshold - COEXIST_BAND {
-      verdicts.push(
-        ConflictVerdict::{ existing : cand, decision : Coexist },
-      )
+      verdicts.push(ConflictVerdict::{ existing: cand, decision: Coexist, })
     }
   }
   Ok(verdicts)
 }
 
+///|
 pub extend SimilarityJudge with ConflictJudge::{judge}
 
+///|
 /// 关键词 Jaccard 重叠度：|token(new) ∩ keywords(cand)| / |并集|。
 /// 两侧均空时返回 0.0。
-pub fn keyword_jaccard(new_content : String, cand_keywords : Array[String]) -> Double {
+pub fn keyword_jaccard(
+  new_content : String,
+  cand_keywords : Array[String],
+) -> Double {
   let new_tokens = tokenize(new_content)
   let set_a : Map[String, Bool] = Map([])
   for t in new_tokens {

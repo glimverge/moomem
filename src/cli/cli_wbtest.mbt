@@ -2,6 +2,7 @@
 // 依据:main.mbt 自身 help 文档的用法约定(FR-07)。
 // native-only:CLI 为本地可执行入口;wasm/js 下 @fs/@env 链接不可用。
 
+///|
 #cfg(target="native")
 test "QA cli: documented trailing --all usage must be accepted" {
   // 帮助文本原文:"moomem list --db <dir> --user <id> [--all]" —— --all 位于末尾。
@@ -13,9 +14,11 @@ test "QA cli: documented trailing --all usage must be accepted" {
   inspect(ok, content="true")
 }
 
+///|
 #cfg(target="native")
 test "QA cli: --all before other options is accepted" {
-  let ok = match parse_options(
+  let ok = match
+    parse_options(
       ["--all", "--db", "/tmp/qa-cli", "--user", "alice"],
       default_options(),
     ) {
@@ -25,13 +28,16 @@ test "QA cli: --all before other options is accepted" {
   inspect(ok, content="true")
 }
 
+///|
 #cfg(target="native")
 test "QA cli: standard add/recall option sets parse" {
-  let add_ok = match parse_options(
+  let add_ok = match
+    parse_options(
       ["--db", "d1", "--user", "alice", "--text", "我对花生过敏"],
       default_options(),
     ) {
-    Ok(o) => o.db == "d1" &&
+    Ok(o) =>
+      o.db == "d1" &&
       o.user == "alice" &&
       o.text == "我对花生过敏" &&
       o.top_k == 5 &&
@@ -40,7 +46,8 @@ test "QA cli: standard add/recall option sets parse" {
     Err(_) => false
   }
   inspect(add_ok, content="true")
-  let recall_ok = match parse_options(
+  let recall_ok = match
+    parse_options(
       ["--db", "d1", "--user", "alice", "--query", "花生", "--top-k", "7"],
       default_options(),
     ) {
@@ -50,6 +57,7 @@ test "QA cli: standard add/recall option sets parse" {
   inspect(recall_ok, content="true")
 }
 
+///|
 #cfg(target="native")
 test "QA cli: bad --top-k / unknown option / missing value rejected" {
   let bad_topk = match parse_options(["--top-k", "abc"], default_options()) {

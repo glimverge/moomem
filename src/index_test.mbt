@@ -1,6 +1,7 @@
 // 黑盒测试：双索引（向量余弦 / BM25 CJK 分词）与 RRF 融合（T03 验收）。
 // 核心断言：user 分片隔离的结构保证（AC-02 的索引层基础）。
 
+///|
 test "VectorIndex: per-user isolation and top-k search" {
   let embedder = match @src.HashingEmbedder::new(64) {
     Ok(e) => e
@@ -33,7 +34,10 @@ test "VectorIndex: per-user isolation and top-k search" {
   inspect(hits_b.length(), content="1")
   inspect(hits_b[0].0, content="b-1")
   // 不存在的 user：空结果
-  inspect(index.search("user-c", embed_one("我对花生过敏"), 5).length(), content="0")
+  inspect(
+    index.search("user-c", embed_one("我对花生过敏"), 5).length(),
+    content="0",
+  )
   // 空查询向量：空结果（嵌入失败降级时的安全性）
   let empty : Array[Double] = []
   inspect(index.search("user-a", empty, 5).length(), content="0")
@@ -42,6 +46,7 @@ test "VectorIndex: per-user isolation and top-k search" {
   inspect(ortho.length(), content="0")
 }
 
+///|
 test "VectorIndex: remove drops entry from search" {
   let embedder = match @src.HashingEmbedder::new(64) {
     Ok(e) => e
@@ -67,6 +72,7 @@ test "VectorIndex: remove drops entry from search" {
   inspect(hits[0].0, content="id-2")
 }
 
+///|
 test "KeywordIndex: CJK query hits, per-user isolation, remove" {
   let index = @src.KeywordIndex::new()
   index.upsert("user-a", "a-1", @src.tokenize("我对花生过敏"))
@@ -91,6 +97,7 @@ test "KeywordIndex: CJK query hits, per-user isolation, remove" {
   inspect(index.size("user-a"), content="1")
 }
 
+///|
 test "KeywordIndex: BM25 ranking prefers stronger match" {
   let index = @src.KeywordIndex::new()
   index.upsert("u", "doc-once", @src.tokenize("花生"))
@@ -100,6 +107,7 @@ test "KeywordIndex: BM25 ranking prefers stronger match" {
   inspect(hits[0].0, content="doc-many") // tf 更高者排前
 }
 
+///|
 test "rrf: fuses two ranked lists with deterministic order" {
   let list_a = ["x", "y", "z"]
   let list_b = ["y", "w", "x"]
@@ -112,6 +120,7 @@ test "rrf: fuses two ranked lists with deterministic order" {
   inspect(fused[2], content="w")
 }
 
+///|
 test "rrf: single list passes through, top_k truncates" {
   let single = @src.rrf([["a", "b", "c"]], 60, 10)
   inspect(single.length(), content="3")

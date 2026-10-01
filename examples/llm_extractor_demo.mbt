@@ -18,17 +18,19 @@
 //   let cfg = @src.Config::{ extractor: Some(extractor as &@src.Extractor), .. }
 //   let store = @src.MemoryStore::open("./my-memories", config=cfg)?
 
+///|
 /// 演示用脚本化 Provider：模拟一次成功的 LLM 提取响应。
 struct DemoProvider {
   replies : Array[String]
   mut calls : Int
 }
 
-impl @llm.Provider for DemoProvider with stream(
+///|
+impl @llm.Provider for DemoProvider with fn stream(
   self,
   _messages,
   _tools,
-  handler
+  handler,
 ) {
   let idx = self.calls
   self.calls = self.calls + 1
@@ -37,36 +39,40 @@ impl @llm.Provider for DemoProvider with stream(
   }
 }
 
-impl @llm.Provider for DemoProvider with name(_) {
+///|
+impl @llm.Provider for DemoProvider with fn name(_) {
   "demo-mock-llm"
 }
 
+///|
 fn main {
-  println("=== moomem W2: LLM 事实提取注入演示（mock 驱动，零网络） ===")
+  println(
+    "=== moomem W2: LLM 事实提取注入演示（mock 驱动，零网络） ===",
+  )
   println("")
   // 1) 注入 LLM 提取器与 LLM 冲突判定器（生产换真实 Provider 即可）
   let provider = DemoProvider::{
-    replies : [
+    replies: [
       "{\"facts\":[]}", // 纯闲聊 → 过滤，不入库
-      "{\"facts\":[{\"content\":\"用户对花生过敏\",\"kind\":\"fact\",\"span\":\"我对花生过敏\"},{\"content\":\"偏好清淡的粤菜\",\"kind\":\"preference\",\"span\":\"我喜欢清淡的粤菜\"}]}",
+       "{\"facts\":[{\"content\":\"用户对花生过敏\",\"kind\":\"fact\",\"span\":\"我对花生过敏\"},{\"content\":\"偏好清淡的粤菜\",\"kind\":\"preference\",\"span\":\"我喜欢清淡的粤菜\"}]}",
       "{\"verdicts\":[]}", // 无冲突裁决（两条并存）
     ],
-    calls : 0,
+    calls: 0,
   }
   let p : &@llm.Provider = provider
   let extractor = @llm_extractor.LlmExtractor::new(p)
   let judge = @llm_extractor.LlmConflictJudge::new(p)
   let backend : &@src.PersistenceBackend = @src.MemoryBackend::new()
   let cfg : @src.Config = @src.Config::{
-    embedder : None,
-    extractor : Some(extractor as &@src.Extractor),
-    judge : Some(judge as &@src.ConflictJudge),
-    persistence : Some(backend),
-    clock : None,
-    dim : @src.DEFAULT_DIM,
-    rrf_k : @src.DEFAULT_RRF_K,
-    recall_candidates : 0,
-    supersede_threshold : @src.DEFAULT_SUPERSEDE_THRESHOLD,
+    embedder: None,
+    extractor: Some(extractor as &@src.Extractor),
+    judge: Some(judge as &@src.ConflictJudge),
+    persistence: Some(backend),
+    clock: None,
+    dim: @src.DEFAULT_DIM,
+    rrf_k: @src.DEFAULT_RRF_K,
+    recall_candidates: 0,
+    supersede_threshold: @src.DEFAULT_SUPERSEDE_THRESHOLD,
   }
   let store = match @src.MemoryStore::open("memory://demo", config=cfg) {
     Ok(s) => s
@@ -78,12 +84,18 @@ fn main {
   // 2) 闲聊被过滤（AC-03）
   println("[add] 今天天气真不错呀~")
   match store.add("user-42", "今天天气真不错呀~") {
-    Ok(s) => println("  -> extracted=\{s.extracted} inserted=\{s.inserted}（闲聊不入库）")
+    Ok(s) =>
+      println(
+        "  -> extracted=\{s.extracted} inserted=\{s.inserted}（闲聊不入库）",
+      )
     Err(e) => println("  -> error: \{e.message()}")
   }
   // 3) 结构化事实入库（kind/span 可解释）
   println("[add] 你好！我对花生过敏，平时喜欢清淡的粤菜。")
-  match store.add("user-42", "你好！我对花生过敏，平时喜欢清淡的粤菜。") {
+  match
+    store.add(
+      "user-42", "你好！我对花生过敏，平时喜欢清淡的粤菜。",
+    ) {
     Ok(s) => {
       println("  -> extracted=\{s.extracted} inserted=\{s.inserted}")
       match store.list_entries("user-42") {
@@ -106,7 +118,9 @@ fn main {
     Err(e) => println("  -> error: \{e.message()}")
   }
   // 5) 观测指标：LLM 调用预算（单次提取 ≤ 2 次，PRD 13.3）
-  println("[观测] LLM 总调用次数: \{extractor.llm_call_count()} + \{judge.llm_call_count()} (judge)")
+  println(
+    "[观测] LLM 总调用次数: \{extractor.llm_call_count()} + \{judge.llm_call_count()} (judge)",
+  )
   let last_failure = match extractor.last_failure_reason() {
     Some(r) => r
     None => "None"
@@ -114,5 +128,7 @@ fn main {
   println("[观测] 最近提取失败: \{last_failure}")
   ignore(store.close())
   println("")
-  println("=== 演示结束。生产环境请注入真实 Provider（见文件头注释）。 ===")
+  println(
+    "=== 演示结束。生产环境请注入真实 Provider（见文件头注释）。 ===",
+  )
 }

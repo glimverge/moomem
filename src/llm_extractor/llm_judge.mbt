@@ -11,6 +11,7 @@
 //   - 重试仍失败返回 Err，由 MemoryStore 降级为"不产生裁决"（两条并存，
 //     AddSummary.degraded=true、notes 含原因——失败对宿主可见）。
 
+///|
 /// LLM 冲突判定适配器：实现核心包的 ConflictJudge trait。
 pub struct LlmConflictJudge {
   /// 注入的 LLM 客户端（mizchi/llm Provider trait 对象）
@@ -21,37 +22,37 @@ pub struct LlmConflictJudge {
   mut last_failure : String?
 }
 
+///|
 /// 构造 LlmConflictJudge。provider 可为真实 provider 或测试 mock。
-pub fn LlmConflictJudge::new(
-  provider : &@llm.Provider
-) -> LlmConflictJudge {
-  LlmConflictJudge::{
-    provider,
-    llm_calls : 0,
-    last_failure : None,
-  }
+pub fn LlmConflictJudge::new(provider : &@llm.Provider) -> LlmConflictJudge {
+  LlmConflictJudge::{ provider, llm_calls: 0, last_failure: None, }
 }
 
+///|
 /// 累计 LLM 调用次数（观测：单次 judge ≤ 2 次）。
 pub fn LlmConflictJudge::llm_call_count(self : LlmConflictJudge) -> Int {
   self.llm_calls
 }
 
+///|
 /// 最近一次失败原因；None = 最近一次判定成功。
-pub fn LlmConflictJudge::last_failure_reason(self : LlmConflictJudge) -> String? {
+pub fn LlmConflictJudge::last_failure_reason(
+  self : LlmConflictJudge,
+) -> String? {
   self.last_failure
 }
 
+///|
 /// 单次 LLM 调用（与 LlmExtractor::request 同构）。
 fn LlmConflictJudge::request(
   self : LlmConflictJudge,
-  messages : Array[@llm.Message]
+  messages : Array[@llm.Message],
 ) -> Result[String, String] {
   self.llm_calls = self.llm_calls + 1
   let buf = StringBuilder()
   let failure : Array[String] = []
   let handler : @llm.StreamHandler = @llm.StreamHandler::{
-    on_event : fn(event : @llm.StreamEvent) {
+    on_event: fn(event : @llm.StreamEvent) {
       match event {
         @llm.StreamEvent::TextDelta(s) => buf.write_string(s)
         @llm.StreamEvent::Error(msg) => failure.push(msg)
@@ -61,17 +62,17 @@ fn LlmConflictJudge::request(
   }
   self.provider.stream(messages, [], handler)
   match failure.length() > 0 {
-    true => Err(
-      "llm provider '\{self.provider.name()}' stream error: \{failure[0]}",
-    )
+    true =>
+      Err("llm provider '\{self.provider.name()}' stream error: \{failure[0]}")
     false => Ok(buf.to_string())
   }
 }
 
-pub impl @src.ConflictJudge for LlmConflictJudge with judge(
+///|
+pub impl @src.ConflictJudge for LlmConflictJudge with fn judge(
   self,
   new_fact,
-  candidates
+  candidates,
 ) {
   // 无候选：零调用，直接无裁决
   if candidates.length() == 0 {
@@ -90,9 +91,11 @@ pub impl @src.ConflictJudge for LlmConflictJudge with judge(
     Err(reason) => {
       // 网络/鉴权失败：不重试，返回 Err（store 降级为并存，原因可见）
       self.last_failure = Some(reason)
-      return Err(@src.MoomemError::ExtractionFailure(
-        "llm conflict judge failed: \{reason}",
-      ))
+      return Err(
+        @src.MoomemError::ExtractionFailure(
+          "llm conflict judge failed: \{reason}",
+        ),
+      )
     }
     Ok(resp) => resp
   }
@@ -112,9 +115,11 @@ pub impl @src.ConflictJudge for LlmConflictJudge with judge(
       let second : String = match self.request(retry_messages) {
         Err(reason) => {
           self.last_failure = Some(reason)
-          return Err(@src.MoomemError::ExtractionFailure(
-            "llm conflict judge failed: \{reason}",
-          ))
+          return Err(
+            @src.MoomemError::ExtractionFailure(
+              "llm conflict judge failed: \{reason}",
+            ),
+          )
         }
         Ok(resp) => resp
       }
@@ -127,21 +132,25 @@ pub impl @src.ConflictJudge for LlmConflictJudge with judge(
           self.last_failure = Some(
             "invalid JSON from llm after 1 retry; first: \{parse_err}; retry: \{err2}",
           )
-          Err(@src.MoomemError::ExtractionFailure(
-            "llm conflict judge degraded (no verdicts): invalid JSON after 1 retry; first: \{parse_err}; retry: \{err2}",
-          ))
+          Err(
+            @src.MoomemError::ExtractionFailure(
+              "llm conflict judge degraded (no verdicts): invalid JSON after 1 retry; first: \{parse_err}; retry: \{err2}",
+            ),
+          )
         }
       }
     }
   }
 }
 
+///|
 pub extend LlmConflictJudge with @src.ConflictJudge::{judge}
 
 // ---------------------------------------------------------------------------
 // 裁决响应解析
 // ---------------------------------------------------------------------------
 
+///|
 /// 解析裁决响应。
 /// 规则：
 ///   - 容忍 markdown 围栏与前后杂散文字（复用 parse_json_tolerant）；
@@ -152,7 +161,7 @@ pub extend LlmConflictJudge with @src.ConflictJudge::{judge}
 ///   - verdicts 为空数组 → 合法（全部 ignore，无裁决）。
 fn parse_verdicts_response(
   response : String,
-  candidates : Array[@src.MemoryEntry]
+  candidates : Array[@src.MemoryEntry],
 ) -> Result[Array[@src.ConflictVerdict], String] {
   let j : Json = match parse_json_tolerant(response) {
     Ok(j) => j
@@ -213,9 +222,7 @@ fn parse_verdicts_response(
       Some(existing) =>
         if !seen.contains(id) {
           seen.set(id, true)
-          verdicts.push(
-            @src.ConflictVerdict::{ existing, decision },
-          )
+          verdicts.push(@src.ConflictVerdict::{ existing, decision, })
         } else {
           dropped = dropped + 1 // 重复裁决丢弃
         }

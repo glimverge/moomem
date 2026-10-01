@@ -4,6 +4,7 @@
 //   - id = "{seq 12位hex}-{rand 4 hex}"，seq 持久化恢复续接
 //   - created_at 为注入 Clock 的逻辑毫秒
 
+///|
 /// 条目生命周期状态（状态机见架构文档 3.3 节）。
 /// Active / Unstructured 参与检索；Superseded / Deleted 保留于快照可审计但不可检索。
 pub(all) enum EntryStatus {
@@ -13,6 +14,7 @@ pub(all) enum EntryStatus {
   Unstructured
 } derive(Eq)
 
+///|
 pub impl Show for EntryStatus with fn output(self, logger) {
   match self {
     Active => logger.write_string("Active")
@@ -22,9 +24,13 @@ pub impl Show for EntryStatus with fn output(self, logger) {
   }
 }
 
+///|
 pub extend EntryStatus with Show::{to_string, output}
+
+///|
 pub extend EntryStatus with Eq::{not_equal, equal}
 
+///|
 /// 条目语义类型（由 Extractor 产出）。
 pub(all) enum EntryKind {
   Fact
@@ -33,6 +39,7 @@ pub(all) enum EntryKind {
   Unstructured
 } derive(Eq)
 
+///|
 pub impl Show for EntryKind with fn output(self, logger) {
   match self {
     Fact => logger.write_string("Fact")
@@ -42,9 +49,13 @@ pub impl Show for EntryKind with fn output(self, logger) {
   }
 }
 
+///|
 pub extend EntryKind with Show::{to_string, output}
+
+///|
 pub extend EntryKind with Eq::{not_equal, equal}
 
+///|
 /// 最小记忆单元：一条可复用事实。
 pub(all) struct MemoryEntry {
   /// "{seq 12位hex}-{rand 4 hex}"，全局唯一，不含 user 信息
@@ -68,6 +79,7 @@ pub(all) struct MemoryEntry {
   metadata : Map[String, Json]
 }
 
+///|
 /// 条目是否可被 recall 返回（Active 与 Unstructured；Superseded/Deleted 不可见）。
 pub fn MemoryEntry::is_recallable(self : MemoryEntry) -> Bool {
   match self.status {
@@ -78,8 +90,9 @@ pub fn MemoryEntry::is_recallable(self : MemoryEntry) -> Bool {
   }
 }
 
+///|
 /// 简要展示（Show 输出不含 embedding 全量，避免噪音）。
-pub impl Show for MemoryEntry with output(self, logger) {
+pub impl Show for MemoryEntry with fn output(self, logger) {
   let kind = self.kind.to_string()
   let status = self.status.to_string()
   let superseded_by = match self.superseded_by {
@@ -92,14 +105,17 @@ pub impl Show for MemoryEntry with output(self, logger) {
   logger.write_string(text)
 }
 
+///|
 pub extend MemoryEntry with Show::{to_string, output}
 
+///|
 /// forget 的目标选择：按 id 或清空该 user 全部可检索条目。
 pub(all) enum ForgetTarget {
   ById(String)
   All
 }
 
+///|
 pub impl Show for ForgetTarget with fn output(self, logger) {
   match self {
     ById(id) => logger.write_string("ById(\{id})")
@@ -107,8 +123,10 @@ pub impl Show for ForgetTarget with fn output(self, logger) {
   }
 }
 
+///|
 pub extend ForgetTarget with Show::{to_string, output}
 
+///|
 /// add 的返回摘要：让开发者看见"AI 理解了什么"（PRD 12.3）。
 pub struct AddSummary {
   /// 提取器产出的事实条数
@@ -125,6 +143,7 @@ pub struct AddSummary {
   notes : Array[String]
 }
 
+///|
 /// 手写 Show（原 derive(Show) 输出格式保持不变：字段名: 值，逗号分隔）。
 pub impl Show for AddSummary with fn output(self, logger) {
   logger.write_string(
@@ -132,8 +151,10 @@ pub impl Show for AddSummary with fn output(self, logger) {
   )
 }
 
+///|
 pub extend AddSummary with Show::{to_string, output}
 
+///|
 /// stats 的返回结构（PRD FR-10）。
 pub struct StoreStats {
   total : Int
@@ -152,6 +173,7 @@ pub struct StoreStats {
   extractor_mode : String
 }
 
+///|
 /// 手写 Show（原 derive(Show) 输出格式保持不变：字段名: 值，逗号分隔）。
 pub impl Show for StoreStats with fn output(self, logger) {
   logger.write_string(
@@ -159,8 +181,10 @@ pub impl Show for StoreStats with fn output(self, logger) {
   )
 }
 
+///|
 pub extend StoreStats with Show::{to_string, output}
 
+///|
 /// 打开 MemoryStore 的配置。所有注入点均为 Option，None 时使用缺省确定性实现。
 pub(all) struct Config {
   /// None → HashingEmbedder(dim)
@@ -183,18 +207,19 @@ pub(all) struct Config {
   supersede_threshold : Double
 }
 
+///|
 /// 缺省配置（全部注入点走确定性缺省实现）。
 pub fn Config::default() -> Config {
   Config::{
-    embedder : None,
-    extractor : None,
-    judge : None,
-    persistence : None,
-    clock : None,
-    dim : DEFAULT_DIM,
-    rrf_k : DEFAULT_RRF_K,
-    recall_candidates : 0,
-    supersede_threshold : DEFAULT_SUPERSEDE_THRESHOLD,
+    embedder: None,
+    extractor: None,
+    judge: None,
+    persistence: None,
+    clock: None,
+    dim: DEFAULT_DIM,
+    rrf_k: DEFAULT_RRF_K,
+    recall_candidates: 0,
+    supersede_threshold: DEFAULT_SUPERSEDE_THRESHOLD,
   }
 }
 
@@ -202,16 +227,33 @@ pub fn Config::default() -> Config {
 // 常量
 // ---------------------------------------------------------------------------
 
+///|
 pub const DEFAULT_DIM : Int = 256
+
+///|
 pub const DEFAULT_RRF_K : Int = 60
+
+///|
 pub const DEFAULT_SUPERSEDE_THRESHOLD : Double = 0.82
+
+///|
 pub const DEFAULT_RECALL_TOP_K : Int = 5
+
+///|
 pub const MAX_RECALL_TOP_K : Int = 50
+
+///|
 pub const MAX_USER_ID_LEN : Int = 64
+
+///|
 /// add 链路冲突检测的每路候选窗口
 pub const CONFLICT_CANDIDATES : Int = 8
+
+///|
 /// SimilarityJudge 的 Coexist 下界间距：[threshold-0.15, threshold)
 pub const COEXIST_BAND : Double = 0.15
+
+///|
 /// 提取器连续失败降级上限（PRD 第 9 章）
 pub const MAX_EXTRACTION_FAILURES : Int = 3
 
@@ -219,6 +261,7 @@ pub const MAX_EXTRACTION_FAILURES : Int = 3
 // user_id 契约（架构文档 7.4：唯一实现，所有入口调用）
 // ---------------------------------------------------------------------------
 
+///|
 /// 校验 user_id：非空、≤64 字符、字符集 [A-Za-z0-9_\-.]，且不为 "." / ".."。
 pub fn validate_user_id(user_id : String) -> Result[Unit, MoomemError] {
   if user_id.length() == 0 {
@@ -242,12 +285,15 @@ pub fn validate_user_id(user_id : String) -> Result[Unit, MoomemError] {
   }
   if user_id == "." || user_id == ".." {
     return Err(
-      MoomemError::InvalidUserId("must not be path component reference '\{user_id}'"),
+      MoomemError::InvalidUserId(
+        "must not be path component reference '\{user_id}'",
+      ),
     )
   }
   Ok(())
 }
 
+///|
 fn is_valid_user_id_char(c : Char) -> Bool {
   (c >= 'a' && c <= 'z') ||
   (c >= 'A' && c <= 'Z') ||
@@ -261,6 +307,7 @@ fn is_valid_user_id_char(c : Char) -> Bool {
 // 包内工具：稳定哈希 / 十六进制 / 条目 id 生成
 // ---------------------------------------------------------------------------
 
+///|
 /// Array[String] 的展示格式（与原 derive(Show) 一致：[a, b, c]）。
 fn show_string_array(arr : Array[String]) -> String {
   let buf = StringBuilder()
@@ -275,6 +322,7 @@ fn show_string_array(arr : Array[String]) -> String {
   buf.to_string()
 }
 
+///|
 /// Int64? 的展示格式（与原 derive(Show) 一致：Some(v) / None）。
 fn show_int64_opt(v : Int64?) -> String {
   match v {
@@ -283,6 +331,7 @@ fn show_int64_opt(v : Int64?) -> String {
   }
 }
 
+///|
 /// FNV-1a 32bit 稳定哈希（三后端确定性一致，用于嵌入分桶与内容指纹）。
 fn fnv1a(s : String) -> Int {
   let mut h : Int = 0x0811c9dc5
@@ -292,6 +341,7 @@ fn fnv1a(s : String) -> Int {
   h
 }
 
+///|
 /// 非负整数的十六进制小写串，左侧补零至 width 位。
 fn to_hex_padded(value : Int, width : Int) -> String {
   let mut s = value.to_string(radix=16)
@@ -301,6 +351,7 @@ fn to_hex_padded(value : Int, width : Int) -> String {
   s
 }
 
+///|
 /// 条目 id："{seq 12位hex}-{rand 4 hex}"。
 /// rand 部分由 (content, seq, created_at) 哈希派生——确定性且三后端一致，
 /// 测试可精确断言；seq 保证全局唯一与恢复续接。

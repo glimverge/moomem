@@ -1,0 +1,10 @@
+import {
+  "heyq02/moomem/src",
+  "moonbitlang/core/env",
+  "moonbitlang/core/string",
+  "moonbitlang/x/fs",
+}
+
+options(
+  "is-main": true,
+)

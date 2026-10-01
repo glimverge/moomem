@@ -2,10 +2,14 @@
 // 分词器：CJK 单字 + 相邻二元组；拉丁字母数字串按词（统一小写）。
 // 与 HashingEmbedder 共用同一 tokenize，保证语义一致性。
 
+///|
 /// BM25 参数（经典默认值）
 pub const BM25_K1 : Double = 1.5
+
+///|
 pub const BM25_B : Double = 0.75
 
+///|
 /// 判断是否 CJK 表意字符（含扩展 A 区与兼容表意区）。
 fn is_cjk_char(c : Char) -> Bool {
   let v = c.to_int()
@@ -25,10 +29,12 @@ fn is_cjk_char(c : Char) -> Bool {
   false
 }
 
+///|
 fn is_latin_word_char(c : Char) -> Bool {
   (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9')
 }
 
+///|
 /// 分词器：CJK 逐字出单字 token，相邻 CJK 字额外出二元组 token；
 /// 拉丁字母数字连续串出一个词 token（小写化）；其余字符为分隔符。
 /// 确定性、无外部依赖，三后端一致；被 BM25 索引与 HashingEmbedder 共用。
@@ -57,6 +63,7 @@ pub fn tokenize(text : String) -> Array[String] {
   tokens
 }
 
+///|
 fn flush_word(buf : StringBuilder, tokens : Array[String]) -> Unit {
   if buf.is_empty() == false {
     tokens.push(buf.to_string().to_lower())
@@ -68,11 +75,13 @@ fn flush_word(buf : StringBuilder, tokens : Array[String]) -> Unit {
 // BM25 分片索引
 // ---------------------------------------------------------------------------
 
+///|
 struct Bm25Doc {
   tf : Map[String, Int]
   len : Int
 }
 
+///|
 /// BM25 索引：按 user 物理分片，维护每 user 的 df 与总词长。
 pub struct KeywordIndex {
   // user → (entry_id → doc)
@@ -83,17 +92,15 @@ pub struct KeywordIndex {
   total_len : Map[String, Int]
 }
 
+///|
 pub fn KeywordIndex::new() -> KeywordIndex {
-  KeywordIndex::{
-    shards : Map([]),
-    df : Map([]),
-    total_len : Map([]),
-  }
+  KeywordIndex::{ shards: Map([]), df: Map([]), total_len: Map([]), }
 }
 
+///|
 fn KeywordIndex::shard(
   self : KeywordIndex,
-  user_id : String
+  user_id : String,
 ) -> Map[String, Bm25Doc] {
   match self.shards.get(user_id) {
     Some(m) => m
@@ -105,9 +112,10 @@ fn KeywordIndex::shard(
   }
 }
 
+///|
 fn KeywordIndex::df_shard(
   self : KeywordIndex,
-  user_id : String
+  user_id : String,
 ) -> Map[String, Int] {
   match self.df.get(user_id) {
     Some(m) => m
@@ -119,7 +127,12 @@ fn KeywordIndex::df_shard(
   }
 }
 
-fn KeywordIndex::add_total_len(self : KeywordIndex, user_id : String, delta : Int) -> Unit {
+///|
+fn KeywordIndex::add_total_len(
+  self : KeywordIndex,
+  user_id : String,
+  delta : Int,
+) -> Unit {
   let cur = match self.total_len.get(user_id) {
     Some(v) => v
     None => 0
@@ -127,13 +140,14 @@ fn KeywordIndex::add_total_len(self : KeywordIndex, user_id : String, delta : In
   self.total_len.set(user_id, cur + delta)
 }
 
+///|
 /// 写入 / 覆盖某 user 的一条文档（keywords 为 tokenize 结果）。
 /// 覆盖时先按旧文档回滚 df 与总词长，保证统计正确。
 pub fn KeywordIndex::upsert(
   self : KeywordIndex,
   user_id : String,
   id : String,
-  keywords : Array[String]
+  keywords : Array[String],
 ) -> Unit {
   let shard = self.shard(user_id)
   // 回滚旧文档统计
@@ -142,13 +156,12 @@ pub fn KeywordIndex::upsert(
       let df_map = self.df_shard(user_id)
       for term in old.tf.keys() {
         match df_map.get(term) {
-          Some(n) => {
+          Some(n) =>
             if n <= 1 {
               df_map.remove(term)
             } else {
               df_map.set(term, n - 1)
             }
-          }
           None => ()
         }
       }
@@ -165,7 +178,7 @@ pub fn KeywordIndex::upsert(
     }
     tf.set(t, cur + 1)
   }
-  shard.set(id, Bm25Doc::{ tf, len : keywords.length() })
+  shard.set(id, Bm25Doc::{ tf, len: keywords.length(), })
   self.add_total_len(user_id, keywords.length())
   // 更新 df（按去重词表）
   let df_map = self.df_shard(user_id)
@@ -178,11 +191,12 @@ pub fn KeywordIndex::upsert(
   }
 }
 
+///|
 /// 摘除某 user 的一条文档（supersede / forget 共用）。
 pub fn KeywordIndex::remove(
   self : KeywordIndex,
   user_id : String,
-  id : String
+  id : String,
 ) -> Unit {
   match self.shards.get(user_id) {
     Some(shard) =>
@@ -191,13 +205,12 @@ pub fn KeywordIndex::remove(
           let df_map = self.df_shard(user_id)
           for term in doc.tf.keys() {
             match df_map.get(term) {
-              Some(n) => {
+              Some(n) =>
                 if n <= 1 {
                   df_map.remove(term)
                 } else {
                   df_map.set(term, n - 1)
                 }
-              }
               None => ()
             }
           }
@@ -210,6 +223,7 @@ pub fn KeywordIndex::remove(
   }
 }
 
+///|
 /// 某 user 分片的条目数。
 pub fn KeywordIndex::size(self : KeywordIndex, user_id : String) -> Int {
   match self.shards.get(user_id) {
@@ -218,13 +232,14 @@ pub fn KeywordIndex::size(self : KeywordIndex, user_id : String) -> Int {
   }
 }
 
+///|
 /// BM25 检索：仅在该 user 分片内打分，按分数降序取前 k。
 /// 排序确定性：分数降序，相同分按 id 升序。
 pub fn KeywordIndex::search(
   self : KeywordIndex,
   user_id : String,
   query : String,
-  k : Int
+  k : Int,
 ) -> Array[(String, Double)] {
   let query_terms = tokenize(query)
   if query_terms.length() == 0 {
@@ -264,7 +279,9 @@ pub fn KeywordIndex::search(
         Some(v) => v
         None => 0
       }
-      let idf = @math.ln(1.0 + ((n_docs - df).to_double() + 0.5) / (df.to_double() + 0.5))
+      let idf = @math.ln(
+        1.0 + ((n_docs - df).to_double() + 0.5) / (df.to_double() + 0.5),
+      )
       let tf_d = tf.to_double()
       let norm = BM25_K1 * (1.0 - BM25_B + BM25_B * doc.len.to_double() / avgdl)
       score = score + idf * tf_d * (BM25_K1 + 1.0) / (tf_d + norm)

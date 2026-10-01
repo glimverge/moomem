@@ -1,6 +1,7 @@
 // RRF 融合器（Reciprocal Rank Fusion）：将两路召回的 id 列表融合重排。
 // score(id) = Σ_lists 1 / (k + rank)，rank 为该 id 在对应列表中的 1 基名次。
 
+///|
 /// RRF 融合：lists 为各路召回的 id 有序列表（已按相关性降序）；
 /// k 为平滑常数（缺省 60），top_k 为截断长度。
 /// 排序确定性：融合分降序，相同分按 id 升序。

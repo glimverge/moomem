@@ -1,8 +1,0 @@
-{
-  "import": [
-    "heyq02/moomem/src",
-    "heyq02/moomem/src/llm_extractor",
-    "mizchi/llm"
-  ],
-  "is-main": true
-}

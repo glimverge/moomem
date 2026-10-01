@@ -1,6 +1,7 @@
 // moomem 统一错误类型。
 // 一切可失败函数返回 Result[T, MoomemError]；禁止 panic / abort。
 
+///|
 /// moomem 全库唯一错误类型。
 /// 声明为 suberror：内部实现可用 raise 风格传播，公开 API 统一 Result[T, MoomemError]。
 pub(all) suberror MoomemError {
@@ -20,21 +21,28 @@ pub(all) suberror MoomemError {
   InvalidOperation(String)
 }
 
+///|
 /// 手写 Show（原 derive(Show) 输出格式保持不变：Variant(payload)）。
 pub impl Show for MoomemError with fn output(self, logger) {
   match self {
     InvalidUserId(detail) => logger.write_string("InvalidUserId(\{detail})")
     StoreCorrupted(detail) => logger.write_string("StoreCorrupted(\{detail})")
     IoFailure(detail) => logger.write_string("IoFailure(\{detail})")
-    ExtractionFailure(detail) => logger.write_string("ExtractionFailure(\{detail})")
-    EmbeddingFailure(detail) => logger.write_string("EmbeddingFailure(\{detail})")
-    BackendUnsupported(detail) => logger.write_string("BackendUnsupported(\{detail})")
-    InvalidOperation(detail) => logger.write_string("InvalidOperation(\{detail})")
+    ExtractionFailure(detail) =>
+      logger.write_string("ExtractionFailure(\{detail})")
+    EmbeddingFailure(detail) =>
+      logger.write_string("EmbeddingFailure(\{detail})")
+    BackendUnsupported(detail) =>
+      logger.write_string("BackendUnsupported(\{detail})")
+    InvalidOperation(detail) =>
+      logger.write_string("InvalidOperation(\{detail})")
   }
 }
 
+///|
 pub extend MoomemError with Show::{to_string, output}
 
+///|
 /// 人类可读的错误消息（含上下文），供 CLI 与宿主程序展示。
 pub fn MoomemError::message(self : MoomemError) -> String {
   match self {
@@ -48,6 +56,7 @@ pub fn MoomemError::message(self : MoomemError) -> String {
   }
 }
 
+///|
 /// 错误类别短名（供 metadata / 日志使用）
 pub fn MoomemError::kind(self : MoomemError) -> String {
   match self {

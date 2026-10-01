@@ -17,16 +17,18 @@
 // 抽象
 // ---------------------------------------------------------------------------
 
+///|
 /// 持久化后端抽象。load 返回 None 表示空库（首次打开）。
 pub(open) trait PersistenceBackend {
-  load(self : Self) -> Result[String?, MoomemError]
-  save(self : Self, snapshot : String) -> Result[Unit, MoomemError]
+  fn load(self : Self) -> Result[String?, MoomemError]
+  fn save(self : Self, snapshot : String) -> Result[Unit, MoomemError]
 }
 
 // ---------------------------------------------------------------------------
 // MemoryBackend：进程内后端（测试崩溃注入 / wasm-js 缺省）
 // ---------------------------------------------------------------------------
 
+///|
 /// 进程内后端。保存完整快照字符串；支持模拟崩溃（半写 / 写失败）。
 pub struct MemoryBackend {
   mut snapshot : String?
@@ -38,20 +40,23 @@ pub struct MemoryBackend {
   mut bytes_written : Int64
 }
 
+///|
 pub fn MemoryBackend::new() -> MemoryBackend {
   MemoryBackend::{
-    snapshot : None,
-    simulate_partial_write : None,
-    fail_next_save : false,
-    bytes_written : 0L,
+    snapshot: None,
+    simulate_partial_write: None,
+    fail_next_save: false,
+    bytes_written: 0L,
   }
 }
 
-pub impl PersistenceBackend for MemoryBackend with load(self) {
+///|
+pub impl PersistenceBackend for MemoryBackend with fn load(self) {
   Ok(self.snapshot)
 }
 
-pub impl PersistenceBackend for MemoryBackend with save(self, snapshot) {
+///|
+pub impl PersistenceBackend for MemoryBackend with fn save(self, snapshot) {
   if self.fail_next_save {
     self.fail_next_save = false
     return Err(MoomemError::IoFailure("MemoryBackend: simulated save failure"))
@@ -74,23 +79,30 @@ pub impl PersistenceBackend for MemoryBackend with save(self, snapshot) {
   Ok(())
 }
 
+///|
 pub extend MemoryBackend with PersistenceBackend::{save, load}
 
+///|
 /// 当前保存的快照（测试观察用）。
 pub fn MemoryBackend::peek(self : MemoryBackend) -> String? {
   self.snapshot
 }
 
+///|
 /// 测试注入：模拟进程被杀的半写状态（save 只写入前 n 个字符）；None = 完整写入。
 pub fn MemoryBackend::set_simulate_partial_write(
   self : MemoryBackend,
-  n : Int?
+  n : Int?,
 ) -> Unit {
   self.simulate_partial_write = n
 }
 
+///|
 /// 测试注入：下一次 save 直接失败（模拟 IO 错误）。
-pub fn MemoryBackend::set_fail_next_save(self : MemoryBackend, fail : Bool) -> Unit {
+pub fn MemoryBackend::set_fail_next_save(
+  self : MemoryBackend,
+  fail : Bool,
+) -> Unit {
   self.fail_next_save = fail
 }
 
@@ -98,6 +110,7 @@ pub fn MemoryBackend::set_fail_next_save(self : MemoryBackend, fail : Bool) -> U
 // FsBackend：native 磁盘后端（双槽快照 + head 指针）
 // ---------------------------------------------------------------------------
 
+///|
 /// 磁盘后端。目录布局：
 ///   <path>/moomem/slot{0,1}.jsonl + <path>/moomem/head
 pub struct FsBackend {
@@ -107,26 +120,31 @@ pub struct FsBackend {
   mut slot : Int
 }
 
+///|
 pub fn FsBackend::new(path : String) -> FsBackend {
-  FsBackend::{ base_dir : path, slot : 0 }
+  FsBackend::{ base_dir: path, slot: 0, }
 }
 
+///|
 fn FsBackend::moomem_dir(self : FsBackend) -> String {
   "\{self.base_dir}/moomem"
 }
 
+///|
 fn FsBackend::slot_path(self : FsBackend, slot : Int) -> String {
   "\{self.moomem_dir()}/slot\{slot}.jsonl"
 }
 
+///|
 fn FsBackend::head_path(self : FsBackend) -> String {
   "\{self.moomem_dir()}/head"
 }
 
+///|
 /// 读取指定槽文件并校验其 header 可解析（用于槽选择）；失败返回 None。
 fn FsBackend::read_slot_if_valid(
   self : FsBackend,
-  slot : Int
+  slot : Int,
 ) -> Result[String?, MoomemError] {
   let path = self.slot_path(slot)
   if !@fs.path_exists(path) {
@@ -140,12 +158,11 @@ fn FsBackend::read_slot_if_valid(
       None => ""
     }
     match parse_json_line(first_line) {
-      Ok(header_json) => {
+      Ok(header_json) =>
         match parse_snapshot_header(header_json) {
           Ok(_) => Ok(Some(content))
           Err(_) => Ok(None) // header 版本不符等：视为无效槽
         }
-      }
       Err(_) => Ok(None)
     }
   } catch {
@@ -153,6 +170,7 @@ fn FsBackend::read_slot_if_valid(
   }
 }
 
+///|
 /// 从快照文本解析 header 中的 gen（用于双槽歧义时取大者）。
 fn snapshot_gen_of(content : String) -> Int? {
   let first_line = match content.split("\n").next() {
@@ -169,7 +187,8 @@ fn snapshot_gen_of(content : String) -> Int? {
   }
 }
 
-pub impl PersistenceBackend for FsBackend with load(self) {
+///|
+pub impl PersistenceBackend for FsBackend with fn load(self) {
   try {
     // 确保目录结构存在（FR-01：目录不存在则创建）
     mkdir_p(self.base_dir)
@@ -272,13 +291,17 @@ pub impl PersistenceBackend for FsBackend with load(self) {
       }
     }
   } catch {
-    e => Err(
-        MoomemError::IoFailure(io_error_message("load (base '\{self.base_dir}')", e)),
+    e =>
+      Err(
+        MoomemError::IoFailure(
+          io_error_message("load (base '\{self.base_dir}')", e),
+        ),
       )
   }
 }
 
-pub impl PersistenceBackend for FsBackend with save(self, snapshot) {
+///|
+pub impl PersistenceBackend for FsBackend with fn save(self, snapshot) {
   try {
     mkdir_p(self.base_dir)
     mkdir_p(self.moomem_dir())
@@ -290,12 +313,19 @@ pub impl PersistenceBackend for FsBackend with save(self, snapshot) {
     self.slot = target
     Ok(())
   } catch {
-    e => Err(MoomemError::IoFailure(io_error_message("save (base '\{self.base_dir}')", e)))
+    e =>
+      Err(
+        MoomemError::IoFailure(
+          io_error_message("save (base '\{self.base_dir}')", e),
+        ),
+      )
   }
 }
 
+///|
 pub extend FsBackend with PersistenceBackend::{save, load}
 
+///|
 /// 将 @fs 的 IOError 转为可读消息。
 fn io_error_message(op : String, e : @fs.IOError) -> String {
   let detail : String = match e {
@@ -304,6 +334,7 @@ fn io_error_message(op : String, e : @fs.IOError) -> String {
   "\{op} failed: \{detail}"
 }
 
+///|
 /// 逐级创建目录（x/fs 的 create_dir 在 native 不支持嵌套路径）。
 /// 已存在的层级跳过；绝对路径以 "/" 起始。
 fn mkdir_p(path : String) -> Unit raise @fs.IOError {
@@ -343,14 +374,20 @@ fn mkdir_p(path : String) -> Unit raise @fs.IOError {
 // 缺省后端选择（架构文档 1.5：native→FsBackend；wasm/js→MemoryBackend）
 // ---------------------------------------------------------------------------
 
+///|
 #cfg(target="native")
-pub fn default_backend(path : String) -> Result[&PersistenceBackend, MoomemError] {
+pub fn default_backend(
+  path : String,
+) -> Result[&PersistenceBackend, MoomemError] {
   let backend = FsBackend::new(path)
   Ok(backend as &PersistenceBackend)
 }
 
+///|
 #cfg(not(target="native"))
-pub fn default_backend(_path : String) -> Result[&PersistenceBackend, MoomemError] {
+pub fn default_backend(
+  _path : String,
+) -> Result[&PersistenceBackend, MoomemError] {
   // wasm/js 无本地文件系统：缺省进程内后端；宿主可通过 config.persistence
   // 注入自己的持久化适配（如浏览器 IndexedDB 胶水）。
   let backend = MemoryBackend::new()

@@ -13,6 +13,7 @@
 // MemoryEntry 编解码
 // ---------------------------------------------------------------------------
 
+///|
 /// MemoryEntry → Json（字段名与磁盘格式一一对应，恢复时不必重算 keywords）。
 pub fn entry_to_json(e : MemoryEntry) -> Json {
   let obj : Map[String, Json] = Map([])
@@ -36,15 +37,15 @@ pub fn entry_to_json(e : MemoryEntry) -> Json {
   Json::object(obj)
 }
 
+///|
 /// Json → MemoryEntry；字段缺失 / 类型不符 → StoreCorrupted。
 pub fn entry_from_json(j : Json) -> Result[MemoryEntry, MoomemError] {
-  try {
-    Ok(entry_from_json_impl(j))
-  } catch {
+  Ok(entry_from_json_impl(j)) catch {
     e => Err(e)
   }
 }
 
+///|
 fn entry_from_json_impl(j : Json) -> MemoryEntry raise MoomemError {
   let obj = match j {
     Object(o) => o
@@ -78,7 +79,8 @@ fn entry_from_json_impl(j : Json) -> MemoryEntry raise MoomemError {
   match obj.get("metadata") {
     Some(Object(m)) => m.each((k, v) => metadata.set(k, v))
     Some(Null) => ()
-    Some(_) => raise MoomemError::StoreCorrupted("field 'metadata' is not an object")
+    Some(_) =>
+      raise MoomemError::StoreCorrupted("field 'metadata' is not an object")
     None => ()
   }
   MemoryEntry::{
@@ -100,6 +102,7 @@ fn entry_from_json_impl(j : Json) -> MemoryEntry raise MoomemError {
 // 状态与类型的字符串编解码
 // ---------------------------------------------------------------------------
 
+///|
 fn status_to_json(s : EntryStatus) -> Json {
   match s {
     Active => Json::string("active")
@@ -109,6 +112,7 @@ fn status_to_json(s : EntryStatus) -> Json {
   }
 }
 
+///|
 fn status_from_json(j : Json) -> EntryStatus raise MoomemError {
   match j {
     String("active") => Active
@@ -121,6 +125,7 @@ fn status_from_json(j : Json) -> EntryStatus raise MoomemError {
   }
 }
 
+///|
 fn kind_to_json(k : EntryKind) -> Json {
   match k {
     Fact => Json::string("fact")
@@ -130,13 +135,15 @@ fn kind_to_json(k : EntryKind) -> Json {
   }
 }
 
+///|
 fn kind_from_json(j : Json) -> EntryKind raise MoomemError {
   match j {
     String("fact") => Fact
     String("preference") => Preference
     String("event") => Event
     String("unstructured") => Unstructured
-    String(other) => raise MoomemError::StoreCorrupted("unknown kind '\{other}'")
+    String(other) =>
+      raise MoomemError::StoreCorrupted("unknown kind '\{other}'")
     _ => raise MoomemError::StoreCorrupted("kind is not a string")
   }
 }
@@ -145,33 +152,49 @@ fn kind_from_json(j : Json) -> EntryKind raise MoomemError {
 // 字段读取辅助（类型不符一律 raise StoreCorrupted）
 // ---------------------------------------------------------------------------
 
-fn get_string_field(obj : Map[String, Json], key : String) -> String raise MoomemError {
+///|
+fn get_string_field(
+  obj : Map[String, Json],
+  key : String,
+) -> String raise MoomemError {
   match obj.get(key) {
     Some(String(s)) => s
-    Some(_) => raise MoomemError::StoreCorrupted("field '\{key}' is not a string")
+    Some(_) =>
+      raise MoomemError::StoreCorrupted("field '\{key}' is not a string")
     None => raise MoomemError::StoreCorrupted("field '\{key}' is missing")
   }
 }
 
-fn get_int_field(obj : Map[String, Json], key : String) -> Int raise MoomemError {
+///|
+fn get_int_field(
+  obj : Map[String, Json],
+  key : String,
+) -> Int raise MoomemError {
   match obj.get(key) {
     Some(Number(n, ..)) => n.to_int()
-    Some(_) => raise MoomemError::StoreCorrupted("field '\{key}' is not a number")
+    Some(_) =>
+      raise MoomemError::StoreCorrupted("field '\{key}' is not a number")
     None => raise MoomemError::StoreCorrupted("field '\{key}' is missing")
   }
 }
 
-fn get_int64_field(obj : Map[String, Json], key : String) -> Int64 raise MoomemError {
+///|
+fn get_int64_field(
+  obj : Map[String, Json],
+  key : String,
+) -> Int64 raise MoomemError {
   match obj.get(key) {
     Some(Number(n, ..)) => n.to_int64()
-    Some(_) => raise MoomemError::StoreCorrupted("field '\{key}' is not a number")
+    Some(_) =>
+      raise MoomemError::StoreCorrupted("field '\{key}' is not a number")
     None => raise MoomemError::StoreCorrupted("field '\{key}' is missing")
   }
 }
 
+///|
 fn get_double_array_field(
   obj : Map[String, Json],
-  key : String
+  key : String,
 ) -> Array[Double] raise MoomemError {
   match obj.get(key) {
     Some(Array(items)) => {
@@ -187,14 +210,16 @@ fn get_double_array_field(
       }
       out
     }
-    Some(_) => raise MoomemError::StoreCorrupted("field '\{key}' is not an array")
+    Some(_) =>
+      raise MoomemError::StoreCorrupted("field '\{key}' is not an array")
     None => raise MoomemError::StoreCorrupted("field '\{key}' is missing")
   }
 }
 
+///|
 fn get_string_array_field(
   obj : Map[String, Json],
-  key : String
+  key : String,
 ) -> Array[String] raise MoomemError {
   match obj.get(key) {
     Some(Array(items)) => {
@@ -210,7 +235,8 @@ fn get_string_array_field(
       }
       out
     }
-    Some(_) => raise MoomemError::StoreCorrupted("field '\{key}' is not an array")
+    Some(_) =>
+      raise MoomemError::StoreCorrupted("field '\{key}' is not an array")
     None => raise MoomemError::StoreCorrupted("field '\{key}' is missing")
   }
 }
@@ -219,6 +245,7 @@ fn get_string_array_field(
 // 快照 header / 整体编解码
 // ---------------------------------------------------------------------------
 
+///|
 /// 快照 header：{"v":1,"gen":..,"clock":..}
 fn snapshot_header_to_json(v : Int, gen : Int, clock : Int64) -> Json {
   let obj : Map[String, Json] = Map([])
@@ -228,13 +255,18 @@ fn snapshot_header_to_json(v : Int, gen : Int, clock : Int64) -> Json {
   Json::object(obj)
 }
 
+///|
 /// 解析 header 行；校验版本号。返回 (v, gen, clock)。
-pub fn parse_snapshot_header(j : Json) -> Result[(Int, Int, Int64), MoomemError] {
+pub fn parse_snapshot_header(
+  j : Json,
+) -> Result[(Int, Int, Int64), MoomemError] {
   try {
     let obj = match j {
       Object(o) => o
       _ =>
-        raise MoomemError::StoreCorrupted("snapshot header is not a JSON object")
+        raise MoomemError::StoreCorrupted(
+          "snapshot header is not a JSON object",
+        )
     }
     let v = get_int_field(obj, "v")
     if v != SNAPSHOT_VERSION {
@@ -250,6 +282,7 @@ pub fn parse_snapshot_header(j : Json) -> Result[(Int, Int, Int64), MoomemError]
   }
 }
 
+///|
 /// 解析单行 JSON（空行 / 语法错误 → StoreCorrupted）。
 pub fn parse_json_line(line : String) -> Result[Json, MoomemError] {
   try {
@@ -263,11 +296,12 @@ pub fn parse_json_line(line : String) -> Result[Json, MoomemError] {
   }
 }
 
+///|
 /// 组装完整快照文本：header 行 + 每条 entry 一行 JSON。
 pub fn build_snapshot_text(
   gen : Int,
   clock : Int64,
-  entries : Array[MemoryEntry]
+  entries : Array[MemoryEntry],
 ) -> String {
   let buf = StringBuilder()
   buf.write_string(
@@ -281,6 +315,7 @@ pub fn build_snapshot_text(
   buf.to_string()
 }
 
+///|
 /// 快照解析结果：header 代数与时钟 + 条目列表（按文件序） + 截断计数。
 pub struct SnapshotParseResult {
   gen : Int
@@ -289,21 +324,23 @@ pub struct SnapshotParseResult {
   truncated_recovered : Int
 }
 
+///|
 /// 解析快照文本。
 /// 规则（架构文档 1.4 / PRD 第 15 章）：
 ///   - 首行必须是合法 header 且版本匹配，否则 StoreCorrupted；
 ///   - 尾部不完整行（半行损坏）丢弃并计入 truncated_recovered；
 ///   - 中部损坏行不属于尾部截断，报 StoreCorrupted。
-pub fn parse_snapshot_text(text : String) -> Result[SnapshotParseResult, MoomemError] {
-  try {
-    Ok(parse_snapshot_text_impl(text))
-  } catch {
+pub fn parse_snapshot_text(
+  text : String,
+) -> Result[SnapshotParseResult, MoomemError] {
+  Ok(parse_snapshot_text_impl(text)) catch {
     e => Err(e)
   }
 }
 
+///|
 fn parse_snapshot_text_impl(
-  text : String
+  text : String,
 ) -> SnapshotParseResult raise MoomemError {
   // 收集行并剥掉尾部空行
   let lines : Array[String] = []
@@ -319,7 +356,8 @@ fn parse_snapshot_text_impl(
   let header_json = parse_json_line_impl(lines[0])
   let obj = match header_json {
     Object(o) => o
-    _ => raise MoomemError::StoreCorrupted("snapshot header is not a JSON object")
+    _ =>
+      raise MoomemError::StoreCorrupted("snapshot header is not a JSON object")
   }
   let v = get_int_field(obj, "v")
   if v != SNAPSHOT_VERSION {
@@ -357,17 +395,17 @@ fn parse_snapshot_text_impl(
       }
     }
   }
-  SnapshotParseResult::{ gen, clock, entries, truncated_recovered : truncated }
+  SnapshotParseResult::{ gen, clock, entries, truncated_recovered: truncated, }
 }
 
+///|
 fn parse_json_line_impl(line : String) -> Json raise MoomemError {
   let trimmed = line.trim().to_owned()
   if trimmed.length() == 0 {
     raise MoomemError::StoreCorrupted("blank line in snapshot")
   }
-  try {
-    @json.parse(trimmed)
-  } catch {
-    e => raise MoomemError::StoreCorrupted("invalid JSON line: \{e.to_string()}")
+  @json.parse(trimmed) catch {
+    e =>
+      raise MoomemError::StoreCorrupted("invalid JSON line: \{e.to_string()}")
   }
 }

@@ -31,15 +31,15 @@ Layering matches `docs/project/architecture.md` §1.3:
 | Dedup | `dedup.mbt` | Per-user content fingerprints |
 | Indexes | `index_vector.mbt`, `index_keyword.mbt`, `ranker.mbt` | Per-user shards + BM25 + RRF |
 | Persistence | `persist.mbt` | `PersistenceBackend`, `FsBackend`, `MemoryBackend` — **only non-test core `@fs` call site** (`moon.pkg` may still import `x/fs`) |
-| Orchestration | `store.mbt` | `MemoryStore` aggregate root (host API); indexes/dedup/`tokenize`/`rrf`/similarity helpers are supported internal/test/CI surfaces, not host API — see [Public API and Types](./public-api-and-types.md) |
+| Orchestration | `store.mbt` | `MemoryStore` aggregate root (host API); indexes/dedup/`rrf` are package-private; `tokenize` / similarity helpers stay `pub` for CI — see [Public API and Types](./public-api-and-types.md) |
 
 ## Tests
 
-Black-box tests sit beside sources as `*_test.mbt`:
+Black-box tests sit beside sources as `*_test.mbt`; white-box as `*_wbtest.mbt`:
 
 - `types_test.mbt` — codec, `validate_user_id`
-- `extractor_test.mbt` — injection / raw mode
-- `index_test.mbt` — vector/BM25/RRF + isolation
+- `extractor_test.mbt` — injection / raw mode + pub diagnostic helpers
+- `index_wbtest.mbt` — VectorIndex / KeywordIndex / DedupIndex / rrf (package-private)
 - `persist_test.mbt` — dual-slot, head corruption, `MemoryBackend` crash inject
 - `store_e2e_test.mbt` — AC-01..05 end-to-end
 - `qa_adversarial_test.mbt`, `w3_config_test.mbt` — edge / config validation

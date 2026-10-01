@@ -3,11 +3,11 @@
 // 与 HashingEmbedder 共用同一 tokenize，保证语义一致性。
 
 ///|
-/// BM25 参数（经典默认值）
-pub const BM25_K1 : Double = 1.5
+/// BM25 参数（经典默认值）；package-private.
+const BM25_K1 : Double = 1.5
 
 ///|
-pub const BM25_B : Double = 0.75
+const BM25_B : Double = 0.75
 
 ///|
 /// 判断是否 CJK 表意字符（含扩展 A 区与兼容表意区）。
@@ -76,14 +76,15 @@ fn flush_word(buf : StringBuilder, tokens : Array[String]) -> Unit {
 // ---------------------------------------------------------------------------
 
 ///|
-struct Bm25Doc {
+priv struct Bm25Doc {
   tf : Map[String, Int]
   len : Int
 }
 
 ///|
 /// BM25 索引：按 user 物理分片，维护每 user 的 df 与总词长。
-pub struct KeywordIndex {
+/// Package-private (abstract): host API is MemoryStore only.
+struct KeywordIndex {
   // user → (entry_id → doc)
   shards : Map[String, Map[String, Bm25Doc]]
   // user → (term → 文档频率 df)
@@ -93,7 +94,7 @@ pub struct KeywordIndex {
 }
 
 ///|
-pub fn KeywordIndex::new() -> KeywordIndex {
+fn KeywordIndex::new() -> KeywordIndex {
   KeywordIndex::{ shards: Map([]), df: Map([]), total_len: Map([]), }
 }
 
@@ -143,7 +144,7 @@ fn KeywordIndex::add_total_len(
 ///|
 /// 写入 / 覆盖某 user 的一条文档（keywords 为 tokenize 结果）。
 /// 覆盖时先按旧文档回滚 df 与总词长，保证统计正确。
-pub fn KeywordIndex::upsert(
+fn KeywordIndex::upsert(
   self : KeywordIndex,
   user_id : String,
   id : String,
@@ -193,7 +194,7 @@ pub fn KeywordIndex::upsert(
 
 ///|
 /// 摘除某 user 的一条文档（supersede / forget 共用）。
-pub fn KeywordIndex::remove(
+fn KeywordIndex::remove(
   self : KeywordIndex,
   user_id : String,
   id : String,
@@ -224,8 +225,9 @@ pub fn KeywordIndex::remove(
 }
 
 ///|
-/// 某 user 分片的条目数。
-pub fn KeywordIndex::size(self : KeywordIndex, user_id : String) -> Int {
+/// 某 user 分片的条目数（wbtest 用；主路径不读 size）。
+#warnings("-unused_value")
+fn KeywordIndex::size(self : KeywordIndex, user_id : String) -> Int {
   match self.shards.get(user_id) {
     Some(m) => m.length()
     None => 0
@@ -235,7 +237,7 @@ pub fn KeywordIndex::size(self : KeywordIndex, user_id : String) -> Int {
 ///|
 /// BM25 检索：仅在该 user 分片内打分，按分数降序取前 k。
 /// 排序确定性：分数降序，相同分按 id 升序。
-pub fn KeywordIndex::search(
+fn KeywordIndex::search(
   self : KeywordIndex,
   user_id : String,
   query : String,

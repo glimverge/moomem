@@ -34,9 +34,10 @@ pub struct MemoryStore {
   entries : Map[String, MemoryEntry]
   /// 每 user 的 entry id 插入序（含全部状态）
   by_user : Map[String, Array[String]]
-  vec_index : VectorIndex
-  kw_index : KeywordIndex
-  dedup : DedupIndex
+  /// Package-private indexes (not host API)
+  priv vec_index : VectorIndex
+  priv kw_index : KeywordIndex
+  priv dedup : DedupIndex
   /// 逻辑时钟上界（快照 header.clock 来源）
   mut clock_high : Int64
   /// 下一个逻辑序号（持久化恢复续接，永不复用）

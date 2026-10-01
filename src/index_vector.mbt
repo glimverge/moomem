@@ -3,12 +3,13 @@
 
 ///|
 /// 向量索引：user_id → (entry_id → 向量)。
-pub struct VectorIndex {
+/// Package-private (abstract): host API is MemoryStore only.
+struct VectorIndex {
   shards : Map[String, Map[String, Array[Double]]]
 }
 
 ///|
-pub fn VectorIndex::new() -> VectorIndex {
+fn VectorIndex::new() -> VectorIndex {
   VectorIndex::{ shards: Map([]), }
 }
 
@@ -29,7 +30,7 @@ fn VectorIndex::shard(
 
 ///|
 /// 写入 / 覆盖某 user 的一条向量。
-pub fn VectorIndex::upsert(
+fn VectorIndex::upsert(
   self : VectorIndex,
   user_id : String,
   id : String,
@@ -40,7 +41,7 @@ pub fn VectorIndex::upsert(
 
 ///|
 /// 摘除某 user 的一条向量（supersede / forget 共用）。
-pub fn VectorIndex::remove(
+fn VectorIndex::remove(
   self : VectorIndex,
   user_id : String,
   id : String,
@@ -52,8 +53,9 @@ pub fn VectorIndex::remove(
 }
 
 ///|
-/// 某 user 分片的条目数。
-pub fn VectorIndex::size(self : VectorIndex, user_id : String) -> Int {
+/// 某 user 分片的条目数（wbtest 用；主路径不读 size）。
+#warnings("-unused_value")
+fn VectorIndex::size(self : VectorIndex, user_id : String) -> Int {
   match self.shards.get(user_id) {
     Some(m) => m.length()
     None => 0
@@ -64,7 +66,7 @@ pub fn VectorIndex::size(self : VectorIndex, user_id : String) -> Int {
 /// 余弦近邻检索：仅在该 user 分片内暴力扫描，按相似度降序取前 k。
 /// 零相似（正交 / 查询向量为空）不返回，保证"无结果返回空列表"。
 /// 排序确定性：相似度降序，相同分按 id 升序。
-pub fn VectorIndex::search(
+fn VectorIndex::search(
   self : VectorIndex,
   user_id : String,
   qvec : Array[Double],

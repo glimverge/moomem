@@ -4,7 +4,8 @@
 
 ///|
 /// 归一化内容（去首尾空白 + 小写 + 主语前缀/尾标点）的内容指纹（FNV-1a）。
-pub fn content_fingerprint(content : String) -> Int {
+/// Package-private; host path goes through MemoryStore::add dedup.
+fn content_fingerprint(content : String) -> Int {
   fnv1a(normalize_content(content))
 }
 
@@ -66,18 +67,19 @@ fn strip_trailing_punct(s : String) -> String {
 /// 按 user 分片的内容指纹索引：user → fingerprint → entry_id。
 /// 只登记当前可检索（Active / Unstructured）的条目；
 /// supersede / forget 时同步摘除。
-pub struct DedupIndex {
+/// Package-private (abstract): host API is MemoryStore only.
+struct DedupIndex {
   by_user : Map[String, Map[Int, String]]
 }
 
 ///|
-pub fn DedupIndex::new() -> DedupIndex {
+fn DedupIndex::new() -> DedupIndex {
   DedupIndex::{ by_user: Map([]), }
 }
 
 ///|
 /// 查询同 user 是否已存在相同内容指纹的条目；返回已存在条目 id。
-pub fn DedupIndex::lookup(
+fn DedupIndex::lookup(
   self : DedupIndex,
   user_id : String,
   content : String,
@@ -90,7 +92,7 @@ pub fn DedupIndex::lookup(
 
 ///|
 /// 登记指纹 → entry_id。
-pub fn DedupIndex::register(
+fn DedupIndex::register(
   self : DedupIndex,
   user_id : String,
   content : String,
@@ -110,7 +112,7 @@ pub fn DedupIndex::register(
 
 ///|
 /// 摘除指纹（条目被 supersede / forget 时调用）。
-pub fn DedupIndex::unregister(
+fn DedupIndex::unregister(
   self : DedupIndex,
   user_id : String,
   content : String,

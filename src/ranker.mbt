@@ -5,7 +5,8 @@
 /// RRF 融合：lists 为各路召回的 id 有序列表（已按相关性降序）；
 /// k 为平滑常数（缺省 60），top_k 为截断长度。
 /// 排序确定性：融合分降序，相同分按 id 升序。
-pub fn rrf(lists : Array[Array[String]], k : Int, top_k : Int) -> Array[String] {
+/// Package-private; used by MemoryStore::recall only.
+fn rrf(lists : Array[Array[String]], k : Int, top_k : Int) -> Array[String] {
   if k <= 0 {
     return []
   }

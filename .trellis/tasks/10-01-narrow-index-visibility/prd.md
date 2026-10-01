@@ -18,10 +18,10 @@ If MoonBit visibility allows, narrow `pub` on internal index/dedup **modules** s
 
 ## Acceptance Criteria
 
-- [ ] AC1. Written decision: narrowed **or** blocked-with-reason (with MoonBit evidence).
-- [ ] AC2. If narrowed: `moon test` native green; `ci/locomo` still compiles for conflict_eval helpers.
-- [ ] AC3. `.trellis/spec/library/public-api-and-types.md` updated to match the decision.
-- [ ] AC4. Host `MemoryStore` method names/signatures unchanged.
+- [x] AC1. Written decision: narrowed **or** blocked-with-reason (with MoonBit evidence).
+- [x] AC2. If narrowed: `moon test` native green; `ci/locomo` still compiles for conflict_eval helpers.
+- [x] AC3. `.trellis/spec/library/public-api-and-types.md` updated to match the decision.
+- [x] AC4. Host `MemoryStore` method names/signatures unchanged.
 
 ## Out of scope
 

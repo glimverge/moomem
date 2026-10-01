@@ -3,7 +3,7 @@
   "name": "narrow-index-visibility",
   "title": "Narrow internal index visibility (P1 Option B)",
   "description": "If MoonBit allows, narrow pub on indexes/dedup while preserving store and CI diagnostic helpers",
-  "status": "planning",
+  "status": "in_progress",
   "dev_type": null,
   "scope": null,
   "package": null,

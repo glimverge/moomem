@@ -16,7 +16,7 @@ Align with MoonBit core style (`read_file_to_string`, etc.).
 
 | Practice | Evidence |
 |----------|----------|
-| Black-box `*_test.mbt` next to sources | `store_e2e_test.mbt`, `index_test.mbt`, … |
+| Black-box `*_test.mbt` / white-box `*_wbtest.mbt` next to sources | `store_e2e_test.mbt`, `index_wbtest.mbt`, … |
 | Prefer `inspect(...)` deterministic assertions | throughout tests |
 | Inject mocks; no mock framework | custom judges/extractors in e2e |
 | Crash/truncate via `MemoryBackend` | `persist_test.mbt`, AC-01 e2e |

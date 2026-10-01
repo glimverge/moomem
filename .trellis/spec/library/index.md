@@ -29,7 +29,7 @@ Before changing library code:
 - [ ] JSON encode/decode stays in `src/json_codec.mbt` only
 - [ ] Core package does not import `mizchi/llm` (optional adapters live in `src/llm_extractor/`)
 - [ ] Any index/search/dedup path takes an explicit `user_id` (no cross-user API)
-- [ ] Host surface stays centered on `MemoryStore::open/add/recall/forget/stats/close` (+ list/export/import); do not treat indexes/`tokenize`/`rrf`/similarity helpers as host API
+- [ ] Host surface stays centered on `MemoryStore::open/add/recall/forget/stats/close` (+ list/export/import); indexes/dedup/`rrf` are package-private; do not treat `tokenize`/similarity helpers as host API
 - [ ] Defaults remain offline/deterministic when injection points are `None`
 
 ---
@@ -53,7 +53,7 @@ After implementing:
 3. Injectable traits with offline defaults: Embedder / Extractor / ConflictJudge / PersistenceBackend / Clock.
 4. `user_id` physical sharding; cross-user recall structurally impossible.
 5. Dual-slot snapshot + head pointer (not append-only JSONL).
-6. Host API: `MemoryStore` open/add/recall/forget/stats/close (+ export/import/list helpers). Indexes / dedup / `tokenize` / `rrf` / similarity helpers are supported internal/test/CI surfaces only.
+6. Host API: `MemoryStore` open/add/recall/forget/stats/close (+ export/import/list helpers). Indexes / dedup / `rrf` are package-private (Option B); `tokenize` / `cosine_similarity` / `keyword_jaccard` remain `pub` CI diagnostics only.
 7. `llm_extractor` is optional; core must not depend on `mizchi/llm`.
 
 ---

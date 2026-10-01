@@ -8,7 +8,7 @@
 
 <!-- @@@auto:current-status -->
 - **Active File**: `journal-1.md`
-- **Total Sessions**: 3
+- **Total Sessions**: 4
 - **Last Active**: 2026-10-01
 <!-- @@@/auto:current-status -->
 
@@ -19,7 +19,7 @@
 <!-- @@@auto:active-documents -->
 | File | Lines | Status |
 |------|-------|--------|
-| `journal-1.md` | ~114 | Active |
+| `journal-1.md` | ~160 | Active |
 <!-- @@@/auto:active-documents -->
 
 ---
@@ -29,6 +29,7 @@
 <!-- @@@auto:session-history -->
 | # | Date | Title | Commits | Branch |
 |---|------|-------|---------|--------|
+| 4 | 2026-10-01 | 混合检索自适应融合（P7） | `cfaefc0`, `4177aec`, `1317a6c`, `deb239a`, `af30ff7` | `main` |
 | 3 | 2026-10-01 | Architecture deepening wave 2 | `d36cdc2`, `5a90c93` | `main` |
 | 2 | 2026-10-01 | Architecture deepening wave 1 (docs + Clock split) | `753e679`, `ab5a356`, `c824472` | `main` |
 | 1 | 2026-10-01 | Bootstrap Trellis specs for moomem | `74ed4b2`, `8af072d`, `afda32f`, `3395917`, `2bafa35`, `49773fa` | `main` |

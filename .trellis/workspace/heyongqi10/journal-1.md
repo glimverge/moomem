@@ -112,3 +112,49 @@ P1 Option B: package-private indexes/dedup; P6: private helpers for MemoryStore.
 ### Next Steps
 
 - None - task complete
+
+
+## Session 4: 混合检索自适应融合（P7）
+
+**Date**: 2026-10-01
+**Task**: 混合检索自适应融合（P7）
+**Branch**: `main`
+
+### Summary
+
+默认 AdaptiveLexical + protect_bm25_topk；LoCoMo api hybrid=BM25 0.435 硬门槛过；stretch +15% 未达。任务已归档。
+
+### Main Changes
+
+## Done
+- Config: FusionPolicy AdaptiveLexical (default) / EqualRrf rollback
+- ranker: rrf_weighted, lexical_strong, protect_bm25_topk
+- retrieval-tuning: equal vs adaptive + grid (no LoCoMo tuning)
+- Holdout: offline+api hybrid Recall@5 = BM25 0.435, LOCOMO_PASS
+- Spec/README/site notes updated; archived to archive/2026-10/
+
+## Stretch
+- TARGET_15PCT still missed (non-blocking)
+
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `cfaefc0` | (see git log) |
+| `4177aec` | (see git log) |
+| `1317a6c` | (see git log) |
+| `deb239a` | (see git log) |
+| `af30ff7` | (see git log) |
+
+### Testing
+
+- Validation was not recorded for this session.
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- None - task complete

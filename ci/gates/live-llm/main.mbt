@@ -179,18 +179,10 @@ fn main {
   let judge = @llm_extractor.LlmConflictJudge::new(p)
   let backend : &@src.PersistenceBackend = @src.MemoryBackend::new()
   let cfg : @src.Config = @src.Config::{
-    embedder: None,
+    ..@src.Config::default(),
     extractor: Some(extractor as &@src.Extractor),
     judge: Some(judge as &@src.ConflictJudge),
     persistence: Some(backend),
-    clock: None,
-    dim: @src.DEFAULT_DIM,
-    rrf_k: @src.DEFAULT_RRF_K,
-    recall_candidates: 0,
-    supersede_threshold: @src.DEFAULT_SUPERSEDE_THRESHOLD,
-    conflict_candidates: @src.CONFLICT_CANDIDATES,
-    coexist_band: @src.COEXIST_BAND,
-    backfill: @src.RecallBackfill::BackfillRecency,
   }
   let store = match @src.MemoryStore::open("memory://llm-live", config=cfg) {
     Ok(s) => s

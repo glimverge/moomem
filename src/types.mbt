@@ -206,6 +206,26 @@ pub impl Show for RecallBackfill with fn output(self, logger) {
 pub extend RecallBackfill with Show::{to_string, output}
 
 ///|
+/// 混合检索融合策略。
+pub(all) enum FusionPolicy {
+  /// 等权 RRF（历史缺省；回退用）
+  EqualRrf
+  /// 查询自适应：词法强命中时降权向量通道
+  AdaptiveLexical
+}
+
+///|
+pub impl Show for FusionPolicy with fn output(self, logger) {
+  match self {
+    EqualRrf => logger.write_string("EqualRrf")
+    AdaptiveLexical => logger.write_string("AdaptiveLexical")
+  }
+}
+
+///|
+pub extend FusionPolicy with Show::{to_string, output}
+
+///|
 /// 打开 MemoryStore 的配置。所有注入点均为 Option，None 时使用缺省确定性实现。
 pub(all) struct Config {
   /// None → HashingEmbedder(dim)
@@ -232,6 +252,16 @@ pub(all) struct Config {
   coexist_band : Double
   /// recall 补齐策略，缺省 BackfillRecency
   backfill : RecallBackfill
+  /// 混合检索融合策略，缺省 AdaptiveLexical
+  fusion_policy : FusionPolicy
+  /// adaptive：BM25 top1 下限（>=0）
+  lexical_floor : Double
+  /// adaptive：top1/top2 倍差（>=1）
+  lexical_gap : Double
+  /// adaptive：词法强时向量权重，∈(0,1]
+  vec_weight_when_lexical : Double
+  /// adaptive：词法弱时向量权重，∈(0,1]
+  vec_weight_when_semantic : Double
 }
 
 ///|
@@ -250,6 +280,11 @@ pub fn Config::default() -> Config {
     conflict_candidates: CONFLICT_CANDIDATES,
     coexist_band: COEXIST_BAND,
     backfill: BackfillRecency,
+    fusion_policy: FusionPolicy::AdaptiveLexical,
+    lexical_floor: DEFAULT_LEXICAL_FLOOR,
+    lexical_gap: DEFAULT_LEXICAL_GAP,
+    vec_weight_when_lexical: DEFAULT_VEC_WEIGHT_LEXICAL,
+    vec_weight_when_semantic: DEFAULT_VEC_WEIGHT_SEMANTIC,
   }
 }
 
@@ -286,6 +321,22 @@ pub const COEXIST_BAND : Double = 0.15
 ///|
 /// 提取器连续失败降级上限（PRD 第 9 章）
 pub const MAX_EXTRACTION_FAILURES : Int = 3
+
+///|
+/// adaptive 词法强判定：BM25 top1 下限（独立开发集校准；偏低以覆盖短轮次）
+pub const DEFAULT_LEXICAL_FLOOR : Double = 0.5
+
+///|
+/// adaptive 词法强判定：top1 ≥ top2 × gap
+pub const DEFAULT_LEXICAL_GAP : Double = 1.05
+
+///|
+/// adaptive：词法强时向量通道权重（≤0.05 时 recall 走 BM25 单路）
+pub const DEFAULT_VEC_WEIGHT_LEXICAL : Double = 0.05
+
+///|
+/// adaptive：词法弱时向量通道权重（略偏 BM25，减少弱词法稀释）
+pub const DEFAULT_VEC_WEIGHT_SEMANTIC : Double = 0.35
 
 // ---------------------------------------------------------------------------
 // user_id 契约（架构文档 7.4：唯一实现，所有入口调用）

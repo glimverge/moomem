@@ -1,9 +1,10 @@
-// Offline retrieval / conflict tuning harness (W3-B).
+// Offline retrieval / conflict tuning harness (W3-B + adaptive fusion).
 // Zero network, zero secrets. Native main package.
 //
 // 1) Default-parameter gate: recall@5=12/12, supersede=3/3, cross_leak=0
 // 2) Grid scan rrf_k × conflict_candidates × supersede_threshold × coexist_band
-// 3) Print Markdown metrics table + best combo suggestion
+// 3) Adaptive fusion: lexical vs paraphrase cases; equal_rrf vs adaptive compare
+// 4) Small grid over adaptive hyperparams (independent set only — never LoCoMo)
 //
 // Run: moon run ci/tools/retrieval-tuning --target native
 
@@ -162,11 +163,76 @@ fn query_cases() -> Array[QueryCase] {
 }
 
 ///|
+/// 词法向：共享表面词，BM25 应强命中。
+fn lexical_query_cases() -> Array[QueryCase] {
+  [
+    QueryCase::{
+      user: "alice", query: "海淀区中关村软件园", expect_key: "海淀区",
+    },
+    QueryCase::{
+      user: "alice", query: "JD-ALICE-2048", expect_key: "JD-ALICE-2048",
+    },
+    QueryCase::{
+      user: "alice", query: "朝阳大悦城电影", expect_key: "大悦城",
+    },
+    QueryCase::{
+      user: "alice", query: "北京社保卡8899", expect_key: "8899",
+    },
+    QueryCase::{
+      user: "alice", query: "东方航空经济舱", expect_key: "东方航空",
+    },
+    QueryCase::{ user: "alice", query: "三体全三册", expect_key: "三体", },
+  ]
+}
+
+///|
+/// 释义向：尽量少共享表面词，依赖语义通道。
+fn paraphrase_query_cases() -> Array[QueryCase] {
+  [
+    QueryCase::{
+      user: "alice",
+      query: "residence near Zhongguancun software park",
+      expect_key: "海淀区",
+    },
+    QueryCase::{
+      user: "alice",
+      query: "employee badge number for Beijing R&D",
+      expect_key: "JD-ALICE-2048",
+    },
+    QueryCase::{
+      user: "alice",
+      query: "Wednesday cinema at Chaoyang mall",
+      expect_key: "大悦城",
+    },
+    QueryCase::{
+      user: "alice",
+      query: "social security card ending 8899",
+      expect_key: "8899",
+    },
+    QueryCase::{
+      user: "alice",
+      query: "preferred China Eastern economy flights",
+      expect_key: "东方航空",
+    },
+    QueryCase::{
+      user: "alice",
+      query: "signed Three-Body Problem trilogy",
+      expect_key: "三体",
+    },
+  ]
+}
+
+///|
 fn open_store(
   rrf_k : Int,
   conflict_candidates : Int,
   supersede_threshold : Double,
   coexist_band : Double,
+  fusion_policy : @src.FusionPolicy,
+  lexical_floor : Double,
+  lexical_gap : Double,
+  vec_weight_when_lexical : Double,
+  vec_weight_when_semantic : Double,
 ) -> @src.MemoryStore {
   let backend : &@src.PersistenceBackend = @src.MemoryBackend::new()
   let cfg = @src.Config::{
@@ -176,6 +242,11 @@ fn open_store(
     conflict_candidates,
     supersede_threshold,
     coexist_band,
+    fusion_policy,
+    lexical_floor,
+    lexical_gap,
+    vec_weight_when_lexical,
+    vec_weight_when_semantic,
   }
   match @src.MemoryStore::open("memory://tuning", config=cfg) {
     Ok(s) => s
@@ -279,25 +350,7 @@ fn evaluate_cross_leak(store : @src.MemoryStore) -> Int {
 }
 
 ///|
-fn run_once(
-  rrf_k : Int,
-  conflict_candidates : Int,
-  supersede_threshold : Double,
-  coexist_band : Double,
-) -> Metrics {
-  let queries = query_cases()
-  let pairs = conflict_pairs()
-  let m = metrics_empty(queries.length(), pairs.length())
-  let store = open_store(
-    rrf_k,
-    conflict_candidates,
-    supersede_threshold,
-    coexist_band,
-  )
-  add_all(store, "alice", alice_facts())
-  add_all(store, "bob", bob_facts())
-  m.supersede_ok = evaluate_supersede(store, pairs)
-  m.cross_leak = evaluate_cross_leak(store)
+fn score_queries(store : @src.MemoryStore, queries : Array[QueryCase], m : Metrics) -> Unit {
   for q in queries {
     let hits = match store.recall(q.user, q.query, top_k=5) {
       Ok(h) => h
@@ -314,6 +367,63 @@ fn run_once(
       None => ()
     }
   }
+}
+
+///|
+fn run_once(
+  rrf_k : Int,
+  conflict_candidates : Int,
+  supersede_threshold : Double,
+  coexist_band : Double,
+) -> Metrics {
+  let queries = query_cases()
+  let pairs = conflict_pairs()
+  let m = metrics_empty(queries.length(), pairs.length())
+  let store = open_store(
+    rrf_k,
+    conflict_candidates,
+    supersede_threshold,
+    coexist_band,
+    @src.FusionPolicy::AdaptiveLexical,
+    @src.DEFAULT_LEXICAL_FLOOR,
+    @src.DEFAULT_LEXICAL_GAP,
+    @src.DEFAULT_VEC_WEIGHT_LEXICAL,
+    @src.DEFAULT_VEC_WEIGHT_SEMANTIC,
+  )
+  add_all(store, "alice", alice_facts())
+  add_all(store, "bob", bob_facts())
+  m.supersede_ok = evaluate_supersede(store, pairs)
+  m.cross_leak = evaluate_cross_leak(store)
+  score_queries(store, queries, m)
+  ignore(store.close())
+  m
+}
+
+///|
+fn run_fusion_once(
+  policy : @src.FusionPolicy,
+  floor : Double,
+  gap : Double,
+  w_lex : Double,
+  w_sem : Double,
+  queries : Array[QueryCase],
+) -> Metrics {
+  let m = metrics_empty(queries.length(), 0)
+  let store = open_store(
+    @src.DEFAULT_RRF_K,
+    @src.CONFLICT_CANDIDATES,
+    @src.DEFAULT_SUPERSEDE_THRESHOLD,
+    @src.COEXIST_BAND,
+    policy,
+    floor,
+    gap,
+    w_lex,
+    w_sem,
+  )
+  add_all(store, "alice", alice_facts())
+  add_all(store, "bob", bob_facts())
+  m.cross_leak = evaluate_cross_leak(store)
+  score_queries(store, queries, m)
   ignore(store.close())
   m
 }
@@ -354,6 +464,26 @@ fn print_metrics_line(
   let mrr_s = format_mrr(mrr_mean(m))
   println(
     "| \{rrf_k} | \{cc} | \{thr_s} | \{band_s} | \{m.recall_hit}/\{m.recall_total} | \{mrr_s} | \{m.supersede_ok}/\{m.supersede_total} |",
+  )
+}
+
+///|
+fn fusion_label(p : @src.FusionPolicy) -> String {
+  match p {
+    EqualRrf => "equal_rrf"
+    AdaptiveLexical => "adaptive"
+  }
+}
+
+///|
+fn print_fusion_line(
+  label : String,
+  subset : String,
+  m : Metrics,
+) -> Unit {
+  let mrr_s = format_mrr(mrr_mean(m))
+  println(
+    "| \{label} | \{subset} | \{m.recall_hit}/\{m.recall_total} | \{mrr_s} |",
   )
 }
 
@@ -430,6 +560,105 @@ fn main {
   println("")
   println(
     "best combo: rrf_k=\{best_rrf} cc=\{best_cc} thr=\{best_thr} band=\{best_band} (ties broken by mrr@5; mrr=\{best_mrr} recall=\{best_m.recall_hit}/\{best_m.recall_total} supersede=\{best_m.supersede_ok}/\{best_m.supersede_total})",
+  )
+
+  // --- Adaptive fusion compare (independent set; no LoCoMo) ---
+  println("")
+  println("=== adaptive fusion compare (independent set) ===")
+  let floor0 = @src.DEFAULT_LEXICAL_FLOOR
+  let gap0 = @src.DEFAULT_LEXICAL_GAP
+  let wlex0 = @src.DEFAULT_VEC_WEIGHT_LEXICAL
+  let wsem0 = @src.DEFAULT_VEC_WEIGHT_SEMANTIC
+  let lex_cases = lexical_query_cases()
+  let para_cases = paraphrase_query_cases()
+  let all_fusion = query_cases()
+  println("| policy | subset | recall@5 | mrr@5 |")
+  println("|--------|--------|---------:|------:|")
+  let eq_all = run_fusion_once(
+    @src.FusionPolicy::EqualRrf, floor0, gap0, wlex0, wsem0, all_fusion,
+  )
+  let ad_all = run_fusion_once(
+    @src.FusionPolicy::AdaptiveLexical, floor0, gap0, wlex0, wsem0, all_fusion,
+  )
+  let eq_lex = run_fusion_once(
+    @src.FusionPolicy::EqualRrf, floor0, gap0, wlex0, wsem0, lex_cases,
+  )
+  let ad_lex = run_fusion_once(
+    @src.FusionPolicy::AdaptiveLexical, floor0, gap0, wlex0, wsem0, lex_cases,
+  )
+  let eq_para = run_fusion_once(
+    @src.FusionPolicy::EqualRrf, floor0, gap0, wlex0, wsem0, para_cases,
+  )
+  let ad_para = run_fusion_once(
+    @src.FusionPolicy::AdaptiveLexical, floor0, gap0, wlex0, wsem0, para_cases,
+  )
+  print_fusion_line("equal_rrf", "all", eq_all)
+  print_fusion_line("adaptive", "all", ad_all)
+  print_fusion_line("equal_rrf", "lexical", eq_lex)
+  print_fusion_line("adaptive", "lexical", ad_lex)
+  print_fusion_line("equal_rrf", "paraphrase", eq_para)
+  print_fusion_line("adaptive", "paraphrase", ad_para)
+
+  // Small adaptive hyperparam grid
+  println("")
+  println("=== adaptive hyperparam grid (independent set) ===")
+  let floors = [0.8, 1.5, 2.5]
+  let gaps = [1.1, 1.2, 1.5]
+  let w_lexs = [0.05, 0.15, 0.25]
+  let w_sems = [0.35, 0.45, 0.55]
+  println("| floor | gap | w_lex | w_sem | all@5 | lex@5 | para@5 | mrr_all |")
+  println("|------:|----:|------:|------:|------:|------:|-------:|--------:|")
+  let mut sug_floor = floor0
+  let mut sug_gap = gap0
+  let mut sug_wlex = wlex0
+  let mut sug_wsem = wsem0
+  let mut sug_score = ad_all.recall_hit * 1000 +
+    ad_lex.recall_hit * 100 +
+    ad_para.recall_hit * 10
+  let mut sug_mrr = mrr_mean(ad_all)
+  for floor in floors {
+    for gap in gaps {
+      for w_lex in w_lexs {
+        for w_sem in w_sems {
+          let m_all = run_fusion_once(
+            @src.FusionPolicy::AdaptiveLexical, floor, gap, w_lex, w_sem, all_fusion,
+          )
+          let m_lex = run_fusion_once(
+            @src.FusionPolicy::AdaptiveLexical, floor, gap, w_lex, w_sem, lex_cases,
+          )
+          let m_para = run_fusion_once(
+            @src.FusionPolicy::AdaptiveLexical, floor, gap, w_lex, w_sem, para_cases,
+          )
+          if m_all.cross_leak != 0 {
+            fail("cross_leak in adaptive grid")
+          }
+          let mrr_s = format_mrr(mrr_mean(m_all))
+          println(
+            "| \{format_mrr(floor)} | \{format_mrr(gap)} | \{format_mrr(w_lex)} | \{format_mrr(w_sem)} | \{m_all.recall_hit}/\{m_all.recall_total} | \{m_lex.recall_hit}/\{m_lex.recall_total} | \{m_para.recall_hit}/\{m_para.recall_total} | \{mrr_s} |",
+          )
+          // Prefer: all recall, then lexical, then paraphrase, then mrr
+          let score = m_all.recall_hit * 1000 +
+            m_lex.recall_hit * 100 +
+            m_para.recall_hit * 10
+          let mm = mrr_mean(m_all)
+          if score > sug_score || (score == sug_score && mm > sug_mrr) {
+            sug_score = score
+            sug_mrr = mm
+            sug_floor = floor
+            sug_gap = gap
+            sug_wlex = w_lex
+            sug_wsem = w_sem
+          }
+        }
+      }
+    }
+  }
+  println("")
+  println(
+    "suggested adaptive defaults: floor=\{format_mrr(sug_floor)} gap=\{format_mrr(sug_gap)} w_lex=\{format_mrr(sug_wlex)} w_sem=\{format_mrr(sug_wsem)} (compare to constants DEFAULT_LEXICAL_FLOOR=\{format_mrr(floor0)} DEFAULT_LEXICAL_GAP=\{format_mrr(gap0)} DEFAULT_VEC_WEIGHT_LEXICAL=\{format_mrr(wlex0)} DEFAULT_VEC_WEIGHT_SEMANTIC=\{format_mrr(wsem0)})",
+  )
+  println(
+    "fusion note: \{fusion_label(@src.FusionPolicy::AdaptiveLexical)} is Config default; EqualRrf remains rollback.",
   )
   println("TUNING_PASS")
 }

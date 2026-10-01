@@ -73,18 +73,10 @@ fn main {
   let judge : &@src.ConflictJudge = AlwaysReplaceJudge::{ }
   let embedder : &@src.Embedder = ResidenceTopicEmbedder::{ }
   let cfg : @src.Config = @src.Config::{
+    ..@src.Config::default(),
     embedder: Some(embedder),
-    extractor: None,
     judge: Some(judge),
     persistence: Some(backend),
-    clock: None,
-    dim: @src.DEFAULT_DIM,
-    rrf_k: @src.DEFAULT_RRF_K,
-    recall_candidates: 0,
-    supersede_threshold: @src.DEFAULT_SUPERSEDE_THRESHOLD,
-    conflict_candidates: @src.CONFLICT_CANDIDATES,
-    coexist_band: @src.COEXIST_BAND,
-    backfill: @src.RecallBackfill::BackfillRecency,
   }
   let store = match @src.MemoryStore::open(
     "memory://conflict-supersede",

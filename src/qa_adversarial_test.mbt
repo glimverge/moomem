@@ -86,18 +86,12 @@ fn qa_open(
   embedder : &@src.Embedder?,
 ) -> Result[@src.MemoryStore, @src.MoomemError] {
   let cfg : @src.Config = @src.Config::{
+    ..@src.Config::default(),
     embedder,
     extractor,
     judge,
     persistence: Some(backend),
     clock,
-    dim: @src.DEFAULT_DIM,
-    rrf_k: @src.DEFAULT_RRF_K,
-    recall_candidates: 0,
-    supersede_threshold: @src.DEFAULT_SUPERSEDE_THRESHOLD,
-    conflict_candidates: @src.CONFLICT_CANDIDATES,
-    coexist_band: @src.COEXIST_BAND,
-    backfill: @src.RecallBackfill::BackfillRecency,
   }
   @src.MemoryStore::open("memory://qa", config=cfg)
 }
@@ -727,18 +721,12 @@ test "QA: config validation rejects illegal values" {
   let backend : &@src.PersistenceBackend = @src.MemoryBackend::new()
   let mk_cfg = (dim : Int, rrf_k : Int, rc : Int, thr : Double) => {
     let cfg : @src.Config = @src.Config::{
-      embedder: None,
-      extractor: None,
-      judge: None,
+      ..@src.Config::default(),
       persistence: Some(backend),
-      clock: None,
       dim,
       rrf_k,
       recall_candidates: rc,
       supersede_threshold: thr,
-      conflict_candidates: @src.CONFLICT_CANDIDATES,
-      coexist_band: @src.COEXIST_BAND,
-      backfill: @src.RecallBackfill::BackfillRecency,
     }
     cfg
   }

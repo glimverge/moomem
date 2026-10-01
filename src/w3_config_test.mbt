@@ -221,6 +221,24 @@ test "W3-A3: conflict_candidates=0 and coexist_band=1.0 rejected" {
     _ => false
   }
   inspect(rejected_band, content="true")
+  let bad_gap = @src.Config::{
+    ..w3_base_cfg(backend),
+    lexical_gap: 0.9,
+  }
+  let rejected_gap = match w3_open(bad_gap) {
+    Err(InvalidOperation(msg)) => msg.contains("lexical_gap")
+    _ => false
+  }
+  inspect(rejected_gap, content="true")
+  let bad_wv = @src.Config::{
+    ..w3_base_cfg(backend),
+    vec_weight_when_lexical: 0.0,
+  }
+  let rejected_wv = match w3_open(bad_wv) {
+    Err(InvalidOperation(msg)) => msg.contains("vec_weight_when_lexical")
+    _ => false
+  }
+  inspect(rejected_wv, content="true")
 }
 
 // ---------------------------------------------------------------------------
@@ -421,4 +439,70 @@ test "W3-A6: SimilarityJudge::new default coexist_band is 0.15" {
     }
   }
   inspect(vs2.length(), content="0")
+}
+
+// ---------------------------------------------------------------------------
+// TC-A7 自适应融合：强词法贴近 BM25；弱词法保留向量
+// ---------------------------------------------------------------------------
+
+///|
+test "W3-A7: adaptive fusion favors BM25 on strong lexical query" {
+  // 向量故意把「无关」文档排前；词法强命中时应仍返回过敏事实。
+  let table : Map[String, Array[Double]] = Map([])
+  table.set("我对花生过敏非常严重", w3_unit(0, 1.0))
+  table.set("我喜欢清淡粤菜少油少盐", w3_unit(1, 1.0))
+  // 查询向量偏向粤菜文档
+  table.set("花生过敏", w3_unit(1, 1.0))
+  // 释义查询：无共享表面词，但向量指向过敏文档
+  table.set("hypersensitivity to groundnuts", w3_unit(0, 1.0))
+  let embedder : &@src.Embedder = W3FixedEmbedder::{
+    table,
+    fallback: w3_unit(2, 1.0),
+  }
+  let judge : &@src.ConflictJudge = W3CountingJudge::{ last_count: -1 }
+  let backend : &@src.PersistenceBackend = @src.MemoryBackend::new()
+  let cfg = @src.Config::{
+    ..w3_base_cfg(backend),
+    embedder: Some(embedder),
+    judge: Some(judge),
+    fusion_policy: @src.FusionPolicy::AdaptiveLexical,
+    lexical_floor: 0.5,
+    lexical_gap: 1.05,
+    vec_weight_when_lexical: 0.10,
+    vec_weight_when_semantic: 0.55,
+    backfill: @src.RecallBackfill::NoBackfill,
+  }
+  let store = match w3_open(cfg) {
+    Ok(s) => s
+    Err(e) => {
+      inspect(e.message(), content="SHOULD NOT REACH")
+      return
+    }
+  }
+  ignore(store.add("w3-a7", "我对花生过敏非常严重"))
+  ignore(store.add("w3-a7", "我喜欢清淡粤菜少油少盐"))
+  let lexical = match store.recall("w3-a7", "花生过敏", top_k=2) {
+    Ok(r) => r
+    Err(e) => {
+      inspect(e.message(), content="SHOULD NOT REACH")
+      return
+    }
+  }
+  inspect(lexical.length() >= 1, content="true")
+  inspect(lexical[0].content.contains("花生过敏"), content="true")
+
+  let semantic = match store.recall(
+    "w3-a7",
+    "hypersensitivity to groundnuts",
+    top_k=2,
+  ) {
+    Ok(r) => r
+    Err(e) => {
+      inspect(e.message(), content="SHOULD NOT REACH")
+      return
+    }
+  }
+  inspect(semantic.length() >= 1, content="true")
+  inspect(semantic[0].content.contains("花生过敏"), content="true")
+  ignore(store.close())
 }

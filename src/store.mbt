@@ -30,6 +30,12 @@ pub struct MemoryStore {
   coexist_band : Double
   /// recall 命中不足 top_k 时的补齐策略
   backfill : RecallBackfill
+  /// 混合检索融合策略
+  fusion_policy : FusionPolicy
+  lexical_floor : Double
+  lexical_gap : Double
+  vec_weight_when_lexical : Double
+  vec_weight_when_semantic : Double
   /// 全部条目（含 Superseded / Deleted，审计与导出可见）
   entries : Map[String, MemoryEntry]
   /// 每 user 的 entry id 插入序（含全部状态）
@@ -100,6 +106,31 @@ pub fn MemoryStore::open(
   if cfg.coexist_band < 0.0 || cfg.coexist_band >= 1.0 {
     return Err(
       MoomemError::InvalidOperation("config.coexist_band must be in [0, 1)"),
+    )
+  }
+  if cfg.lexical_floor < 0.0 {
+    return Err(
+      MoomemError::InvalidOperation("config.lexical_floor must be >= 0"),
+    )
+  }
+  if cfg.lexical_gap < 1.0 {
+    return Err(
+      MoomemError::InvalidOperation("config.lexical_gap must be >= 1"),
+    )
+  }
+  if cfg.vec_weight_when_lexical <= 0.0 || cfg.vec_weight_when_lexical > 1.0 {
+    return Err(
+      MoomemError::InvalidOperation(
+        "config.vec_weight_when_lexical must be in (0, 1]",
+      ),
+    )
+  }
+  if cfg.vec_weight_when_semantic <= 0.0 ||
+    cfg.vec_weight_when_semantic > 1.0 {
+    return Err(
+      MoomemError::InvalidOperation(
+        "config.vec_weight_when_semantic must be in (0, 1]",
+      ),
     )
   }
   // 解析持久化后端
@@ -176,6 +207,11 @@ pub fn MemoryStore::open(
     conflict_candidates: cfg.conflict_candidates,
     coexist_band: cfg.coexist_band,
     backfill: cfg.backfill,
+    fusion_policy: cfg.fusion_policy,
+    lexical_floor: cfg.lexical_floor,
+    lexical_gap: cfg.lexical_gap,
+    vec_weight_when_lexical: cfg.vec_weight_when_lexical,
+    vec_weight_when_semantic: cfg.vec_weight_when_semantic,
     entries: Map([]),
     by_user: Map([]),
     vec_index: VectorIndex::new(),
@@ -687,13 +723,45 @@ pub fn MemoryStore::recall(
     Ok(vs) => if vs.length() > 0 { vs[0] } else { [] }
     Err(_) => []
   }
-  let vec_ids : Array[String] = self.vec_index
-    .search(user_id, qvec, candidates_n)
-    .map(p => p.0)
-  let kw_ids : Array[String] = self.kw_index
-    .search(user_id, query, candidates_n)
-    .map(p => p.0)
-  let fused = rrf([vec_ids, kw_ids], self.rrf_k, k)
+  let vec_hits = self.vec_index.search(user_id, qvec, candidates_n)
+  let kw_hits = self.kw_index.search(user_id, query, candidates_n)
+  let vec_ids : Array[String] = vec_hits.map(p => p.0)
+  let kw_ids : Array[String] = kw_hits.map(p => p.0)
+  let fused = match self.fusion_policy {
+    EqualRrf => rrf([vec_ids, kw_ids], self.rrf_k, k)
+    AdaptiveLexical => {
+      let bm25_scores : Array[Double] = kw_hits.map(p => p.1)
+      let strong = lexical_strong(
+        bm25_scores,
+        self.lexical_floor,
+        self.lexical_gap,
+      )
+      if strong {
+        // 词法强：BM25 序主导；向量仅以极低权重参与（Config.vec_weight_when_lexical）
+        // 若权重已接近 0，实质退化为 BM25 单路，避免等权 RRF 稀释。
+        if self.vec_weight_when_lexical <= 0.05 {
+          let out : Array[String] = []
+          let limit = if k < kw_ids.length() { k } else { kw_ids.length() }
+          for i = 0; i < limit; i = i + 1 {
+            out.push(kw_ids[i])
+          }
+          out
+        } else {
+          rrf_weighted(
+            vec_ids,
+            kw_ids,
+            self.rrf_k,
+            k,
+            self.vec_weight_when_lexical,
+            1.0 - self.vec_weight_when_lexical,
+          )
+        }
+      } else {
+        let w_v = self.vec_weight_when_semantic
+        rrf_weighted(vec_ids, kw_ids, self.rrf_k, k, w_v, 1.0 - w_v)
+      }
+    }
+  }
   let results : Array[MemoryEntry] = []
   for id in fused {
     match self.entries.get(id) {

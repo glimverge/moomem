@@ -6,18 +6,8 @@
 ///|
 fn default_cfg(backend : &@src.PersistenceBackend) -> @src.Config {
   @src.Config::{
-    embedder: None,
-    extractor: None,
-    judge: None,
+    ..@src.Config::default(),
     persistence: Some(backend),
-    clock: None,
-    dim: @src.DEFAULT_DIM,
-    rrf_k: @src.DEFAULT_RRF_K,
-    recall_candidates: 0,
-    supersede_threshold: @src.DEFAULT_SUPERSEDE_THRESHOLD,
-    conflict_candidates: @src.CONFLICT_CANDIDATES,
-    coexist_band: @src.COEXIST_BAND,
-    backfill: @src.RecallBackfill::BackfillRecency,
   }
 }
 

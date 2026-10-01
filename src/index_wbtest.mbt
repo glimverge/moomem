@@ -137,6 +137,44 @@ test "rrf: single list passes through, top_k truncates" {
 }
 
 ///|
+test "rrf_weighted: equal weights match equal rrf on two lists" {
+  let vec = ["x", "y", "z"]
+  let kw = ["y", "w", "x"]
+  let equal = rrf([vec, kw], 60, 3)
+  let weighted = rrf_weighted(vec, kw, 60, 3, 1.0, 1.0)
+  inspect(weighted.length(), content="3")
+  inspect(weighted[0], content=equal[0])
+  inspect(weighted[1], content=equal[1])
+  inspect(weighted[2], content=equal[2])
+}
+
+///|
+test "rrf_weighted: lexical-favoring weight preserves BM25 top" {
+  // BM25 强命中 b 排第一；向量把 a 排第一。降权向量后 b 应胜出。
+  let vec = ["a", "b", "c"]
+  let kw = ["b", "c", "a"]
+  let fused = rrf_weighted(vec, kw, 60, 3, 0.15, 0.85)
+  inspect(fused[0], content="b")
+}
+
+///|
+test "lexical_strong: single hit above floor" {
+  inspect(lexical_strong([2.0], 1.5, 1.2), content="true")
+  inspect(lexical_strong([1.0], 1.5, 1.2), content="false")
+  inspect(lexical_strong([], 1.5, 1.2), content="false")
+}
+
+///|
+test "lexical_strong: gap and floor boundaries" {
+  // top1/top2 = 2.4/2.0 = 1.2 → 刚好达标
+  inspect(lexical_strong([2.4, 2.0], 1.5, 1.2), content="true")
+  // 倍差不足
+  inspect(lexical_strong([2.3, 2.0], 1.5, 1.2), content="false")
+  // floor 不足
+  inspect(lexical_strong([1.4, 1.0], 1.5, 1.2), content="false")
+}
+
+///|
 test "DedupIndex: register / lookup / unregister per user" {
   let dedup = DedupIndex::new()
   dedup.register("user-a", "  我对花生过敏 ", "id-1")

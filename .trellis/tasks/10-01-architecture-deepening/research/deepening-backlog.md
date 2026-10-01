@@ -48,14 +48,15 @@ Verified against live tree on 2026-10-01.
 
 | Field | Content |
 |-------|---------|
-| Problem | Two **modules** in one file (`Embedder` + `Clock`/`LogicalClock`/`FixedClock` from line ~103); readers assume Clock is part of Embedder. |
+| Problem | ~~Two modules in one file~~ **Done:** Clock lives in `src/clock.mbt`; Embedder stays in `embedder.mbt`. |
 | Candidate module | `Clock` + `LogicalClock` / `FixedClock` |
-| Current interface | Unchanged traits; wrong file **locality** |
-| Proposed | `clock.mbt` (or `time.mbt`); leave Embedder alone |
+| Current interface | Unchanged traits; file locality matches module |
+| Proposed | ~~`clock.mbt`~~ Landed in `10-01-split-clock-module` |
 | Dependency category | In-process |
-| Test-surface impact | None if symbols stay `pub` with same names |
+| Test-surface impact | None (symbols stay `pub` with same names) |
 | Leverage | Medium (navigation); low behavioral risk |
 | Do not | Merge Clock into Config or invent a third time API |
+| Status | **Done** — see `10-01-split-clock-module` |
 
 ### P4 — Clarify FS package vs call-site seam
 

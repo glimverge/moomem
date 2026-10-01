@@ -14,7 +14,7 @@ W1 must be testable with **zero network / zero API key**. Architecture (`docs/pr
 | `Extractor` | `extractor.mbt` | `RawExtractor` (passthrough `Unstructured`) | `src/llm_extractor` `LlmExtractor` |
 | `ConflictJudge` | `conflict.mbt` | `SimilarityJudge` (cosine + keyword Jaccard) | `LlmConflictJudge` |
 | `PersistenceBackend` | `persist.mbt` | native `FsBackend` / else `MemoryBackend` | Host IndexedDB glue, etc. |
-| `Clock` | `embedder.mbt` | `LogicalClock` (monotonic, snapshot-resumed) | System clock; tests use `FixedClock` |
+| `Clock` | `clock.mbt` | `LogicalClock` (monotonic, snapshot-resumed) | System clock; tests use `FixedClock` |
 
 `Config` fields are `&Trait?`; `None` resolves inside `MemoryStore::open` (`types.mbt` `Config`, `store.mbt`).
 

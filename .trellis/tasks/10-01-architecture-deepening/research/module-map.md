@@ -43,7 +43,7 @@ Deletion test: delete `MemoryStore` → every host reimplements extract→dedup�
 | `Extractor` | `RawExtractor`; `LlmExtractor` | True external (LLM) + in-process default | Keep; package split already deepens locality |
 | `ConflictJudge` | `SimilarityJudge`; `LlmConflictJudge` | Same | Keep |
 | `PersistenceBackend` | `FsBackend`; `MemoryBackend` | Local-substitutable | Keep; dual-slot lives in FsBackend impl |
-| `Clock` | `LogicalClock`; `FixedClock` (both in `embedder.mbt` today) | In-process | Keep; file co-location with Embedder is hygiene only (P3) |
+| `Clock` | `LogicalClock`; `FixedClock` (both in `clock.mbt`) | In-process | Keep; split from Embedder (P3 done) |
 
 Rule check: each has ≥2 adapters → real seams, not hypothetical.
 
@@ -65,7 +65,7 @@ Rule check: each has ≥2 adapters → real seams, not hypothetical.
 
 | Artifact | Role | Problem |
 |----------|------|---------|
-| `docs/project/architecture.md` | Intended design narrative | §2 still says `moon.pkg.json`; omits `llm_extractor/`, `ci/`, extra tests (`qa_*`, `w3_config_*`); §2 file-tree line for `embedder.mbt` lists Clock + LogicalClock only (FixedClock appears later in prose §7, not as its own file) |
+| `docs/project/architecture.md` | Intended design narrative | Tree refreshed for `clock.mbt` (P3); earlier gaps (`moon.pkg.json`, omitted packages/tests) tracked under P2 |
 | `spec/spec-feature-*.md` | Feature/process contracts | Overlaps architecture + Trellis specs |
 | `.trellis/spec/library|cli/` | AI coding guidelines | Current; should stay source of “how to edit” |
 | `docs/project/09-handover.md` | Human onboarding | Says “src/store.mbt 等 11 个文件” and “四个注入 trait” — live tree has **13** non-test core `.mbt` files and **five** traits (Clock missing from the count) |

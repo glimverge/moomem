@@ -17,10 +17,10 @@ Move `Clock` / `LogicalClock` / `FixedClock` from `src/embedder.mbt` into `src/c
 
 ## Acceptance Criteria
 
-- [ ] AC1. `clock.mbt` exists; `embedder.mbt` no longer defines Clock types.
-- [ ] AC2. Public symbol names unchanged (`Clock`, `LogicalClock`, `FixedClock`).
-- [ ] AC3. `moon test` passes on native.
-- [ ] AC4. Architecture/Trellis references updated where they claimed Clock only lives under embedder file.
+- [x] AC1. `clock.mbt` exists; `embedder.mbt` no longer defines Clock types.
+- [x] AC2. Public symbol names unchanged (`Clock`, `LogicalClock`, `FixedClock`).
+- [x] AC3. `moon test` passes on native.
+- [x] AC4. Architecture/Trellis references updated where they claimed Clock only lives under embedder file.
 
 ## Out of scope
 

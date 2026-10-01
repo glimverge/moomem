@@ -27,7 +27,7 @@ Layering matches `docs/project/architecture.md` §1.3:
 | Types | `types.mbt` | `MemoryEntry`, `Config`, `AddSummary`, `StoreStats`, `ForgetTarget`, `validate_user_id` |
 | Errors | `errors.mbt` | `MoomemError` suberror + `message` / `kind` |
 | JSON | `json_codec.mbt` | Sole entry/snapshot encode-decode |
-| Traits + defaults | `embedder.mbt`, `extractor.mbt`, `conflict.mbt` | Injectables + `HashingEmbedder` / `RawExtractor` / `SimilarityJudge` / clocks |
+| Traits + defaults | `embedder.mbt`, `extractor.mbt`, `conflict.mbt`, `clock.mbt` | Injectables + `HashingEmbedder` / `RawExtractor` / `SimilarityJudge` / `LogicalClock` / `FixedClock` |
 | Dedup | `dedup.mbt` | Per-user content fingerprints |
 | Indexes | `index_vector.mbt`, `index_keyword.mbt`, `ranker.mbt` | Per-user shards + BM25 + RRF |
 | Persistence | `persist.mbt` | `PersistenceBackend`, `FsBackend`, `MemoryBackend` — **only non-test core `@fs` call site** (`moon.pkg` may still import `x/fs`) |
@@ -57,7 +57,7 @@ Black-box tests sit beside sources as `*_test.mbt`:
 |--------|-----------|
 | New public type / config field | `types.mbt` (+ codec in `json_codec.mbt` if persisted) |
 | New `MoomemError` variant | `errors.mbt` (update `Show`, `message`, `kind`) |
-| New injectable AI capability | New trait file next to embedder/extractor/conflict; wire through `Config` + `MemoryStore::open` |
+| New injectable AI / infra capability | New trait file next to `embedder` / `extractor` / `conflict` / `clock`; wire through `Config` + `MemoryStore::open` |
 | Disk / crash-safety | `persist.mbt` only |
 | Orchestration of add/recall flows | `store.mbt` only — keep indexes/traits stateless or rebuildable |
 | LLM prompts / OpenAI client | `src/llm_extractor/` — never core |

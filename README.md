@@ -280,7 +280,8 @@ src/
 ├── types.mbt         核心类型 / user_id 校验 / id 生成
 ├── errors.mbt        MoomemError 统一错误
 ├── json_codec.mbt    唯一 JSON 编解码处
-├── embedder.mbt      Embedder/Clock trait + 缺省实现
+├── embedder.mbt      Embedder trait + HashingEmbedder + cosine_similarity
+├── clock.mbt         Clock trait + LogicalClock / FixedClock
 ├── extractor.mbt     Extractor trait + RawExtractor
 ├── conflict.mbt      ConflictJudge trait + SimilarityJudge
 ├── dedup.mbt         内容指纹去重

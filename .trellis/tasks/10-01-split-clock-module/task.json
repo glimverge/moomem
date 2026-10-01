@@ -3,7 +3,7 @@
   "name": "split-clock-module",
   "title": "Split Clock module into clock.mbt",
   "description": "P3: move Clock/LogicalClock/FixedClock from embedder.mbt to clock.mbt without API change",
-  "status": "planning",
+  "status": "in_progress",
   "dev_type": null,
   "scope": null,
   "package": null,

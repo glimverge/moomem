@@ -26,8 +26,8 @@ FlowUs 工作区| 「临界微光」(id 08cef79b-6e4e-47a1-996d-ba0e4d256143)| P
   
 ## 二、技术架构要点(接手前必读)
 
-  * **核心模型** :MemoryStore(门面六方法:add / recall / list_entries / stats / close / open)→ Namespace(按 user_id 隔离)→ MemoryEntry(content / kind / status[Active·Superseded·Deleted] / metadata)。核心库 `src/` 共 **13** 个非测试 `.mbt` 文件(另有 `*_test.mbt` 黑盒测试),零第三方依赖(仅 moonbitlang/x fs)。
-  * **五个注入 trait(全部 pub(open))** :Embedder / Extractor / ConflictJudge / PersistenceBackend / Clock(LogicalClock · FixedClock 与 Embedder 同在 `embedder.mbt`) —— 一切能力外部注入,核心包零 mizchi/llm 引用是 CI 红线(grep 断言)。
+  * **核心模型** :MemoryStore(门面六方法:add / recall / list_entries / stats / close / open)→ Namespace(按 user_id 隔离)→ MemoryEntry(content / kind / status[Active·Superseded·Deleted] / metadata)。核心库 `src/` 共 **14** 个非测试 `.mbt` 文件(另有 `*_test.mbt` 黑盒测试),零第三方依赖(仅 moonbitlang/x fs)。
+  * **五个注入 trait(全部 pub(open))** :Embedder / Extractor / ConflictJudge / PersistenceBackend / Clock(`LogicalClock` · `FixedClock` 在 `clock.mbt`) —— 一切能力外部注入,核心包零 mizchi/llm 引用是 CI 红线(grep 断言)。
   * **持久化** :双槽全量快照 + head 指针(x/fs 无 append API 的工程折中,重启一致性 1/1 实测);wasm/js 缺省 MemoryBackend,磁盘需宿主注入。
   * **检索栈** :内置 BM25(CJK 单字 + 二元组分词)+ 内存余弦向量 + RRF 融合(k=60,Config 可调);recall 命中不足 top_k 时 Recency 补齐(可配 NoBackfill)。
   * **LLM 适配层(独立包 src/llm_extractor/)** :LlmExtractor(DegradePolicy:ReturnRaw/PropagateError)+ LlmConflictJudge,基于 mizchi/llm 0.3.2;降级三通道可见(degraded / notes / metadata.extraction_degraded,W3.1 修)。

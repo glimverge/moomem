@@ -112,7 +112,8 @@ moomem/
 │   ├── types.mbt              # 核心类型：EntryStatus/EntryKind/MemoryEntry/Config/StoreStats/AddSummary/...
 │   ├── errors.mbt             # MoomemError 统一错误
 │   ├── json_codec.mbt         # 各类型 to_json/from_json（唯一 JSON 编解码处）
-│   ├── embedder.mbt           # trait Embedder + HashingEmbedder；同文件：Clock + LogicalClock + FixedClock
+│   ├── embedder.mbt           # trait Embedder + HashingEmbedder + cosine_similarity
+│   ├── clock.mbt              # trait Clock + LogicalClock + FixedClock
 │   ├── extractor.mbt          # trait Extractor + RawExtractor(缺省)
 │   ├── conflict.mbt           # trait ConflictJudge + SimilarityJudge(缺省) + ConflictDecision
 │   ├── dedup.mbt              # 精确去重（同 user 内容指纹）
@@ -375,6 +376,8 @@ pub trait Embedder {
 }
 // 缺省实现：HashingEmbedder —— 小写化 → 分词（与 BM25 同一分词器）→ 每 token 哈希到 [0,dim)
 // 桶内 TF 累加 → L2 归一。确定性、无网络、O(n)。
+
+// ---- clock.mbt ----
 pub trait Clock { now_ms(self : Self) -> Int64 }
 // 缺省实现：LogicalClock —— 由 seq 派生（seq * 1ms），open 时从快照 header.clock 续接，单调。
 
@@ -519,9 +522,9 @@ open(path)：选择后端（native→FsBackend）→ load() 读 head 指向槽�
 - **对应**：FR 全体基础；FR-08（编解码）；AC-01 的数据格式基础
 - **验收**：`moon test` 绿；codec 往返（to_json→from_json 等价）属性测试。
 
-### T02 提取与注入点抽象层（Embedder / Extractor / ConflictJudge / dedup）
-- **文件**：`src/embedder.mbt`、`src/extractor.mbt`、`src/conflict.mbt`、`src/dedup.mbt`、`src/extractor_test.mbt`
-- **功能点**：三个 trait 定义（Q1 决议落地）；HashingEmbedder（词袋哈希 256 维）；RawExtractor（raw 直通）；SimilarityJudge（阈值规则）；Clock/LogicalClock；内容指纹去重。
+### T02 提取与注入点抽象层（Embedder / Extractor / ConflictJudge / Clock / dedup）
+- **文件**：`src/embedder.mbt`、`src/clock.mbt`、`src/extractor.mbt`、`src/conflict.mbt`、`src/dedup.mbt`、`src/extractor_test.mbt`
+- **功能点**：注入 trait 定义（Q1 决议落地）；HashingEmbedder（词袋哈希 256 维）；RawExtractor（raw 直通）；SimilarityJudge（阈值规则）；Clock/LogicalClock/FixedClock（`clock.mbt`）；内容指纹去重。
 - **依赖**：T01 ｜ **优先级**：P0
 - **对应**：FR-02 提取链路抽象；AC-05（降级路径）；PRD 决议 Q1/Q2；FR-09（确定性使三后端测试可复现）
 - **验收**：确定性测试（同输入同输出）；注入 mock 的测试通过；raw 模式零 Key 可跑。

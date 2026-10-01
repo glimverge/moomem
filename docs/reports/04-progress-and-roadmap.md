@@ -37,7 +37,7 @@
 10-01| W3 里程碑:参数 Config 化(W3-A)、版本常量同步(W3-D)、离线调参台 ci/tuning(W3-B,135 组网格,缺省组 12/12·1.000·3/3·0 过门禁)、CLI `--llm` 接线(W3-C,native 门控 + 仅 env 读密钥);native 97→107,wasm 系 90→96| ✅ 完成(独立验证通过,见 [06-w3-qa-verification.md](06-w3-qa-verification.md))| 
 10-01| W3 独立验证:1 项 P1(提取器 ReturnRaw 降级不可见)、2 项 P3(本地端点判定过宽、传输失败误报为非法 JSON)、1 项 P2 记录(缺省冲突判定仅覆盖近重复式更新,实测语义型住址更新相似度 0.471)| ✅ 修复规格已产出并落地(见 [spec/spec-feature-w3.1-observability-hardening.md](../../spec/spec-feature-w3.1-observability-hardening.md))| 
 10-01| W3.1 补丁:A-`ExtractedFact.degraded`/`degrade_reason` + store 自报降级消费(三通道可见,修复 P1);B-本地端点 host 精确匹配;C-传输失败与解析失败分类;native 107→112,wasm 系 96→99| ✅ 完成(独立复验通过,见 [07-w3.1-verification.md](07-w3.1-verification.md));余 2 项 P3 残留(R1 代理环境分类、R2 闲聊不清零计数)| 
-—| W4:LoCoMo 评测集接入与量化指标(Recall@5、提取 Precision、supersede 正确率)| ⏳ 待启动  
+—| W4:LoCoMo 评测集接入与量化指标(Recall@5、提取 Precision、supersede 正确率)| 🚧 规格与数据资产已产出,交 Cursor 执行(见 [spec/spec-feature-w4-locomo-eval.md](../../spec/spec-feature-w4-locomo-eval.md);数据见 ci/locomo/data/)  
   
 进度结论
 

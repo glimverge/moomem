@@ -1,0 +1,44 @@
+{
+ "meta": {
+  "purpose": "Supersede 正确率评测语料（PRD §16.1「冲突处理」，30 组）",
+  "scoring": "每组：先 add(old) 再 add(new)，随后读 list_entries 断言 old.status==Superseded 且 new 可召回；满足记 1 分。",
+  "grouping_rationale": "分组来自实测事实而非设计偏好——缺省 SimilarityJudge（cosine 与 Jaccard 取 max，阈值 0.82）只覆盖字面高度重合的近重复式更新；语义型更新在缺省离线配置下判定为 Ignore。实测数据见 docs/reports/06-w3-qa-verification.md §4。",
+  "near_duplicate": "单槽位替换（改一个词/数字/星期），共享上下文占比高。离线期望 supersede，进离线门禁。",
+  "semantic": "语义型更新（住址/职业/关系/物品更替），字面几乎无重叠。离线期望 ignore（记录不计分）；仅注入 LlmConflictJudge 的 L2 真实 LLM 档位期望 supersede。",
+  "do_not_tune": "若某组实测相似度落在阈值附近（0.82 ± 0.03），保持语料不动、在报告中标注余量，禁止为凑通过率改写语料。"
+ },
+ "near_duplicate": [
+  { "id": "N01", "domain": "过敏原", "old": "严重过敏原清单包含花生制品项", "new": "严重过敏原清单包含海鲜制品项", "expect": "supersede" },
+  { "id": "N02", "domain": "宠物", "old": "宠物是一只橘色的猫叫豆豆", "new": "宠物是一只橘色的狗叫豆豆", "expect": "supersede" },
+  { "id": "N03", "domain": "作息", "old": "睡眠习惯晚上十一点准时睡觉", "new": "睡眠习惯晚上十二点准时睡觉", "expect": "supersede" },
+  { "id": "N04", "domain": "饮品", "old": "常喝无糖美式咖啡加一份燕麦奶", "new": "常喝无糖拿铁咖啡加一份燕麦奶", "expect": "supersede" },
+  { "id": "N05", "domain": "出差", "old": "出差首选东方航空经济舱", "new": "出差首选南方航空经济舱", "expect": "supersede" },
+  { "id": "N06", "domain": "娱乐", "old": "每周三晚上去朝阳大悦城看电影", "new": "每周四晚上去朝阳大悦城看电影", "expect": "supersede" },
+  { "id": "N07", "domain": "工号", "old": "工号是 JD-ALICE-2048 在北京研发中心", "new": "工号是 JD-ALICE-4096 在北京研发中心", "expect": "supersede" },
+  { "id": "N08", "domain": "证件", "old": "身份证尾号 8899 办过北京社保卡", "new": "身份证尾号 8877 办过北京社保卡", "expect": "supersede" },
+  { "id": "N09", "domain": "紧急联系人", "old": "紧急联系人是王五手机 13900002222", "new": "紧急联系人是王六手机 13900002222", "expect": "supersede" },
+  { "id": "N10", "domain": "饮食偏好", "old": "饮食偏好清淡粤菜少油少盐", "new": "饮食偏好清淡川菜少油少盐", "expect": "supersede" },
+  { "id": "N11", "domain": "通勤", "old": "每天骑共享单车从回龙观到西二旗通勤", "new": "每天骑共享单车从回龙观到望京通勤", "expect": "supersede" },
+  { "id": "N12", "domain": "藏书", "old": "书柜里有一套三体全三册签注本", "new": "书柜里有一套三体全三册精装本", "expect": "supersede" },
+  { "id": "N13", "domain": "健身", "old": "每周五晚上去静安嘉里中心健身", "new": "每周六晚上去静安嘉里中心健身", "expect": "supersede" },
+  { "id": "N14", "domain": "笔记本", "old": "主力笔记本是十六寸的 MacBook Pro", "new": "主力笔记本是十四寸的 MacBook Pro", "expect": "supersede" },
+  { "id": "N15", "domain": "银行", "old": "工资卡是招商银行的一卡通金卡", "new": "工资卡是建设银行的一卡通金卡", "expect": "supersede" },
+  { "id": "N16", "domain": "保险", "old": "意外险在平安投保保额五十万", "new": "意外险在太平洋投保保额五十万", "expect": "supersede" },
+  { "id": "N17", "domain": "车牌", "old": "车牌尾号 3721 的白色卡罗拉", "new": "车牌尾号 7312 的白色卡罗拉", "expect": "supersede" },
+  { "id": "N18", "domain": "餐厅", "old": "最常去楼下那家川味小馆吃水煮鱼", "new": "最常去楼下那家川味小馆吃毛血旺", "expect": "supersede" },
+  { "id": "N19", "domain": "阅读", "old": "每天睡前读二十分钟纸质书", "new": "每天睡前读三十分钟纸质书", "expect": "supersede" },
+  { "id": "N20", "domain": "外语", "old": "在学英语和日语两门外语", "new": "在学英语和法语两门外语", "expect": "supersede" }
+ ],
+ "semantic": [
+  { "id": "S01", "domain": "住址", "old": "我住在北京市海淀区中关村软件园", "new": "我搬到深圳南山科技园了", "expect_offline": "ignore", "expect_live": "supersede", "rationale": "字面无重叠；实测同类住址式对相似度仅 0.263–0.471，远低于 0.82" },
+  { "id": "S02", "domain": "职业", "old": "我在一家互联网公司做后端工程师", "new": "我跳槽去了一家创业公司当技术主管", "expect_offline": "ignore", "expect_live": "supersede", "rationale": "同域换职，词面仅共享「一家公司」" },
+  { "id": "S03", "domain": "学历", "old": "我现在还在读本科", "new": "我上个月本科毕业了，开始全职工作", "expect_offline": "ignore", "expect_live": "supersede", "rationale": "状态推进而非改写，共享「本科」但其余全异" },
+  { "id": "S04", "domain": "婚姻", "old": "我一直是单身", "new": "我上个月订婚了", "expect_offline": "ignore", "expect_live": "supersede", "rationale": "语义相反，字面无重叠" },
+  { "id": "S05", "domain": "车辆", "old": "我开一辆白色的丰田凯美瑞", "new": "我换了一辆蓝色的特斯拉", "expect_offline": "ignore", "expect_live": "supersede", "rationale": "换车场景，品牌颜色全变" },
+  { "id": "S06", "domain": "手机", "old": "我的手机一直是安卓的", "new": "我现在换成 iPhone 了", "expect_offline": "ignore", "expect_live": "supersede", "rationale": "平台迁移，仅共享「我的手机/现在」" },
+  { "id": "S07", "domain": "运动", "old": "我每周去健身房三次", "new": "我改成每天早上晨跑五公里", "expect_offline": "ignore", "expect_live": "supersede", "rationale": "习惯替换，字面几乎无重叠" },
+  { "id": "S08", "domain": "居所性质", "old": "我一直租房住在公司附近", "new": "我买房搬到郊区了", "expect_offline": "ignore", "expect_live": "supersede", "rationale": "租转购，仅共享「我」" },
+  { "id": "S09", "domain": "工作城市", "old": "我在上海上班", "new": "我调到成都分部了", "expect_offline": "ignore", "expect_live": "supersede", "rationale": "地点变更，无共同实体词" },
+  { "id": "S10", "domain": "宠物更替", "old": "我养了两只布偶猫", "new": "我把猫送人了，现在只养一只鹦鹉", "expect_offline": "ignore", "expect_live": "supersede", "rationale": "宠物种类替换，共享「养」「猫」但语义为更替" }
+ ]
+}

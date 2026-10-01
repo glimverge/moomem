@@ -61,7 +61,7 @@ moon test
 moon test --target wasm
 moon run ci/tools/retrieval-tuning --target native   # tool（无 CI 调用）
 moon run ci/eval/locomo --target native              # L3 offline eval
-# NEW_VERSION=… SKIP_COMMIT=1 bash scripts/ci/run-locomo-benchmark-archive.sh  # release archive dry-run
+# NEW_VERSION=… bash scripts/ci/run-locomo-benchmark-archive.sh  # local offline+api+live archive
 moon run examples/basic-store --target native
 moon run examples/llm-extractor --target native
 moon run examples/conflict-supersede --target native

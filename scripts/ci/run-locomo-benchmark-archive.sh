@@ -1,16 +1,18 @@
 #!/usr/bin/env bash
-# Run LoCoMo offline + api + live, merge into benchmarks/locomo/results/<version>.json.
+# Run LoCoMo offline + api (live skipped in CI), merge into benchmarks/locomo/results/<version>.json.
 #
 # Env:
 #   NEW_VERSION   required (e.g. 0.2.3) — module version / file basename
 #   GIT_TAG       optional (default v${NEW_VERSION})
 #   SKIP_COMMIT   if "1", write files but do not git commit/push
 #   SKIP_API      if "1", skip --embedder api (record error/skipped)
-#   SKIP_LIVE     if "1", skip --live
-#   LIVE_EXTRACT_LIMIT  extraction gold cases for --live (default 20; 0 = all 100)
+#   SKIP_LIVE     if "1", skip --live (CI release archive always sets this)
+#   LIVE_EXTRACT_LIMIT  only when SKIP_LIVE!=1; 0 = all 100 (local optional use)
+#
+# Live for release scores: run scripts/ci/run-locomo-live-local.sh after archive.
 #
 # Secrets (never written to JSON):
-#   DEEPSEEK_* for --live
+#   DEEPSEEK_* for --live (local only)
 #   MOOMEM_EMBED_* for --embedder api (or QWEN_* mapped below)
 set -euo pipefail
 
@@ -71,12 +73,16 @@ else
     > "${TMP_DIR}/api.json"
 fi
 if [[ "${SKIP_LIVE:-0}" != "1" ]]; then
-  # Archive smoke subset (full 100-case live remains a manual command; see docs/project/08).
-  LIVE_EXTRACT_LIMIT="${LIVE_EXTRACT_LIMIT:-20}"
-  export MOOMEM_LOCOMO_EXTRACT_LIMIT="${LIVE_EXTRACT_LIMIT}"
-  run_mode live --live --extract-limit "${LIVE_EXTRACT_LIMIT}"
+  # Optional local full archive; release CI always sets SKIP_LIVE=1.
+  LIVE_EXTRACT_LIMIT="${LIVE_EXTRACT_LIMIT:-0}"
+  EXTRA=(--live)
+  if [[ "${LIVE_EXTRACT_LIMIT}" != "0" ]]; then
+    EXTRA+=(--extract-limit "${LIVE_EXTRACT_LIMIT}")
+    export MOOMEM_LOCOMO_EXTRACT_LIMIT="${LIVE_EXTRACT_LIMIT}"
+  fi
+  run_mode live "${EXTRA[@]}"
 else
-  echo '{"mode":"live","run":{"embedder":"hashing","model":null,"dim":null,"extractor_model":null,"metrics":{},"gates":{"overall":"skipped"},"status":"skipped"}}' \
+  echo '{"mode":"live","run":{"embedder":"hashing","model":null,"dim":null,"extractor_model":null,"metrics":{"extraction_status":"skipped"},"gates":{"overall":"skipped"},"status":"skipped"}}' \
     > "${TMP_DIR}/live.json"
 fi
 

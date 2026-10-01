@@ -1,0 +1,37 @@
+sequenceDiagram
+    participant H as 宿主程序
+    participant S as MemoryStore(store.mbt)
+    participant X as Extractor(缺省 Raw)
+    participant D as dedup.mbt
+    participant J as ConflictJudge(缺省 Similarity)
+    participant E as Embedder(缺省 Hashing)
+    participant V as VectorIndex
+    participant K as KeywordIndex
+    participant P as PersistenceBackend
+
+    H->>S: add("user-42", "我对花生过敏")
+    S->>S: validate_user_id(拒绝 / \ .. 空白 控制字符)
+    S->>X: extract(user_id, text)
+    X-->>S: [Fact("对花生过敏", kind=Fact)]
+    Note over S: 提取 0 条 → 返回摘要{extracted:0}，不入库(9章)
+    loop 每条 fact
+        S->>D: 指纹查询(同 user + content 归一化哈希)
+        D-->>S: 已存在 → 跳过(duplicates+1, 返回原 id)
+        S->>V: 邻近候选检索(user_id, k=8)
+        S->>K: 邻近候选检索(user_id, k=8)
+        S->>J: judge(new_fact, candidates)
+        J-->>S: [Replace(北京条目)] / [Coexist] / []
+        S->>E: embed([content])
+        E-->>S: vec[256]
+        S->>S: MemoryEntry::new(seq++, clock.now_ms(), status=Active)
+        S->>V: upsert(user_id, id, vec)
+        S->>K: upsert(user_id, id, 分词(content))
+        alt 存在 Replace 裁决
+            S->>S: 旧条目.status=Superseded, superseded_by=新id
+            S->>V: remove(旧 id)
+            S->>K: remove(旧 id)
+        end
+    end
+    S->>P: save(全量快照: header{v,gen,clock} + entries JSONL)
+    P-->>S: Ok
+    S-->>H: AddSummary{extracted:1, inserted:1, superseded:1, degraded:false}

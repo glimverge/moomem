@@ -1,0 +1,19 @@
+{
+  "name": "heyq02/moomem",
+  "version": "0.1.0",
+  "desc": "moomem - embedded agent memory layer library for MoonBit",
+  "langs": "all",
+  "deps": {
+    "moonbitlang/x": "0.5.5"
+  },
+  "readme": "README.md",
+  "repository": "",
+  "license": "Apache-2.0",
+  "keywords": [
+    "memory",
+    "agent",
+    "rag",
+    "bm25",
+    "vector-search"
+  ]
+}

@@ -43,3 +43,38 @@ Replaced fullstack frontend/backend templates with library and CLI specs from th
 ### Next Steps
 
 - None - task complete
+
+
+## Session 2: Architecture deepening wave 1 (docs + Clock split)
+
+**Date**: 2026-10-01
+**Task**: Architecture deepening wave 1 (docs + Clock split)
+**Branch**: `main`
+
+### Summary
+
+Executed deepening children: synced architecture/docs routing (P2+P5), Trellis host-vs-internal and FS call-site rules (P1A+P4), moved Clock to src/clock.mbt (P3). Parent and three children archived.
+
+### Main Changes
+
+- Detailed change bullets were not supplied; see the summary above.
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `753e679` | (see git log) |
+| `ab5a356` | (see git log) |
+| `c824472` | (see git log) |
+
+### Testing
+
+- Validation was not recorded for this session.
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- None - task complete

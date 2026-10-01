@@ -29,6 +29,7 @@
 | D1 | 发版归档档位 = **C：offline + api + live** | 用户 2026-10-01 |
 | D2 | 远程已配置支持 embedding 的 QWEN；本地以 `.env` 的 `QWEN_*` / `DEEPSEEK_*` 为参考 | 用户 2026-10-01 |
 | D3 | 门禁分层：offline 保持硬门禁（quality/push）；api/live **只归档不阻塞发版**；站点标 pass/fail | 用户 2026-10-01 |
+| D4 | 结果写入：**Release job 直接 commit 回 main**（固定路径 + 可识别 commit 前缀） | 用户 2026-10-01 |
 
 ## Requirements
 
@@ -40,6 +41,7 @@
 - R6. CI/本地接线：api 档使用 `MOOMEM_EMBED_*`（可由 `QWEN_*` 映射）；live 档使用 `DEEPSEEK_*`；密钥永不写入结果文件或提交进仓。
 - R7. Push CI 的离线 `eval-locomo` 门禁语义保持不变（零密钥）；三档全量归档挂在**发版后**路径，不并入日常 push。
 - R8. api/live 未达现有硬阈值时仍须落盘完整指标，并在结果与站点上标记未达标；**不得因此失败已发布版本或阻断结果提交**（D3）。
+- R9. 发版后归档 job 将结果 **直接 commit/push 到 main**（D4）；路径约定待 design；commit message 使用固定前缀（如 `chore(benchmark):`），且结果 JSON **不含密钥**。
 
 ## Acceptance Criteria
 
@@ -49,7 +51,8 @@
 - [ ] AC4. 离线档仍可通过 `moon run ci/eval/locomo --target native` 跑通；push `eval-locomo` 不因本任务引入密钥依赖。
 - [ ] AC5. 许可与语料目录约束未被破坏。
 - [ ] AC6. Release 环境能解析 embedding（QWEN→`MOOMEM_EMBED_*`）与 DeepSeek 密钥；文档说明本地 `.env` 映射方式。
-- [ ] AC7. 在 api 档已知未达标（如 hybrid&lt;bm25 / TARGET_15PCT）场景下，归档 job 仍成功写出结果文件，且不把该失败升级为发版失败。
+- [ ] AC7. 在 api 档已知未达标（如 hybrid 低于 bm25 / TARGET_15PCT）场景下，归档 job 仍成功写出结果文件，且不把该失败升级为发版失败。
+- [ ] AC8. 归档成功后 main 上出现与版本绑定的结果提交（固定前缀）；随后 Pages 部署可展示该版本（依赖现有 `deploy.yml`）。
 
 ## Out of Scope (initial)
 
@@ -62,8 +65,8 @@
 
 1. ~~发版归档跑哪些档位？~~ → **D1 = C**
 2. ~~api/live 门禁策略？~~ → **D3 = 分层（api/live 只归档）**
-3. **结果如何进入仓库？**（自动 commit / 开 PR / 仅 artifact）— 阻塞站点 SSG 与「数据存在项目中」。
-4. 站点页展示粒度：仅汇总表，还是含分项指标 + 与上一版 diff？
+3. ~~结果如何进入仓库？~~ → **D4 = release job 直 commit main**
+4. **站点页展示粒度？** — 阻塞页面信息架构与 JSON schema 字段深度。
 
 ## Notes
 

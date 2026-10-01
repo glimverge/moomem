@@ -96,8 +96,8 @@ moomem/
 │   │   ├── sequence-diagram-recall.mermaid
 │   │   └── 03~10 编号报告（测试/示例架构权威 = 10）
 │   ├── resources/             # 调研与立项依据（选题/竞品）
-│   └── archive/               # 归档（赛季结束后迁入）
-├── spec/                      # 功能/流程验收契约（W3/W4、CI 流水线）— 非 Trellis 编码规范
+│   └── archive/               # 归档；含 feature-specs/（已完成 W3/W3.1/W4 规格）
+├── spec/                      # 现行 process 契约（CI·发布流水线）— 非 Trellis 编码规范
 ├── .trellis/spec/             # AI 编码约定（改 src/ 前读 library/）
 ├── examples/                  # E2 场景演示（mock / 零网络）；见 [10](10-testing-examples-architecture.md)
 │   ├── basic-store/

@@ -61,8 +61,8 @@
 ## Open Questions
 
 1. ~~发版归档跑哪些档位？~~ → **D1 = C**
-2. **api/live 指标未达现有硬门禁时，归档流程是「照常落盘 + 页面标红」还是「阻塞发版」？** — 阻塞规划：api 档当前已知会 fail。
-3. 结果写入是 release job 内自动 commit，还是产出 artifact / 开 PR 合入？
+2. ~~api/live 门禁策略？~~ → **D3 = 分层（api/live 只归档）**
+3. **结果如何进入仓库？**（自动 commit / 开 PR / 仅 artifact）— 阻塞站点 SSG 与「数据存在项目中」。
 4. 站点页展示粒度：仅汇总表，还是含分项指标 + 与上一版 diff？
 
 ## Notes

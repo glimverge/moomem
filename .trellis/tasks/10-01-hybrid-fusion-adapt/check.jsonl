@@ -1,0 +1,4 @@
+{"_example": "Fill with {\"file\": \"<path>\", \"reason\": \"<why>\"}. Put spec/research files only — no code paths. Run `python3 .trellis/scripts/get_context.py --mode packages` to list available specs. Delete this line once real entries are added."}
+{"file": ".trellis/spec/library/quality-guidelines.md", "reason": "Anti-pattern: split store for fusion"}
+{"file": ".trellis/spec/library/public-api-and-types.md", "reason": "Verify public surface unchanged"}
+{"file": "docs/project/08-w4-eval-report.md", "reason": "Holdout metrics comparison"}

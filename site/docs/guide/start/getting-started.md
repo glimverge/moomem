@@ -6,20 +6,11 @@
 
 ## 安装
 
-:::note
-尚未发布到 mooncakes。本地开发请用本仓库做 path 依赖，或把 `src/` 拷进工程。
-:::
+已发布：[heyq02/moomem](https://mooncakes.io/docs/heyq02/moomem)。在宿主工程执行：
 
-发布后在宿主 `moon.mod` / `moon.mod.json` 中加入：
-
-```json
-{
-  "deps": {
-    "heyq02/moomem": "0.3.0"
-  }
-}
+```bash
+moon add heyq02/moomem
 ```
-
 ## 最短代码
 
 ```moonbit

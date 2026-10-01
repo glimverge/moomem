@@ -10,5 +10,6 @@ moomem 全生命周期文档（选题调研 → 竞品复核 → PRD → 进度�
 | 02 | [竞品分析与生态复核报告 v2.0](02-competitive-analysis.md) | **当前有效版本**：MoonBit vs Rust/Go/TS 对比、mooncakes 生态复核、九轮查重，确认 Agent 持久化记忆为唯一空位 |
 | 03 | [产品需求文档 PRD v1.1](03-prd.md) | 22 章 implementation-ready PRD；含 FR-01~10、AC-01~07 验收标准、四周里程碑、风险登记册与 Q1/Q2 决议 |
 | 04 | [进度与规划（2026-10-01）](04-progress-and-roadmap.md) | 里程碑进度（W1/W2 完成、v0.2.1 已发布）、P0~P3 后续规划、验收六条对照 |
+| 05 | [测试用例体系](05-test-suite.md) | 四层测试（L0 离线 / L1 Mock LLM / L2 Live LLM / L3 LoCoMo）；AC/FR 映射与 CI·发版门禁 |
 
 另有架构设计文档 [`../architecture.md`](../architecture.md)（模块划分、注入点、双槽快照持久化）及配套 Mermaid 图（类图 / add·recall 时序）。

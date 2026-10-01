@@ -44,8 +44,8 @@ PRD 四周里程碑中 W1(纯工程闭环)与 W2(LLM 提取适配)已在首个�
 ## 三、后续规划(按优先级)
 
   * **P0 · 赛事申报(截止 10-31)** :飞书表单完成十月赛报名(最多 3 次提交,以最后一次有效提交为准);确认已加入赛事交流群且群昵称为 GitHub ID(奖金发放硬性条件);仓库需保持连续提交记录。
-  * **P1 · W4 评测闭环** :接入 LoCoMo 多轮对话记忆基准子集,产出 PRD 第 16 章的量化指标(混合检索 Recall@5 高于单路 BM25 ≥15%、提取 Precision ≥0.8、supersede 正确率 ≥80%、跨用户 0 渗透);这是"测试质量"评分项的最强展示,建议优先于 W3。
-  * **P1 · 官方测试套件交叉验证** :用 moonbitlang/core 官方测试范式复核,并考虑 GitHub Action CI(四目标测试矩阵),持续提交记录 + CI 绿标是验收六条的直接证据。
+  * **P1 · 官方测试套件交叉验证** : 四层体系见 [05-test-suite.md](05-test-suite.md)（L0 离线 + L1 Mock LLM 进 test-pipeline；L2 Live LLM 进 release-pipeline）；持续用 moonbitlang/core 范式复核并保持 GitHub Action 绿标。
+  * **P1 · W4 评测闭环** : 接入 LoCoMo 多轮对话记忆基准子集（体系中的 **L3**），产出 PRD 第 16 章量化指标；建议优先于 W3。
   * **P2 · W3 功能迭代** :冲突候选窗口 k=8 / 阈值 0.82 调参(AC-04 用例集上);CLI 接线 LLM 提取(需引入 ffi/http 与密钥管理,先做独立评审);recall 命中不足补齐策略可配置化。
   * **P2 · 工程债** :moon.mod.json → moon.mod 格式迁移(工具链已通告弃用,migrate 会重构模块配置布局,单独立项);向 mizchi/llm 上游提 MockProvider impl 未导出的小 PR。
   * **P3 · 赛后动作** :Q3 开放问题——评估向 moon-agent 提集成 PR(记忆层作为其 BufferMemory 的持久化替代);十一月赛(第二赛季度开始)可滚动参赛,季度奖评定在赛季度收官。

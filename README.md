@@ -9,7 +9,7 @@
 - `user_id` 物理分片隔离：跨用户检索在结构上不可能发生
 
 ```
-moomem v0.1.0 ｜ moonbitlang/x@0.5.5 ｜ mizchi/llm@0.3.2（仅 llm_extractor 适配包）｜ Apache-2.0
+moomem v0.2.2 ｜ moonbitlang/x@0.5.5 ｜ mizchi/llm@0.3.2（仅 llm_extractor / CLI --llm）｜ Apache-2.0
 ```
 
 ---
@@ -72,6 +72,13 @@ $BIN list   --db ./mem --user user-42
 $BIN stats  --db ./mem
 $BIN export --db ./mem > backup.jsonl
 $BIN import --db ./mem --file backup.jsonl
+
+# 可选：LLM 提取（OpenAI 兼容端点；密钥只读环境变量）
+# export MOOMEM_LLM_API_KEY=...
+# export MOOMEM_LLM_BASE_URL=https://api.deepseek.com   # 可选
+# export MOOMEM_LLM_MODEL=deepseek-chat                  # 可选，缺省 gpt-4o-mini
+$BIN add --db ./mem --user user-42 --text "你好！我对花生过敏" --llm
+# 同时启用 LLM 冲突判定：加 --llm-judge（隐含 --llm）
 ```
 
 ### 4) 运行测试

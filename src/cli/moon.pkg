@@ -12,6 +12,6 @@ options(
   "is-main": true,
   targets: {
     "llm_wiring.mbt": ["native"],
-    "llm_wiring_stub.mbt": ["wasm", "wasm-gc", "js"],
+    "llm_wiring_stub.mbt": ["not", "native"],
   },
 )

@@ -130,10 +130,11 @@ moon run ci/eval/locomo --target native
 # 真实嵌入（QWEN，.env: QWEN_* → MOOMEM_EMBED_*）
 MOOMEM_EMBED_API_KEY=… MOOMEM_EMBED_BASE_URL=… MOOMEM_EMBED_MODEL=… \
   moon run ci/eval/locomo --target native -- --embedder api
-# 提取精度 · 全量 100 条（本地；不进发版 archive job）
+# 提取精度 · 全量 100 条（本地；DEEPSEEK_*）
 moon run ci/eval/locomo --target native -- --live
-# 发版 offline+api 归档之后，本地回填 live 并提交：
-#   set -a && source .env && set +a && bash scripts/ci/run-locomo-live-local.sh
+# 发版后本地归档三档（offline+api+live）并提交：
+#   set -a && source .env && set +a
+#   NEW_VERSION=<published> bash scripts/ci/run-locomo-benchmark-archive.sh
 ```
 
-密钥均从环境变量读取、不落仓库（`.env` 已 gitignore）；api 档运行约数～十余分钟（视嵌入端点）；live 全量约数分钟。**发版流水线不再跑 live**；全量 Precision 以本报告 §三与本地 `--live` / `run-locomo-live-local.sh` 为准。
+密钥均从环境变量读取、不落仓库（`.env` 已 gitignore）。**发版流水线在 Publish 后结束**；LoCoMo 三档归档全部在本地完成。

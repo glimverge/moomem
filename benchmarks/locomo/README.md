@@ -1,8 +1,8 @@
 # LoCoMo release benchmarks
 
-Versioned L3 eval archives produced after a successful (non dry-run) release.
-Harness entry remains `moon run ci/eval/locomo --target native`; this tree is the
-**machine-readable archive** consumed by the docs site.
+Versioned L3 eval archives produced **locally** after a mooncakes publish (not by
+GitHub Actions). Harness: `moon run ci/eval/locomo --target native`. This tree is
+the machine-readable archive consumed by the docs site.
 
 ## Layout
 
@@ -14,30 +14,29 @@ Harness entry remains `moon run ci/eval/locomo --target native`; this tree is th
 
 ## How results are written
 
-1. Release pipeline job `benchmark-archive` (after publish/tag) runs
-   `scripts/ci/run-locomo-benchmark-archive.sh` with **`SKIP_LIVE=1`**
-   (offline + api only; `runs.live.status` = `skipped`).
-2. Script merges reports into `results/<version>.json`, updates `latest.json`,
-   and commits with `chore(benchmark):`.
-3. **Live** is filled locally (DeepSeek), then committed:
-
-```bash
-set -a && source .env && set +a   # DEEPSEEK_*
-# optional: NEW_VERSION=0.4.0  (defaults to latest.json)
-# optional: LIVE_EXTRACT_LIMIT=20  (default 0 = full 100 gold cases)
-bash scripts/ci/run-locomo-live-local.sh
-# SKIP_COMMIT=1 to only write disk; SKIP_PUSH=1 to commit without push
-```
-
-4. Push to `main` triggers Pages deploy; the site copies this tree at build time.
-
-Local dry run of CI archive (offline+api, live skipped stub):
+Release pipeline stops after Publish / tag / GitHub Release. Operators archive
+benchmarks on a machine with `.env` (QWEN→embed + DeepSeek):
 
 ```bash
 set -a && source .env && set +a
-NEW_VERSION=0.0.0-dev SKIP_COMMIT=1 SKIP_LIVE=1 \
-  bash scripts/ci/run-locomo-benchmark-archive.sh
+# NEW_VERSION must match the published moon.mod / tag (e.g. 0.4.0)
+NEW_VERSION=0.4.0 bash scripts/ci/run-locomo-benchmark-archive.sh
+# runs offline + api + live (full 100 extract cases by default), then commit + push
+#
+# SKIP_COMMIT=1          write JSON only
+# SKIP_PUSH=1            commit, no push
+# SKIP_API=1 / SKIP_LIVE=1
+# LIVE_EXTRACT_LIMIT=20  smoke subset for live extraction
 ```
+
+If offline+api already exist and only live is missing:
+
+```bash
+set -a && source .env && set +a
+bash scripts/ci/run-locomo-live-local.sh   # defaults to latest.json version
+```
+
+Push to `main` triggers Pages deploy; the site copies this tree at build time.
 
 ## License note
 

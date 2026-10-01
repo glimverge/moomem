@@ -1,18 +1,18 @@
 #!/usr/bin/env bash
-# Run LoCoMo offline + api (live skipped in CI), merge into benchmarks/locomo/results/<version>.json.
+# Local LoCoMo benchmark archive: offline + api + live → benchmarks/locomo/results/<version>.json.
+# Not invoked by the release pipeline (publish ends after GitHub Release).
 #
 # Env:
-#   NEW_VERSION   required (e.g. 0.2.3) — module version / file basename
+#   NEW_VERSION   required (e.g. 0.4.0) — module version / file basename
 #   GIT_TAG       optional (default v${NEW_VERSION})
 #   SKIP_COMMIT   if "1", write files but do not git commit/push
-#   SKIP_API      if "1", skip --embedder api (record error/skipped)
-#   SKIP_LIVE     if "1", skip --live (CI release archive always sets this)
-#   LIVE_EXTRACT_LIMIT  only when SKIP_LIVE!=1; 0 = all 100 (local optional use)
-#
-# Live for release scores: run scripts/ci/run-locomo-live-local.sh after archive.
+#   SKIP_PUSH     if "1", commit locally but do not push (ignored when SKIP_COMMIT=1)
+#   SKIP_API      if "1", skip --embedder api (record skipped)
+#   SKIP_LIVE     if "1", skip --live (record skipped)
+#   LIVE_EXTRACT_LIMIT  when live runs: 0 = all 100 gold cases (default); e.g. 20 for smoke
 #
 # Secrets (never written to JSON):
-#   DEEPSEEK_* for --live (local only)
+#   DEEPSEEK_* for --live
 #   MOOMEM_EMBED_* for --embedder api (or QWEN_* mapped below)
 set -euo pipefail
 
@@ -52,10 +52,8 @@ run_mode() {
   set -e
   if [[ ! -f "${report}" ]]; then
     echo "ERROR: missing report for ${mode} (exit ${rc})" >&2
-    # Network / harness crash: fail the archive job (D3: process errors fail job).
     return 1
   fi
-  # Gate misses are OK for api/live under --report-only-exit; offline should still pass.
   if [[ "${mode}" == "offline" ]]; then
     if ! grep -q '^LOCOMO_PASS$' "${log}"; then
       echo "ERROR: offline LoCoMo did not print LOCOMO_PASS" >&2
@@ -73,7 +71,6 @@ else
     > "${TMP_DIR}/api.json"
 fi
 if [[ "${SKIP_LIVE:-0}" != "1" ]]; then
-  # Optional local full archive; release CI always sets SKIP_LIVE=1.
   LIVE_EXTRACT_LIMIT="${LIVE_EXTRACT_LIMIT:-0}"
   EXTRA=(--live)
   if [[ "${LIVE_EXTRACT_LIMIT}" != "0" ]]; then
@@ -99,13 +96,12 @@ def load_run(path: Path):
     data = json.loads(path.read_text())
     if "run" not in data:
         raise SystemExit(f"bad mode report (missing run): {path}")
-    # Reject accidental secret leakage
     blob = json.dumps(data)
-    for bad in ("api_key", "API_KEY", "sk-", "Bearer "):
-        if bad in blob and bad != "sk-" :
+    for bad in ("api_key", "API_KEY", "Bearer "):
+        if bad in blob:
             raise SystemExit(f"refusing to archive: report contains suspicious token {bad!r}")
-        if bad == "sk-" and "sk-" in blob:
-            raise SystemExit("refusing to archive: report looks like it contains an API key")
+    if "sk-" in blob:
+        raise SystemExit("refusing to archive: report looks like it contains an API key")
     return data["run"]
 
 runs = {
@@ -131,10 +127,8 @@ Path(out_path).write_text(json.dumps(doc, indent=2) + "\n")
 print(f"wrote {out_path}")
 PY
 
-# latest.json pointer
 printf '%s\n' "{\"version\": \"${NEW_VERSION}\"}" > "${OUT_DIR}/latest.json"
 
-# Secret scan on final artifact
 if grep -Eiq 'api[_-]?key|sk-[a-zA-Z0-9]|Bearer[[:space:]]' "${RESULT_FILE}"; then
   echo "ERROR: result file appears to contain secrets" >&2
   exit 1
@@ -144,9 +138,6 @@ if [[ "${SKIP_COMMIT:-0}" == "1" ]]; then
   echo "SKIP_COMMIT=1 — left results on disk only"
   exit 0
 fi
-
-git config user.name "github-actions[bot]"
-git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
 git add \
   "${OUT_DIR}/latest.json" \
@@ -160,6 +151,11 @@ if git diff --cached --quiet; then
 fi
 
 git commit -m "chore(benchmark): archive LoCoMo results for ${NEW_VERSION}"
-git push origin HEAD:main
 
-echo "benchmark archive committed for ${NEW_VERSION}"
+if [[ "${SKIP_PUSH:-0}" == "1" ]]; then
+  echo "SKIP_PUSH=1 — committed locally only"
+  exit 0
+fi
+
+git push origin HEAD
+echo "benchmark archive committed and pushed for ${NEW_VERSION}"

@@ -1,6 +1,6 @@
 # LoCoMo Benchmark
 
-发版归档的 L3 评测分数（offline / api / live），来自 `ci/eval/locomo`。本页只展示指标——对话子集仍在 `ci/eval/locomo/data/`（CC BY-NC 4.0）。
+本地归档的 L3 评测分数（offline / api / live），来自 `ci/eval/locomo`。本页只展示指标——对话子集仍在 `ci/eval/locomo/data/`（CC BY-NC 4.0）。
 
 完整归因与五项指标结论见仓库 [评测报告](https://github.com/glimverge/moomem/blob/main/docs/project/08-w4-eval-report.md)。
 
@@ -11,8 +11,8 @@ import { BenchmarkPage } from '../../components/BenchmarkPage';
 ## 分数如何产生
 
 1. Push CI 保留离线硬门禁（`moon run ci/eval/locomo`）。
-2. 正式发版成功后（非 dry-run），`benchmark-archive` 只跑 **offline + api**（`SKIP_LIVE=1`），提交 `benchmarks/locomo/results/<version>.json`。
-3. **live** 在本地跑完再回填同一文件并 commit（见下方命令）。
+2. 发版流水线在 **Publish mooncakes / tag / GitHub Release** 后结束（不再跑 LoCoMo archive）。
+3. 发版后在本地跑三档并提交 `benchmarks/locomo/results/<version>.json`（见下方）。
 4. 本页随 `main` 的 Pages 部署重建。
 
 ## 本地命令
@@ -21,20 +21,13 @@ import { BenchmarkPage } from '../../components/BenchmarkPage';
 # 离线档（进 push CI）
 moon run ci/eval/locomo --target native
 
-# api 档（需 MOOMEM_EMBED_*；可由 QWEN_* 映射）
-moon run ci/eval/locomo --target native -- --embedder api
+# api / live 单档
+moon run ci/eval/locomo --target native -- --embedder api   # MOOMEM_EMBED_* / QWEN_*
+moon run ci/eval/locomo --target native -- --live           # DEEPSEEK_*，全量 100 条
 
-# live 全量 100 条（手工 / W4 §三；需 DEEPSEEK_*）— 不进发版流水线
-moon run ci/eval/locomo --target native -- --live
-
-# 发版后：把 live 结果合并进最新归档 JSON 并提交
+# 发版后本地归档三档并 commit + push（NEW_VERSION = 已发布版本）
 set -a && source .env && set +a
-bash scripts/ci/run-locomo-live-local.sh
-# NEW_VERSION=0.4.0 LIVE_EXTRACT_LIMIT=20 SKIP_PUSH=1 bash scripts/ci/run-locomo-live-local.sh
+NEW_VERSION=0.4.0 bash scripts/ci/run-locomo-benchmark-archive.sh
 ```
 
 api 档环境映射：`QWEN_*` → `MOOMEM_EMBED_*`。live 档只读 `DEEPSEEK_*`。结果 JSON 永不写入 API Key。
-
-:::important
-LoCoMo 数据许可见仓库 [`ci/eval/locomo/data/README.md`](https://github.com/glimverge/moomem/blob/main/ci/eval/locomo/data/README.md)（CC BY-NC 4.0）。缺省 `AdaptiveLexical` 下离线/api 混合 Recall@5 不低于 BM25（见 [08 §七](https://github.com/glimverge/moomem/blob/main/docs/project/08-w4-eval-report.md)）；stretch ≥15% 增益仅在 `--embedder api` 下评估且不阻塞。
-:::

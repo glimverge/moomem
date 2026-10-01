@@ -1,0 +1,6 @@
+{"file": ".trellis/spec/library/index.md", "reason": "Library layer overview for review alignment"}
+{"file": ".trellis/spec/library/directory-structure.md", "reason": "File/module placement rules"}
+{"file": ".trellis/spec/library/public-api-and-types.md", "reason": "Host MemoryStore interface"}
+{"file": ".trellis/spec/guides/code-reuse-thinking-guide.md", "reason": "Reuse / depth thinking"}
+{"file": ".trellis/tasks/10-01-architecture-deepening/research/module-map.md", "reason": "Module map draft"}
+{"file": ".trellis/tasks/10-01-architecture-deepening/research/deepening-backlog.md", "reason": "Ranked deepening backlog"}

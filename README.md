@@ -2,14 +2,14 @@
 
 **MoonBit 嵌入式 Agent 记忆层库** —— 给你的 Agent 一个零部署、可持久化、用户隔离的长期记忆。
 
-- 纯 MoonBit 实现，核心库唯一外部依赖为官方 `moonbitlang/x`（仅 `fs` 子包，且全部调用被锁死在 `persist.mbt` 适配层）
+- 纯 MoonBit 实现，核心库唯一外部依赖为官方 `moonbitlang/x`（仅 `fs` 子包，且全部调用被锁死在 `persist.mbt` 适配层）；LLM 能力收敛在独立适配包 `src/llm_extractor`（依赖 `mizchi/llm`，核心零第三方依赖的铁律不破）
 - **零 API Key 可运行**：嵌入 / 提取 / 冲突判定全部是一等注入 trait，缺省实现确定性、离线（词袋哈希嵌入 + raw 直通提取 + 余弦规则判定）
 - 向量 + BM25 双路混合检索，RRF 融合
 - 双槽快照持久化 + 崩溃恢复（尾部半行截断）
 - `user_id` 物理分片隔离：跨用户检索在结构上不可能发生
 
 ```
-moomem v0.1.0 ｜ moonbitlang/x@0.5.5 ｜ Apache-2.0
+moomem v0.1.0 ｜ moonbitlang/x@0.5.5 ｜ mizchi/llm@0.3.2（仅 llm_extractor 适配包）｜ Apache-2.0
 ```
 
 ---
@@ -24,6 +24,7 @@ moomem v0.1.0 ｜ moonbitlang/x@0.5.5 ｜ Apache-2.0
 
 ```bash
 moon add moonbitlang/x   # moomem 依赖它做磁盘持久化（仅 fs 子包）
+moon add mizchi/llm      # 仅使用 LLM 提取适配包（src/llm_extractor）时需要
 ```
 
 在宿主项目 `moon.mod.json` 的 `deps` 中引入 moomem（发布到 mooncakes 后）：
@@ -76,8 +77,9 @@ $BIN import --db ./mem --file backup.jsonl
 ### 4) 运行测试
 
 ```bash
-moon test                    # native 后端，39 个黑盒测试全绿
-moon test --target wasm-gc   # 三后端行为一致（AC-06）
+moon test                    # native 后端，80 个黑盒测试全绿（核心 62 + llm_extractor 18）
+moon test --target wasm      # 四后端行为一致（AC-06）
+moon test --target wasm-gc
 moon test --target js
 ```
 
@@ -103,8 +105,8 @@ moon test --target js
 | trait | 缺省实现（确定性、离线） | 生产替换 |
 |---|---|---|
 | `Embedder` | `HashingEmbedder`（256 维词袋哈希，TF + L2 归一） | vcdb / 宿主嵌入服务适配 |
-| `Extractor` | `RawExtractor`（原文 kind=unstructured 直通，零 Key） | mizchi/llm 等事实提取适配 |
-| `ConflictJudge` | `SimilarityJudge`（余弦+关键词 Jaccard，阈值 0.82，候选窗口 8） | LLM 判定（replace/merge/ignore） |
+| `Extractor` | `RawExtractor`（原文 kind=unstructured 直通，零 Key） | `src/llm_extractor` 包的 `LlmExtractor`（见下节） |
+| `ConflictJudge` | `SimilarityJudge`（余弦+关键词 Jaccard，阈值 0.82，候选窗口 8） | `src/llm_extractor` 包的 `LlmConflictJudge`（见下节） |
 | `PersistenceBackend` | native: `FsBackend`；wasm/js: `MemoryBackend` | 浏览器 IndexedDB 胶水等 |
 | `Clock` | `LogicalClock`（快照续接的单调逻辑时钟） | 系统时钟 |
 
@@ -116,6 +118,78 @@ let cfg : Config = Config::{
 }
 let store = MemoryStore::open("./memory", config=cfg).unwrap()
 ```
+
+## W2 LLM 注入（mizchi/llm 适配器）
+
+核心包 `src/` 保持零第三方依赖（铁律）；LLM 能力收敛在独立适配包
+**`src/llm_extractor`**（依赖 `mizchi/llm@0.3.2`，仅用其纯 trait 层，不触碰 ffi）。
+缺省 `RawExtractor` 不做闲聊过滤；注入 `LlmExtractor` 后即获得 PRD 13.1 的
+结构化事实提取（AC-03）。
+
+### 用法
+
+```moonbit
+// 宿主 moon.pkg.json import:
+//   "heyq02/moomem/src"  "heyq02/moomem/src/llm_extractor"  "mizchi/llm/openai"
+
+// ① 构造 LLM 客户端（OpenAI 兼容端点：OpenAI/OpenRouter/Ollama/自建网关）
+let provider = @openai.OpenAIProvider::new(
+  "sk-...",
+  endpoint=OpenAIEndpoint::OpenAI,   // 或 Custom(base_url="https://...")
+  model="gpt-4o-mini",
+)
+
+// ② 包装为 moomem 注入点（LLM 客户端可注入 = 可 mock 测试）
+let extractor = @llm_extractor.LlmExtractor::new(provider)
+let judge = @llm_extractor.LlmConflictJudge::new(provider)
+
+// ③ 注入 MemoryStore
+let cfg : Config = Config::{
+  ..Config::default(),
+  extractor : Some(extractor as &Extractor),
+  judge : Some(judge as &ConflictJudge),
+}
+let store = MemoryStore::open("./memory", config=cfg).unwrap()
+// add("user-42", "你好！我对花生过敏") → 只入库 Fact("用户对花生过敏", span="我对花生过敏")
+```
+
+可运行示例（脚本化 mock 驱动、零网络）：`moon run examples --target native`。
+
+### 提取契约（PRD 13.1）
+
+- 输出结构化事实：`content` + `kind`（fact / preference / event）+ 原文依据 `span`
+- 只保留可复用信息，寒暄丢弃（提取 0 条 → 不入库，`AddSummary.extracted=0`）
+- 忠实原文不改写、不推断；歧义按"宁少勿错"丢弃（未知 kind 的单条事实直接丢弃）
+- 容错解析：接受 markdown 代码围栏、JSON 前后夹带说明文字；单条事实上限 `max_facts`（默认 16）
+
+### 稳定性与降级（PRD 13.3）
+
+| 场景 | 行为 | 失败原因可见处 |
+|---|---|---|
+| 正常 | 单次提取 1 次 LLM 调用 | — |
+| 非法 JSON | 携纠正指令重试 1 次（共 2 次，调用预算上限） | — |
+| 重试仍非法 | **降级**：原文以 kind=unstructured 入库，不抛错（缺省 `ReturnRaw` 策略） | `extractor.last_failure_reason()` |
+| 网络/鉴权失败 | 不重试，直接降级（1 次调用） | `extractor.last_failure_reason()` |
+| 冲突判定失败 | `Err` → store 降级为"两条并存"，`AddSummary.degraded=true` | `AddSummary.notes`、`judge.last_failure_reason()` |
+
+两种降级策略 `DegradePolicy`：
+- `ReturnRaw`（缺省）：提取器自行降级返回原文 unstructured，`add` 永不因提取失败报错；
+- `PropagateError`：返回 `Err`，交给 `MemoryStore` 统一降级——`AddSummary.degraded=true`、
+  notes 含原因、条目 `metadata.extraction_degraded=true`，并参与 PRD 第 9 章
+  "连续 3 次失败熔断"（第 3 次 `add` 返回 `ExtractionFailure`）。
+
+观测 API：`LlmExtractor::llm_call_count()` / `last_failure_reason()`、
+`LlmConflictJudge::llm_call_count()` / `last_failure_reason()`；
+条目 `metadata.extractor == "llm"`，`stats().extractor_mode == "llm"`（12.3 可解释）。
+
+### 注意事项
+
+- `mizchi/llm` 主包的 `MockProvider` / `BoxedProvider` 的 `Provider` 实现未导出
+  （跨包不可见）：宿主 mock 请在自己包内 `impl @llm.Provider for MyMock`，
+  18 个无网络黑盒测试（`src/llm_extractor/llm_extractor_test.mbt`）即此范例
+- 真实 HTTP 走 `mizchi/llm/openai`（或 `anthropic`）子包，由 mizchi/llm 的 ffi 层
+  按后端（native/js/wasm）分发；moomem 核心与 `src/llm_extractor` 包本身不依赖 ffi，
+  四后端测试均零网络
 
 ## 持久化与崩溃恢复
 
@@ -184,8 +258,12 @@ src/
 ├── ranker.mbt        RRF 融合
 ├── persist.mbt       PersistenceBackend + FsBackend/MemoryBackend（唯一 fs 调用点）
 ├── store.mbt         MemoryStore 编排（open/add/recall/forget/stats/close）
-├── *_test.mbt        黑盒测试（39 个，覆盖 AC-01/02/04/05 与崩溃恢复）
+├── *_test.mbt        黑盒测试（62 个，覆盖 AC-01/02/04/05 与崩溃恢复）
+├── llm_extractor/    W2 LLM 适配包：LlmExtractor + LlmConflictJudge（依赖 mizchi/llm，
+│                     核心包不依赖；18 个零网络 mock 黑盒测试）
 └── cli/              CLI 工具（add/recall/list/stats/export/import）
+
+examples/             W2 可运行示例：moon run examples（mock 驱动，零网络）
 ```
 
 ## License

@@ -4,7 +4,7 @@
 
 ## Repository packages
 
-目标态角色描述如下。**`ci/*` 角色子树已落地**；`examples/` 仍为扁平 demo，待 `expand-examples-e2`。权威蓝图见 [`docs/project/10-testing-examples-architecture.md`](../../../docs/project/10-testing-examples-architecture.md)。
+权威布局见 [`docs/project/10-testing-examples-architecture.md`](../../../docs/project/10-testing-examples-architecture.md)。下列路径为**现行**。
 
 | Path | Role | Key deps |
 |------|------|----------|
@@ -14,7 +14,7 @@
 | `ci/gates/live-llm/` | L2 Live LLM release gate | separate package |
 | `ci/eval/locomo/` | L3 LoCoMo eval harness + `data/` | separate package |
 | `ci/tools/retrieval-tuning/` | Offline retrieval tuning tool (U1; **not in CI**) | separate package |
-| `examples/<scene>/` *(pending: flat `examples/` demo)* | E2 scene demos: `basic-store`, `llm-extractor`, `conflict-supersede`, `cli-smoke` | — |
+| `examples/<scene>/` | E2 scene demos: `basic-store`, `llm-extractor`, `conflict-supersede`, `cli-smoke` | — |
 | `docs/project/` | Architecture, PRD reports; testing/examples architecture = doc **10** | — |
 | `spec/` | Feature/process specs (CI pipelines, W3/W4) — **not** Trellis coding specs | — |
 | `.trellis/spec/` | AI coding guidelines (this tree) | — |
@@ -71,7 +71,7 @@ L1 mock-LLM tests live beside adapters: `src/llm_extractor/*_test.mbt`. Gates / 
 
 ## Where new tests / examples / gates go
 
-Align with [doc 10 decision tree](../../../docs/project/10-testing-examples-architecture.md). Prefer target paths; `ci/*` role tree is migrated — only `examples/` still uses the flat demo until E2 lands.
+Align with [doc 10 decision tree](../../../docs/project/10-testing-examples-architecture.md).
 
 | Need | Put it in |
 |------|----------|
@@ -80,7 +80,7 @@ Align with [doc 10 decision tree](../../../docs/project/10-testing-examples-arch
 | Real LLM blocking release | `ci/gates/live-llm/` (L2) |
 | Benchmark / corpus eval | `ci/eval/locomo/` (L3) |
 | Sweep / calibrate Config, not a gate | `ci/tools/retrieval-tuning/` (tool) |
-| Teachable runnable demo (no AC suite) | `examples/<scene>/` (E2; until migrate: flat `examples/`) |
+| Teachable runnable demo (no AC suite) | `examples/<scene>/` (E2) |
 
 **Forbidden**: live key paths inside examples; treating tools as default L0; stuffing eval corpora into package-side unit tests.
 

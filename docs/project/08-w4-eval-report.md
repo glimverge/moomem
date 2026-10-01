@@ -1,5 +1,7 @@
 # W4 LoCoMo L3 评测报告（08）
 
+> **历史路径注**：文中 `ci/locomo` 为评测当日路径；现行入口为 `ci/eval/locomo`（见 [10](10-testing-examples-architecture.md)）。证据表数字不改写。
+>
 > 定位：PRD §16.1「AI 能力评测」五项指标在本仓库 `ci/locomo` harness 上的**实测结果**与达标判定。
 > 覆盖范围：三档全部完成——离线档（零网络）、`--embedder api`（QWEN `qwen3.7-text-embedding-flash`，dim=1024）、`--live`（DeepSeek `deepseek-flash`）。
 > 复现命令：`moon run ci/locomo --target native`（与 CI `eval-locomo` job 同源）；数据 `ci/locomo/data/`（LoCoMo 派生切片，CC BY-NC 4.0）。

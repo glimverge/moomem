@@ -3,7 +3,7 @@
   "name": "align-docs-after-migrate",
   "title": "迁移后文档与 spec 对齐",
   "description": "Sweep docs/spec/README for post-migration paths; update doc 10 migration status",
-  "status": "planning",
+  "status": "in_progress",
   "dev_type": null,
   "scope": null,
   "package": null,

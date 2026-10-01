@@ -182,7 +182,14 @@ let store = MemoryStore::open("./memory", config=cfg).unwrap()
 // add("user-42", "你好！我对花生过敏") → 只入库 Fact("用户对花生过敏", span="我对花生过敏")
 ```
 
-可运行示例（脚本化 mock 驱动、零网络）：`moon run examples --target native`。
+可运行示例（脚本化 mock 驱动、零网络）：
+
+```bash
+moon run examples/basic-store --target native
+moon run examples/llm-extractor --target native
+moon run examples/conflict-supersede --target native
+moon run examples/cli-smoke --target native
+```
 
 ### 提取契约（PRD 13.1）
 
@@ -295,7 +302,8 @@ src/
 │                     核心包不依赖；35 个零网络 mock 黑盒测试）
 └── cli/              CLI 工具（add/recall/list/stats/export/import）
 
-examples/             W2 可运行示例：moon run examples（mock 驱动，零网络）
+examples/             E2 场景示例：moon run examples/<scene>（basic-store / llm-extractor /
+                      conflict-supersede / cli-smoke；mock 驱动，零网络）
 ```
 
 ## 项目文档

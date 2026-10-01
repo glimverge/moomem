@@ -1,5 +1,7 @@
 # W3 独立验证报告（2026-10-01）
 
+> **历史路径注**：文中 `ci/tuning` 等为验证当日路径；现行入口见 [10](10-testing-examples-architecture.md)（`ci/tools/retrieval-tuning` 等）。
+
 对 Cursor 提交的 W3 执行结果做独立复验。结论：**功能验收全部通过，四项发现中一项需修复（P1 可观测性），三项为改进项**。修复方案见 [spec/spec-feature-w3.1-observability-hardening.md](../../spec/spec-feature-w3.1-observability-hardening.md)。
 
 ## 1. 验收项逐条复验

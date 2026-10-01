@@ -1,6 +1,6 @@
 # moomem 测试用例体系(2026-10-01)
 
-> **落点 / CI / 决策树（架构权威）** → [10-testing-examples-architecture](10-testing-examples-architecture.md)。本文只做 L0–L3 **用例编目与 AC 映射**；能力边界与目标目录以 10 为准。
+> **落点 / CI / 决策树（架构权威）** → [10-testing-examples-architecture](10-testing-examples-architecture.md)。本文只做 L0–L3 **用例编目与 AC 映射**；能力边界与目录以 10 为准。
 
 对照 [04-progress-and-roadmap](04-progress-and-roadmap.md) 与 [PRD v1.1](03-prd.md)（FR-01~10 / AC-01~07），把现有与发版门禁测试收成**四层体系**。目标：日常 CI 零网络全绿；发版必须过真实 LLM；W4 LoCoMo 指标另册。
 
@@ -10,8 +10,8 @@
 |----|------|------|------------|------|----------|
 | **L0** | 纯工程离线 | 每次 push/PR → `test-pipeline` | 无 | `moon test`（四后端）+ `moon check` | 阻塞合并 |
 | **L1** | Mock LLM | 同 L0（包内 `*_test.mbt`） | 无（脚本化 Provider） | `src/llm_extractor/*_test.mbt` | 阻塞合并 |
-| **L2** | Live LLM | **仅** `release-pipeline` | 要（DeepSeek） | `moon run ci/llm_live --target native` | **阻塞发版** |
-| **L3** | 基准评测 | push/PR → `eval-locomo`（离线）；api/live 手工 | 离线零密钥；api/live 可选 | `moon run ci/locomo --target native` | 离线阻塞合并；api/live 不进 push CI |
+| **L2** | Live LLM | **仅** `release-pipeline` | 要（DeepSeek） | `moon run ci/gates/live-llm --target native` | **阻塞发版** |
+| **L3** | 基准评测 | push/PR → `eval-locomo`（离线）；api/live 手工 | 离线零密钥；api/live 可选 | `moon run ci/eval/locomo --target native` | 离线阻塞合并；api/live 不进 push CI |
 
 ```mermaid
 graph LR
@@ -113,11 +113,14 @@ graph LR
 
 ### 2.8 示例冒烟（CI 清单；非包旁 L0）
 
-> 角色属 **E2 example**（教学演示 / smoke），**不是**包旁 `*_test.mbt`。落点与迁移后四场景见 [10](10-testing-examples-architecture.md)。此处仅编目现网 CI 冒烟入口。
+> 角色属 **E2 example**（教学演示 / smoke），**不是**包旁 `*_test.mbt`。落点与四场景见 [10](10-testing-examples-architecture.md)。此处编目现网 CI 冒烟入口。
 
 | ID | 入口 | 覆盖 |
 |----|------|------|
-| EX-X01 | `moon run examples --target native` | mock Provider 演示，零网络（现状单包；目标 `examples/<scene>`） |
+| EX-X01 | `moon run examples/basic-store --target native` | 无 LLM 主路径：open → add → recall → forget |
+| EX-X02 | `moon run examples/llm-extractor --target native` | mock Provider 提取演示，零网络 |
+| EX-X03 | `moon run examples/conflict-supersede --target native` | 冲突 / supersede 可见编排 |
+| EX-X04 | `moon run examples/cli-smoke --target native` | 库用法对齐常见 CLI 场景 |
 
 ---
 
@@ -144,13 +147,13 @@ graph LR
 
 | 项 | 值 |
 |----|-----|
-| 代码 | `ci/llm_live/` |
-| 命令 | `moon run ci/llm_live --target native` |
+| 代码 | `ci/gates/live-llm/` |
+| 命令 | `moon run ci/gates/live-llm --target native` |
 | 密钥 | Secret `DEEPSEEK_API_KEY`；Variables `DEEPSEEK_BASE_URL` / `DEEPSEEK_MODEL` |
 | 成功标记 | 日志行 `LIVE_LLM_PASS` |
 | Workflow | `.github/workflows/release-pipeline.yml` → job `llm-live` |
 
-### 4.1 场景清单（实现于 `ci/llm_live/main.mbt`）
+### 4.1 场景清单（实现于 `ci/gates/live-llm/main.mbt`）
 
 | ID | 场景 | 断言要点（抗非确定性） |
 |----|------|------------------------|
@@ -171,7 +174,7 @@ graph LR
 
 ```bash
 set -a && source .env && set +a
-moon run ci/llm_live --target native
+moon run ci/gates/live-llm --target native
 ```
 
 ---
@@ -180,9 +183,9 @@ moon run ci/llm_live --target native
 
 | 项 | 值 |
 |----|-----|
-| 代码 | `ci/locomo/` |
-| 离线命令 | `moon run ci/locomo --target native` → `LOCOMO_PASS` |
-| 数据 | `ci/locomo/data/`（LoCoMo 子集 CC BY-NC 4.0；勿改） |
+| 代码 | `ci/eval/locomo/` |
+| 离线命令 | `moon run ci/eval/locomo --target native` → `LOCOMO_PASS` |
+| 数据 | `ci/eval/locomo/data/`（LoCoMo 子集 CC BY-NC 4.0；勿改） |
 | CI | `test-pipeline.yml` → job `eval-locomo`（`needs: test`） |
 
 | 用例 ID | 场景 | 离线断言 |
@@ -220,7 +223,7 @@ moon run ci/llm_live --target native
 |----|------|------|
 | L0/L1 现网 115/102 | ✅ | 现网计数（W3 增量：配置用例 6、CLI 用例 4；W3.1 增量：TC-A1~A5、TC-C4/C5；W4-0 增量：闲聊清零 2；指纹归一化增量：DedupIndex 主语/标点同指纹 1）；新增用例同步改本表 ID |
 | L2 场景从冒烟扩为矩阵 | ✅（本轮实现） | 发版必跑；失败不降级为 skip |
-| L3 LoCoMo | ✅ | `ci/locomo` + `eval-locomo`；08 报告待产品侧 |
+| L3 LoCoMo | ✅ | `ci/eval/locomo` + `eval-locomo`；08 报告待产品侧 |
 | CLI 真 LLM 接线 | ✅ W3-C 已接线（`--llm`，native 门控） | L0 覆盖参数解析与配置构造；真实调用归 L2 |
 | 缺省冲突判定的语义档缺口 | ⚠️ 已实测记录 | 缺省 SimilarityJudge 仅覆盖近重复式更新（住址式实测 0.471→Ignore）；语义档由 L2-07 覆盖，见 README 限制第 4 条 |
 | 代理环境下的传输失败分类 | ⚠️ 环境依赖 | `HTTP_PROXY` 生效时无 `StreamEvent::Error`，落回 `invalid JSON` + 多 1 次调用；见 README 限制第 10 条 |
@@ -240,3 +243,4 @@ moon run ci/llm_live --target native
 | 2026-10-01 | W3.1-C：`StreamEvent::Error` 原因统一 `transport error:` 前缀；解析失败保留 `invalid JSON:`（断言最小修补） |
 | 2026-10-01 | W3.1 独立复验：112/99×3 与全部 DoD 复现；新增两项 P3 残留（代理环境传输失败分类、闲聊不清零计数），见 [07 报告](07-w3.1-verification.md) |
 | 2026-10-01 | 文首回链 [10](10-testing-examples-architecture.md)；§2.8 示例冒烟标明 E2（EX-X01），避免与包旁 L0 混淆 |
+| 2026-10-01 | 迁移扫尾：L2/L3/EX 入口改为 `ci/gates/live-llm`、`ci/eval/locomo`、四场景 `examples/<scene>`（历史路径见 [10](10-testing-examples-architecture.md) §3） |

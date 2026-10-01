@@ -17,7 +17,7 @@
 
 资产| 位置| 说明  
 ---|---|---  
-代码仓库(单一事实源)| github.com/glimverge/moomem| main 分支;含 docs/(PARA 结构:project 主体文档 + resources 调研 + archive 归档)、spec/(4 份工程规格书)、ci/(tuning / llm_live / locomo)、.github/workflows(测试 + 发布流水线)  
+代码仓库(单一事实源)| github.com/glimverge/moomem| main 分支;含 docs/(PARA 结构:project 主体文档 + resources 调研 + archive 归档)、spec/(4 份工程规格书)、ci/(gates/live-llm · eval/locomo · tools/retrieval-tuning)、.github/workflows(测试 + 发布流水线)  
 包发布| mooncakes.io/docs/heyq02/moomem@0.2.1| 模块名 heyq02/moomem(owner 段必须 = mooncakes 用户名 heyq02,改名曾踩坑)  
 FlowUs 工作区| 「临界微光」(id 08cef79b-6e4e-47a1-996d-ba0e4d256143)| PARA 四层:1 · 项目 → 容器页「moomem · MoonBit 黑客松(十月赛)」(d32231d7)→ PRD / 进度 / 竞品 / 选题各页;3 · 资源、4 · 归档另有骨架  
 本地工作区| ~/WorkBuddy/2026-09-30-23-46-23/| moomem/ 代码仓 + outputs/ 四份 HTML 报告原件 + .workbuddy/memory/(逐日工作日志,含全部坑位记录)  
@@ -32,7 +32,7 @@ FlowUs 工作区| 「临界微光」(id 08cef79b-6e4e-47a1-996d-ba0e4d256143)| P
   * **检索栈** :内置 BM25(CJK 单字 + 二元组分词)+ 内存余弦向量 + RRF 融合(k=60,Config 可调);recall 命中不足 top_k 时 Recency 补齐(可配 NoBackfill)。
   * **LLM 适配层(独立包 src/llm_extractor/)** :LlmExtractor(DegradePolicy:ReturnRaw/PropagateError)+ LlmConflictJudge,基于 mizchi/llm 0.3.2;降级三通道可见(degraded / notes / metadata.extraction_degraded,W3.1 修)。
   * **CLI(src/cli/)** :六子命令;--llm/--llm-judge 仅 native 门控,密钥只从环境变量读(无 --api-key 明文参数)。
-  * **配置(src/types.mbt Config)** :dim / rrf_k / recall_candidates / backfill / conflict_candidates / coexist_band 等全部可调,缺省值经 ci/tuning 135 组网格校准。
+  * **配置(src/types.mbt Config)** :dim / rrf_k / recall_candidates / backfill / conflict_candidates / coexist_band 等全部可调,缺省值经 `ci/tools/retrieval-tuning` 135 组网格校准。
 
 ## 三、里程碑时间线(全部已落地)
 
@@ -53,9 +53,10 @@ FlowUs 工作区| 「临界微光」(id 08cef79b-6e4e-47a1-996d-ba0e4d256143)| P
 ---|---|---  
 L0 离线| 114 native / 101×3 其余后端;moon check --target all 零警告| push/PR 阻塞;native 计数底线 114(test-pipeline 的 NATIVE_TEST_BASELINE)  
 L1 Mock LLM| ScriptedProvider 脚本化用例(W3/W3.1/W4-0 全在册)| 同 L0  
-L2 Live LLM| ci/llm_live(DEEPSEEK_* env,不进 push CI)| 发版流水线门禁(release-pipeline);需 CI secrets 配置 DEEPSEEK_API_KEY  
-L3 基准评测| ci/locomo:离线档进 push CI(eval-locomo job);--embedder api 与 --live 手工| 离线:隔离 0 / 持久化 1/1 / supersede ≥0.8;api 档:hybrid≥bm25 + TARGET_15PCT  
-调参台| ci/tuning(135 组网格,零网络 native)| 缺省组 recall 12/12 · mrr 1.000 · supersede 3/3 · leak 0  
+L2 Live LLM| `ci/gates/live-llm`(DEEPSEEK_* env,不进 push CI)| 发版流水线门禁(release-pipeline);需 CI secrets 配置 DEEPSEEK_API_KEY  
+L3 基准评测| `ci/eval/locomo`:离线档进 push CI(eval-locomo job);--embedder api 与 --live 手工| 离线:隔离 0 / 持久化 1/1 / supersede ≥0.8;api 档:hybrid≥bm25 + TARGET_15PCT  
+调参台| `ci/tools/retrieval-tuning`(135 组网格,零网络 native)| 缺省组 recall 12/12 · mrr 1.000 · supersede 3/3 · leak 0  
+E2 示例| `examples/{basic-store,llm-extractor,conflict-supersede,cli-smoke}`(mock,零网络)| smoke 矩阵(非 L0 断言源)  
   
 ## 五、评测结论(08 报告,PRD §16.1)
 
@@ -92,7 +93,7 @@ P3| 赛后动作| 评估向 moon-agent 提集成 PR(记忆层替代其 BufferMem
 工具| 调用方式| 坑位  
 ---|---|---  
 moon CLI| ~/.moon/bin/moon(绝对路径)| 缺省 target 是 wasm 非 native;磁盘测试用 #cfg(target="native") 门控  
-常用命令| moon test --target native|wasm|wasm-gc|js;moon run ci/tuning|ci/locomo --target native;moon check --target all| 评测三档:裸跑(离线)/ --embedder api(QWEN)/ --live(DeepSeek)  
+常用命令| moon test --target native\|wasm\|wasm-gc\|js;moon run ci/tools/retrieval-tuning\|ci/eval/locomo --target native;moon run examples/\<scene\> --target native;moon check --target all| 评测三档:裸跑(离线)/ --embedder api(QWEN)/ --live(DeepSeek);L2:`ci/gates/live-llm`  
 密钥| moomem/.env;QWEN_* 需映射为 MOOMEM_EMBED_*;DEEPSEEK_* 直读| 跑 api/live 前先 curl 单次探针验证端点再全量(嵌入 788 轮 ×2 约 8 分钟)  
 FlowUs CLI| ~/.local/bin/flowus v0.3.11(绝对路径);OAuth 凭证 ~/.flowus/credentials.json| 无 markdown 写入,只有块级 JSON;分批 ≤90 块;table_row 只能追加不能改;落盘用技能 html-to-flowus(含通用转换器与完整坑位清单)  
 沙箱环境| 本机 shell| HTTP_PROXY 生效(死端口测试会被代理拦截返回 200,须 env -u 或 NO_PROXY='*');grep 对部分 UTF-8 文件行为异常,优先用专用检索工具  
@@ -103,7 +104,7 @@ FlowUs CLI| ~/.local/bin/flowus v0.3.11(绝对路径);OAuth 凭证 ~/.flowus/cre
   * **验证文化** :执行方报告一律不采信,逐条独立复跑;三份独立验证报告(06/07/08)即证据链,也是赛事「AI 可解释」验收标准的材料。
   * **单一事实源** :仓库 docs/(PARA:project 主体 + resources 资源 + archive 归档,README 总索引);FlowUs 是云端镜像(PARA:1 · 项目下);两处数字以仓库为准,改动先改仓库再同步 FlowUs。
   * **提交纪律** :文档与代码分离提交;commit message 用 conventional 前缀(docs(spec)/fix(core)/ci(eval) 等);不混入无关改动(工作区曾出现 release-pipeline.yml 遗留改动,单独处理)。
-  * **许可红线** :仓库 Apache-2.0;ci/locomo/data/ 的 LoCoMo 派生切片是 CC BY-NC 4.0 —— 不可删 data/README.md 署名段、不可提交完整数据集。
+  * **许可红线** :仓库 Apache-2.0;`ci/eval/locomo/data/` 的 LoCoMo 派生切片是 CC BY-NC 4.0 —— 不可删 data/README.md 署名段、不可提交完整数据集。
 
 交接结论
 

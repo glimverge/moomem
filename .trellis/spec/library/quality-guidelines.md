@@ -33,36 +33,23 @@ Architecture authority for layers, CI iron rules, and where gates/eval/tools/exa
 | `ci/gates/*` | L2 live LLM release gate | Live scenarios | **仅** release |
 | `ci/eval/*` | L3 benchmark / corpus | Metrics | 离线 push；live 手工 |
 | `ci/tools/*` | Developer tuning (U1) | Sweep / report | **不进 CI** |
-| `examples/<scene>` | Teachable demos (E2) | No (smoke only post-migration) | smoke 矩阵，非 L0 |
+| `examples/<scene>` | Teachable demos (E2) | No (smoke only) | smoke 矩阵，非 L0 |
 
 Iron rules: L0/L1 never read `DEEPSEEK_*`; L2 never joins push CI; examples never depend on live keys.
 
 ### Verification commands
-
-**Current (run these today — ci role tree migrated; examples still flat):**
 
 ```bash
 moon test
 moon test --target wasm
 moon run ci/tools/retrieval-tuning --target native   # tool（无 CI 调用）
 moon run ci/eval/locomo --target native              # L3 offline eval
-# optional local / release-only / smoke:
-# moon run ci/gates/live-llm --target native         # L2 gate（需 DEEPSEEK_*）
-# moon run examples --target native                  # 现状单包 demo（E2 未迁）
-```
-
-**Target (post expand-examples-e2 — scene packages not landed yet):**
-
-```bash
-moon test
-moon test --target wasm
-moon run ci/tools/retrieval-tuning --target native
-moon run ci/gates/live-llm --target native
-moon run ci/eval/locomo --target native
 moon run examples/basic-store --target native
 moon run examples/llm-extractor --target native
 moon run examples/conflict-supersede --target native
 moon run examples/cli-smoke --target native
+# optional local / release-only:
+# moon run ci/gates/live-llm --target native         # L2 gate（需 DEEPSEEK_*）
 ```
 
 ## Code reuse checklist

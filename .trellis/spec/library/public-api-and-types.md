@@ -49,7 +49,7 @@ Cross-package callers need these; keep them `pub`:
 | `cosine_similarity` | `embedder.mbt` | Vector similarity |
 | `keyword_jaccard` | `conflict.mbt` | Lexical overlap |
 
-Diagnostic caller outside the core package: `ci/locomo/conflict_eval.mbt` (uses tokenize / cosine / jaccard — not a host product path). Black-box tests in `extractor_test.mbt` also cover these helpers.
+Diagnostic caller outside the core package: `ci/eval/locomo/conflict_eval.mbt` (uses tokenize / cosine / jaccard — not a host product path). Black-box tests in `extractor_test.mbt` also cover these helpers.
 
 ## Core types (`src/types.mbt`)
 

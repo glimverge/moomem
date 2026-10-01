@@ -43,4 +43,4 @@
 
 - [`spec/`](../spec/)：功能/流程验收契约（feature：W3 / W3.1 / W4；process：CI·发布流水线）——与 `.trellis/spec` 分工见上方「Where to look」
 - [`.trellis/spec/`](../.trellis/spec/)：AI 编码约定（目录结构、错误/持久化/测试等层规）——改核心库前先读
-- [`ci/locomo/data/README.md`](../ci/locomo/data/README.md)：评测数据资产说明（LoCoMo 派生切片，CC BY-NC 4.0）
+- [`ci/eval/locomo/data/README.md`](../ci/eval/locomo/data/README.md)：评测数据资产说明（LoCoMo 派生切片，CC BY-NC 4.0）

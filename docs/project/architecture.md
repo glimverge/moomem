@@ -99,13 +99,18 @@ moomem/
 │   └── archive/               # 归档（赛季结束后迁入）
 ├── spec/                      # 功能/流程验收契约（W3/W4、CI 流水线）— 非 Trellis 编码规范
 ├── .trellis/spec/             # AI 编码约定（改 src/ 前读 library/）
-├── examples/                  # 现状：单包 demo；目标态见 [10-testing-examples-architecture](10-testing-examples-architecture.md)
-│   ├── moon.pkg
-│   └── llm_extractor_demo.mbt # LLM 提取演示（可 mock）→ 目标迁入 examples/llm-extractor/
-├── ci/                        # 现状路径如下；目标态 N2 角色子树见文档 10（gates/eval/tools）
-│   ├── locomo/                # LoCoMo L3 评测 harness（moon.pkg + *.mbt）→ ci/eval/locomo/
-│   ├── tuning/                # 离线调参台（不进 CI）→ ci/tools/retrieval-tuning/
-│   └── llm_live/              # Live LLM 门禁（发版流水线）→ ci/gates/live-llm/
+├── examples/                  # E2 场景演示（mock / 零网络）；见 [10](10-testing-examples-architecture.md)
+│   ├── basic-store/
+│   ├── llm-extractor/
+│   ├── conflict-supersede/
+│   └── cli-smoke/
+├── ci/                        # 角色子树（gates / eval / tools）；见文档 10
+│   ├── gates/
+│   │   └── live-llm/          # L2 Live LLM 门禁（发版流水线）
+│   ├── eval/
+│   │   └── locomo/            # L3 LoCoMo 评测 harness（含 data/）
+│   └── tools/
+│       └── retrieval-tuning/  # 离线调参台（不进 CI）
 ├── src/                       # 核心库（13 个非测试 .mbt）
 │   ├── moon.pkg               # 核心库包配置（import moonbitlang/x/fs；调用点仍须隔离在 persist.mbt）
 │   ├── lib.mbt                # 公开常量、MOOMEM_VERSION / SNAPSHOT_VERSION

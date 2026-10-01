@@ -92,8 +92,13 @@ jobs:
         with:
           version: ${{ env.MOON_VERSION }}
 
-      - name: moon run examples (mock, zero network)
-        run: moon run examples --target native
+      - name: moon run examples (four scenes, mock, zero network)
+        run: |
+          set -euo pipefail
+          moon run examples/basic-store --target native
+          moon run examples/llm-extractor --target native
+          moon run examples/conflict-supersede --target native
+          moon run examples/cli-smoke --target native
 
   eval-locomo:
     name: L3 Eval (offline, native)

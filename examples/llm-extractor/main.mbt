@@ -1,9 +1,9 @@
-// moomem W2 示例：LLM 事实提取注入演示。
+// moomem E2 示例：LLM 事实提取注入演示（mock Provider，零网络）。
 //
-// 运行（无网络，脚本化 mock 驱动）：
-//   moon run examples --target native
+// 运行：
+//   moon run examples/llm-extractor --target native
 //
-// 生产接线（需要真实 LLM，本示例不编译该路径以保持四后端零网络可跑）：
+// 生产接线（需要真实 LLM，本示例不编译该路径以保持零网络可跑）：
 //
 //   import "mizchi/llm/openai"  // 该子包经 ffi 走真实 HTTP，按宿主后端选择
 //
@@ -47,7 +47,7 @@ impl @llm.Provider for DemoProvider with fn name(_) {
 ///|
 fn main {
   println(
-    "=== moomem W2: LLM 事实提取注入演示（mock 驱动，零网络） ===",
+    "=== moomem E2: llm-extractor（mock 驱动，零网络） ===",
   )
   println("")
   // 1) 注入 LLM 提取器与 LLM 冲突判定器（生产换真实 Provider 即可）

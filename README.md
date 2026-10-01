@@ -77,10 +77,11 @@ $BIN import --db ./mem --file backup.jsonl
 ### 4) 运行测试
 
 ```bash
-moon test                    # native 后端，97 个测试全绿（核心 58 + llm_extractor 35 + cli 4）
-moon test --target wasm      # 四后端行为一致（AC-06），各 90 个（native 专属的磁盘与 CLI 测试除外）
+moon test                    # native 后端，全绿（核心 + llm_extractor + cli）
+moon test --target wasm      # 四后端行为一致（AC-06）；native 专属的磁盘与 CLI 测试除外
 moon test --target wasm-gc
 moon test --target js
+moon run ci/tuning --target native   # 零网络离线调参台（检索/冲突参数网格扫描）
 ```
 
 ---

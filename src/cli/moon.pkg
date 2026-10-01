@@ -1,5 +1,8 @@
 import {
   "heyq02/moomem/src",
+  "heyq02/moomem/src/llm_extractor",
+  "mizchi/llm",
+  "mizchi/llm/openai",
   "moonbitlang/core/env",
   "moonbitlang/core/string",
   "moonbitlang/x/fs",
@@ -7,4 +10,8 @@ import {
 
 options(
   "is-main": true,
+  targets: {
+    "llm_wiring.mbt": ["native"],
+    "llm_wiring_stub.mbt": ["wasm", "wasm-gc", "js"],
+  },
 )

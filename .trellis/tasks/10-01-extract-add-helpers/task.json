@@ -3,7 +3,7 @@
   "name": "extract-add-helpers",
   "title": "Extract MemoryStore.add private helpers (P6)",
   "description": "Private helpers inside store implementation; host interface unchanged",
-  "status": "planning",
+  "status": "in_progress",
   "dev_type": null,
   "scope": null,
   "package": null,

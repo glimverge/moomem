@@ -40,19 +40,11 @@ LLM Agent 每次推理只依赖本轮上下文，进程结束即失忆。**moome
 
 环境：[moon](https://www.moonbitlang.com/) ≥ `0.1.20260920`。
 
-> [!NOTE]
-> 尚未发布到 mooncakes。本地开发请用本仓库做 path 依赖，或把 `src/` 拷进工程。
+已发布：[heyq02/moomem](https://mooncakes.io/docs/heyq02/moomem)。在宿主工程执行：
 
-发布后在宿主 `moon.mod` 中加入：
-
-```json
-{
-  "deps": {
-    "heyq02/moomem": "0.3.0"
-  }
-}
+```bash
+moon add heyq02/moomem
 ```
-
 ```moonbit
 fn main {
   let mem = @moomem.MemoryStore::open("./memory").unwrap()

@@ -1,4 +1,15 @@
+{"file": ".trellis/spec/library/index.md", "reason": "Library checklist for quality verification"}
+{"file": ".trellis/spec/library/directory-structure.md", "reason": "Verify file placement guidance matches tree"}
+{"file": ".trellis/spec/library/public-api-and-types.md", "reason": "Verify API/isolation rules match store/types"}
+{"file": ".trellis/spec/library/error-handling.md", "reason": "Verify error conventions"}
+{"file": ".trellis/spec/library/persistence.md", "reason": "Verify dual-slot and FS isolation rules"}
+{"file": ".trellis/spec/library/trait-injection.md", "reason": "Verify trait and llm_extractor boundary"}
+{"file": ".trellis/spec/library/quality-guidelines.md", "reason": "Verify testing and anti-patterns"}
+{"file": ".trellis/spec/cli/index.md", "reason": "CLI checklist"}
+{"file": ".trellis/spec/cli/commands-and-env.md", "reason": "Verify CLI command docs"}
+{"file": ".trellis/spec/cli/llm-wiring.md", "reason": "Verify LLM wiring docs"}
 {"file": ".trellis/spec/guides/index.md", "reason": "Guides index for consistency review"}
 {"file": ".trellis/spec/guides/code-reuse-thinking-guide.md", "reason": "Reuse checklist while verifying specs"}
 {"file": ".trellis/spec/guides/cross-layer-thinking-guide.md", "reason": "Cross-layer consistency for library specs"}
 {"file": ".trellis/tasks/00-bootstrap-guidelines/research/repo-architecture.md", "reason": "Architecture notes for verifying specs match the real repo"}
+{"file": ".trellis/tasks/00-bootstrap-guidelines/prd.md", "reason": "Bootstrap completion criteria"}

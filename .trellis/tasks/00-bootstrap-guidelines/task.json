@@ -21,9 +21,10 @@
   "children": [],
   "parent": null,
   "relatedFiles": [
-    ".trellis/spec/backend/",
-    ".trellis/spec/frontend/"
+    ".trellis/spec/library/",
+    ".trellis/spec/cli/",
+    ".trellis/spec/guides/"
   ],
-  "notes": "First-time setup task created by trellis init (fullstack project)",
+  "notes": "Bootstrap for MoonBit library moomem (not fullstack). Spec reshaped to library/ + cli/.",
   "meta": {}
 }

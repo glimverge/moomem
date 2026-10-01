@@ -21,42 +21,42 @@ the rest conversationally.
 
 ## Status (update the checkboxes as you complete each item)
 
-- [ ] Fill backend guidelines
-- [ ] Fill frontend guidelines
-- [ ] Add code examples
+- [x] Fill library guidelines (replaces inapplicable backend/ORM template)
+- [x] Frontend guidelines N/A — deleted; filled CLI guidelines instead
+- [x] Add code examples (real paths/symbols from `src/`, `src/cli/`, `src/llm_extractor/`)
 
 ---
 
 ## Spec files to populate
 
-
-### Backend guidelines
-
-| File | What to document |
-|------|------------------|
-| `.trellis/spec/backend/directory-structure.md` | Where different file types go (routes, services, utils) |
-| `.trellis/spec/backend/database-guidelines.md` | ORM, migrations, query patterns, naming conventions |
-| `.trellis/spec/backend/error-handling.md` | How errors are caught, logged, and returned |
-| `.trellis/spec/backend/logging-guidelines.md` | Log levels, format, what to log |
-| `.trellis/spec/backend/quality-guidelines.md` | Code review standards, testing requirements |
-
-
-### Frontend guidelines
+### Library guidelines (core MoonBit package)
 
 | File | What to document |
 |------|------------------|
-| `.trellis/spec/frontend/directory-structure.md` | Component/page/hook organization |
-| `.trellis/spec/frontend/component-guidelines.md` | Component patterns, props conventions |
-| `.trellis/spec/frontend/hook-guidelines.md` | Custom hook naming, patterns |
-| `.trellis/spec/frontend/state-management.md` | State library, patterns, what goes where |
-| `.trellis/spec/frontend/type-safety.md` | TypeScript conventions, type organization |
-| `.trellis/spec/frontend/quality-guidelines.md` | Linting, testing, accessibility |
+| `.trellis/spec/library/directory-structure.md` | Package layout, module boundaries |
+| `.trellis/spec/library/public-api-and-types.md` | `MemoryStore` API, types, `user_id` isolation |
+| `.trellis/spec/library/error-handling.md` | `MoomemError`, `Result`, no panic |
+| `.trellis/spec/library/persistence.md` | Dual-slot snapshot, FS/json isolation |
+| `.trellis/spec/library/trait-injection.md` | Embedder/Extractor/ConflictJudge/PersistenceBackend/Clock |
+| `.trellis/spec/library/quality-guidelines.md` | Testing, naming, anti-patterns |
+
+### CLI guidelines
+
+| File | What to document |
+|------|------------------|
+| `.trellis/spec/cli/commands-and-env.md` | Subcommands, flags, `MOOMEM_LLM_*` |
+| `.trellis/spec/cli/llm-wiring.md` | Native wiring vs stub, key/localhost rules |
+
+### Removed (template-only; not applicable)
+
+- `.trellis/spec/frontend/**` — no web UI in this repo
+- `.trellis/spec/backend/**` — no ORM/HTTP backend; core is an embedded library
 
 
-### Thinking guides (already populated)
+### Thinking guides (already populated; lightly adapted)
 
-`.trellis/spec/guides/` contains general thinking guides pre-filled with
-best practices. Customize only if something clearly doesn't fit this project.
+`.trellis/spec/guides/` contains general thinking guides. Cross-layer triggers
+were adjusted to moomem layers (store / traits / persist / codec / CLI).
 
 ---
 
@@ -82,6 +82,9 @@ usually much faster than documenting from scratch.
 | `CONVENTIONS.md` / `.aider.conf.yml` | aider |
 | `CONTRIBUTING.md` | General project conventions |
 | `.editorconfig` | Editor formatting rules |
+
+Primary sources used for this bootstrap: `README.md`, `docs/project/architecture.md`,
+`src/**/*.mbt`, task research `research/repo-architecture.md`.
 
 ### Step 2: Analyze the codebase for anything not covered by existing docs
 

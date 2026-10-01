@@ -170,7 +170,7 @@ against both fresh init and upgrade paths.
       the older `.trellis/.version`
 - [ ] Add an upgrade regression using an older pristine template fixture, then
       assert the installed file reaches the current packaged shape
-- [ ] Update the backend spec that owns the runtime contract
+- [ ] Update the library/cli spec that owns the runtime contract
 
 ---
 
@@ -267,7 +267,7 @@ against both fresh init and upgrade paths.
   the older `.trellis/.version`
 - [ ] Add an upgrade regression using an older pristine template fixture, then
   assert the installed file reaches the current packaged shape
-- [ ] Update the backend spec that owns the runtime contract
+- [ ] Update the library/cli spec that owns the runtime contract
 
 **Real-world example**: Codex inline mode changed workflow platform markers from
 `[Codex]` / `[Kilo, Antigravity, Windsurf]` to `[codex-sub-agent]` /

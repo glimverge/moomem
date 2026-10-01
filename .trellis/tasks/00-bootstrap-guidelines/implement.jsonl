@@ -1,4 +1,15 @@
-{"file": ".trellis/spec/guides/index.md", "reason": "Shared thinking guides to keep while reshaping layer specs"}
-{"file": ".trellis/spec/guides/code-reuse-thinking-guide.md", "reason": "Reuse guidance for documenting module boundaries"}
-{"file": ".trellis/spec/guides/cross-layer-thinking-guide.md", "reason": "Cross-layer contracts: MemoryStore orchestration vs adapters"}
+{"file": ".trellis/spec/library/index.md", "reason": "Library package entry + hard invariants checklist"}
+{"file": ".trellis/spec/library/directory-structure.md", "reason": "Package/file placement for core, llm_extractor, cli"}
+{"file": ".trellis/spec/library/public-api-and-types.md", "reason": "MemoryStore API, types, user_id isolation"}
+{"file": ".trellis/spec/library/error-handling.md", "reason": "MoomemError and Result conventions"}
+{"file": ".trellis/spec/library/persistence.md", "reason": "Dual-slot snapshot and FS/json isolation"}
+{"file": ".trellis/spec/library/trait-injection.md", "reason": "Injectable traits and llm_extractor boundary"}
+{"file": ".trellis/spec/library/quality-guidelines.md", "reason": "Testing and anti-patterns"}
+{"file": ".trellis/spec/cli/index.md", "reason": "CLI package entry"}
+{"file": ".trellis/spec/cli/commands-and-env.md", "reason": "CLI commands and MOOMEM_LLM_* env"}
+{"file": ".trellis/spec/cli/llm-wiring.md", "reason": "Native LLM wiring vs stub"}
+{"file": ".trellis/spec/guides/index.md", "reason": "Shared thinking guides index"}
+{"file": ".trellis/spec/guides/code-reuse-thinking-guide.md", "reason": "Reuse guidance for module boundaries"}
+{"file": ".trellis/spec/guides/cross-layer-thinking-guide.md", "reason": "Cross-layer contracts: MemoryStore vs adapters"}
 {"file": ".trellis/tasks/00-bootstrap-guidelines/research/repo-architecture.md", "reason": "Bootstrap architecture notes and proposed spec reshape"}
+{"file": ".trellis/tasks/00-bootstrap-guidelines/prd.md", "reason": "Bootstrap task requirements and completion status"}

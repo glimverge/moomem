@@ -1,0 +1,95 @@
+# Spec: spec/spec-process-cicd-test-pipeline.md
+name: Test Pipeline
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: test-pipeline-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+env:
+  CI: "true"
+  # Pin ≥ README floor (moon ≥ 0.1.20260920)
+  MOON_VERSION: "0.1.20260920"
+  # Documented native baseline (core + llm_extractor + cli)
+  NATIVE_TEST_BASELINE: "97"
+
+jobs:
+  check:
+    name: Static Check
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup MoonBit
+        uses: ./.github/actions/setup-moonbit
+        with:
+          version: ${{ env.MOON_VERSION }}
+
+      - name: moon check (native)
+        run: moon check --target native
+
+  test:
+    name: Test (${{ matrix.target }})
+    needs: check
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    strategy:
+      fail-fast: false
+      matrix:
+        target: [native, wasm, wasm-gc, js]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup MoonBit
+        uses: ./.github/actions/setup-moonbit
+        with:
+          version: ${{ env.MOON_VERSION }}
+
+      - name: moon test
+        run: |
+          set -euo pipefail
+          moon test --target "${{ matrix.target }}" | tee /tmp/moon-test.log
+          # Require a clean summary line
+          summary="$(grep -E '^Total tests: [0-9]+, passed: [0-9]+, failed: [0-9]+\.?$' /tmp/moon-test.log | tail -n1)"
+          test -n "${summary}"
+          failed="$(echo "${summary}" | sed -E 's/.*failed: ([0-9]+).*/\1/')"
+          passed="$(echo "${summary}" | sed -E 's/.*passed: ([0-9]+).*/\1/')"
+          total="$(echo "${summary}" | sed -E 's/.*Total tests: ([0-9]+).*/\1/')"
+          echo "target=${{ matrix.target }} total=${total} passed=${passed} failed=${failed}"
+          test "${failed}" = "0"
+          test "${passed}" = "${total}"
+          if [[ "${{ matrix.target }}" == "native" ]]; then
+            if [[ "${total}" -lt "${NATIVE_TEST_BASELINE}" ]]; then
+              echo "Native suite regressed: expected ≥ ${NATIVE_TEST_BASELINE} tests, got ${total}"
+              exit 1
+            fi
+          fi
+
+  smoke-example:
+    name: Example Smoke (native)
+    needs: test
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup MoonBit
+        uses: ./.github/actions/setup-moonbit
+        with:
+          version: ${{ env.MOON_VERSION }}
+
+      - name: moon run examples (mock, zero network)
+        run: moon run examples --target native

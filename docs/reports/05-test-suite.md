@@ -214,3 +214,4 @@ moon run ci/llm_live --target native
 | 日期 | 变更 |
 |------|------|
 | 2026-10-01 | 初版：四层体系 + AC 映射 + 现有用例编目；L2 扩场景与发版门禁对齐 |
+| 2026-10-01 | W3.1：L1 增 TC-A1~A3（ReturnRaw 可观测）；L0 增 TC-A4/A5；CLI 增 TC-C4/C5（localhost 精确匹配） |

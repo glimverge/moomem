@@ -485,7 +485,7 @@ test "qa2: PropagateError下JSON重试仍失败 → Err含双重失败原因, �
 
 ///|
 test "qa2: DegradePolicy两策略在store层的可见性差异锁定" {
-  // ---- A: ReturnRaw → store 视为成功提取, 降级仅通过 last_failure_reason 可见 ----
+  // ---- A: ReturnRaw → 不抛错，但 store 三通道均可见降级（W3.1-A）----
   let pa = Qa2SeqProvider::new([qa2_fail_events("mock 503 service unavailable")])
   let pa_ref : &@llm.Provider = pa
   let ext_a = @llm_extractor.LlmExtractor::new(pa_ref) // 默认 ReturnRaw
@@ -504,14 +504,22 @@ test "qa2: DegradePolicy两策略在store层的可见性差异锁定" {
       return
     }
   }
-  // ReturnRaw：不抛错, store 层无降级标记（失败只能从 extractor 观测口读取）
-  inspect(sa.degraded, content="false")
+  // ReturnRaw：不抛错，但 AddSummary / notes / metadata 均可见
+  inspect(sa.degraded, content="true")
   inspect(sa.inserted, content="1")
+  let mut note_a_ok = false
+  for n in sa.notes {
+    if n.contains("extraction degraded to raw") && n.contains("mock 503") {
+      note_a_ok = true
+    }
+  }
+  inspect(note_a_ok, content="true")
   inspect(ext_a.last_failure_reason() != None, content="true")
   let reason_a = match ext_a.last_failure_reason() {
     Some(r) => r
     None => ""
   }
+  inspect(reason_a.contains("transport error"), content="true")
   inspect(reason_a.contains("mock 503"), content="true")
   let entries_a = match store_a.list_entries("qa2-user") {
     Ok(es) => es
@@ -526,9 +534,9 @@ test "qa2: DegradePolicy两策略在store层的可见性差异锁定" {
     entries_a[0].metadata.get("extractor") == Some(Json::string("llm")),
     content="true",
   )
-  // ReturnRaw 约定：store 层不标 extraction_degraded（设计差异点, 锁定防回归）
   inspect(
-    entries_a[0].metadata.get("extraction_degraded") == None,
+    entries_a[0].metadata.get("extraction_degraded") ==
+    Some(Json::string("true")),
     content="true",
   )
   let st_a = match store_a.stats() {

@@ -176,14 +176,14 @@ let store = MemoryStore::open("./memory", config=cfg).unwrap()
 |---|---|---|
 | 正常 | 单次提取 1 次 LLM 调用 | — |
 | 非法 JSON | 携纠正指令重试 1 次（共 2 次，调用预算上限） | — |
-| 重试仍非法 | **降级**：原文以 kind=unstructured 入库，不抛错（缺省 `ReturnRaw` 策略） | `extractor.last_failure_reason()` |
-| 网络/鉴权失败 | 不重试，直接降级（1 次调用） | `extractor.last_failure_reason()` |
+| 重试仍非法 | **降级**：原文以 kind=unstructured 入库，不抛错（缺省 `ReturnRaw` 策略） | `AddSummary.degraded` / `notes` / `metadata.extraction_degraded` + `last_failure_reason()` |
+| 网络/鉴权失败 | 不重试，直接降级（1 次调用；原因前缀 `transport error:`） | 同上 |
 | 冲突判定失败 | `Err` → store 降级为"两条并存"，`AddSummary.degraded=true` | `AddSummary.notes`、`judge.last_failure_reason()` |
 
 两种降级策略 `DegradePolicy`：
 - `ReturnRaw`（缺省）：提取器自行降级返回原文 unstructured，`add` 永不因提取失败报错；
-- `PropagateError`：返回 `Err`，交给 `MemoryStore` 统一降级——`AddSummary.degraded=true`、
-  notes 含原因、条目 `metadata.extraction_degraded=true`，并参与 PRD 第 9 章
+  降级在 `AddSummary.degraded`、`notes` 与条目 `metadata.extraction_degraded` 三处可见——不会静默；
+- `PropagateError`：返回 `Err`，交给 `MemoryStore` 统一降级——同上三通道可见，并参与 PRD 第 9 章
   "连续 3 次失败熔断"（第 3 次 `add` 返回 `ExtractionFailure`）。
 
 观测 API：`LlmExtractor::llm_call_count()` / `last_failure_reason()`、
@@ -248,7 +248,6 @@ recall 只返回 `Active` / `Unstructured`；`Superseded` / `Deleted` 物理保�
 7. `stats.bytes_on_disk` 为快照字符数（MemoryBackend 下为逻辑值），非精确磁盘字节
 8. wasm/js 后端缺省为进程内 `MemoryBackend`（无本地文件系统），磁盘持久化需宿主注入 `PersistenceBackend`
 9. 超长条目不做截断：缺省 `HashingEmbedder` 对内容长度无上限，本场景不会触发问题；注入生产级 Embedder 后请在 v0.2 评估长度上限与截断策略
-10. **CLI `--llm` 的提取失败降级目前在输出中不可见**（`degraded=false`、条目 metadata 仅有 `extractor: "llm"`）：`LlmExtractor` 缺省策略 `ReturnRaw` 把失败转成原文入库而不返回错误，store 的降级检测挂在错误分支上。修复规格见 `spec/spec-feature-w3.1-observability-hardening.md`（W3.1-A）
 
 ## 项目结构
 

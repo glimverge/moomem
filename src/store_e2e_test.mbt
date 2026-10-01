@@ -401,6 +401,19 @@ test "AC-05: degraded mode with failing extractor" {
     _ => "MISSING"
   }
   inspect(degraded_tag, content="true")
+  // W3.1-A TC-A5：store Err 路径构造的降级事实携带 degrade_reason，并写入 metadata
+  let listed = match store.list_entries("user-42") {
+    Ok(es) => es
+    Err(_) => {
+      inspect("list failed", content="SHOULD NOT REACH")
+      return
+    }
+  }
+  inspect(listed.length() >= 1, content="true")
+  inspect(
+    listed[0].metadata.get("extraction_degraded") == Some(Json::string("true")),
+    content="true",
+  )
   // 连续第 3 次失败：返回错误（PRD 第 9 章）
   let third = match store.add("user-42", "第三条记忆") {
     Ok(_) => "OK"

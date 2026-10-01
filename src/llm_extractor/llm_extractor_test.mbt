@@ -375,6 +375,7 @@ test "LlmExtractor: 网络/鉴权失败 → 降级且不重试" {
   inspect(facts.length(), content="1")
   inspect(facts[0].content, content="我的常用邮箱是 a@b.c")
   inspect(facts[0].kind == @src.EntryKind::Unstructured, content="true")
+  inspect(facts[0].degraded, content="true")
   let reason = match ext.last_failure_reason() {
     Some(r) => r
     None => {
@@ -382,6 +383,7 @@ test "LlmExtractor: 网络/鉴权失败 → 降级且不重试" {
       return
     }
   }
+  inspect(reason.contains("transport error"), content="true")
   inspect(reason.contains("stream error"), content="true")
   inspect(reason.contains("connection refused"), content="true")
   // 网络失败不重试：仅 1 次调用
@@ -864,5 +866,166 @@ test "端到端: LLM replace 裁决触发 supersede 状态机" {
     }
   }
   inspect(beijing_visible, content="false")
+  ignore(store.close())
+}
+
+// ---------------------------------------------------------------------------
+// W3.1-A：ReturnRaw 降级三通道可观测
+// ---------------------------------------------------------------------------
+
+///|
+test "W3.1-A1: ReturnRaw fail surfaces degraded summary notes and metadata" {
+  let provider = ScriptedProvider::new([Fail("dial tcp: connection refused (mock)")])
+  let p : &@llm.Provider = provider
+  let ext = @llm_extractor.LlmExtractor::new(p)
+  let e : &@src.Extractor = ext
+  let store = match mk_store(e, None) {
+    Ok(s) => s
+    Err(err) => {
+      inspect(err.message(), content="SHOULD NOT REACH")
+      return
+    }
+  }
+  let text = "我住在北京海淀区"
+  let summary = match store.add("user-42", text) {
+    Ok(s) => s
+    Err(err) => {
+      inspect(err.message(), content="SHOULD NOT REACH")
+      return
+    }
+  }
+  inspect(summary.degraded, content="true")
+  inspect(summary.inserted, content="1")
+  let mut note_ok = false
+  for n in summary.notes {
+    if n.contains("extraction degraded to raw") &&
+      n.contains("connection refused") {
+      note_ok = true
+    }
+  }
+  inspect(note_ok, content="true")
+  let entries = match store.list_entries("user-42") {
+    Ok(es) => es
+    Err(_) => {
+      inspect("list failed", content="SHOULD NOT REACH")
+      return
+    }
+  }
+  inspect(entries.length(), content="1")
+  inspect(entries[0].kind == @src.EntryKind::Unstructured, content="true")
+  inspect(entries[0].content, content=text)
+  inspect(
+    entries[0].metadata.get("extraction_degraded") == Some(Json::string("true")),
+    content="true",
+  )
+  ignore(store.close())
+}
+
+///|
+test "W3.1-A2: ReturnRaw streak increments to 3/3 without Err" {
+  // 每次 add 各消耗一次 Fail 事件
+  let provider = ScriptedProvider::new([
+    Fail("e1"),
+    Fail("e2"),
+    Fail("e3"),
+  ])
+  let p : &@llm.Provider = provider
+  let ext = @llm_extractor.LlmExtractor::new(p)
+  let e : &@src.Extractor = ext
+  let store = match mk_store(e, None) {
+    Ok(s) => s
+    Err(err) => {
+      inspect(err.message(), content="SHOULD NOT REACH")
+      return
+    }
+  }
+  let mut last_streak = ""
+  for i in 1..=3 {
+    let text = "记忆片段-\{i}"
+    let summary = match store.add("user-42", text) {
+      Ok(s) => s
+      Err(err) => {
+        inspect(err.message(), content="SHOULD NOT REACH")
+        return
+      }
+    }
+    inspect(summary.degraded, content="true")
+    let mut found = ""
+    for n in summary.notes {
+      if n.contains("streak") {
+        found = n
+      }
+    }
+    last_streak = found
+  }
+  inspect(last_streak.contains("streak 3/3"), content="true")
+  // ReturnRaw 承诺：第 3 次仍不抛 Err
+  ignore(store.close())
+}
+
+///|
+test "W3.1-A3: successful LLM extract clears degrade state" {
+  let provider = ScriptedProvider::new([
+    Fail("transient"),
+    Text(
+      "{\"facts\":[{\"content\":\"用户对花生过敏\",\"kind\":\"fact\",\"span\":\"我对花生过敏\"}]}",
+    ),
+    Fail("after-success"),
+  ])
+  let p : &@llm.Provider = provider
+  let ext = @llm_extractor.LlmExtractor::new(p)
+  let e : &@src.Extractor = ext
+  let store = match mk_store(e, None) {
+    Ok(s) => s
+    Err(err) => {
+      inspect(err.message(), content="SHOULD NOT REACH")
+      return
+    }
+  }
+  // 先降级一次
+  ignore(store.add("user-42", "占位原文"))
+  // 成功提取：degraded=false，无 extraction_degraded
+  let ok = match store.add("user-42", "你好，我对花生过敏") {
+    Ok(s) => s
+    Err(err) => {
+      inspect(err.message(), content="SHOULD NOT REACH")
+      return
+    }
+  }
+  inspect(ok.degraded, content="false")
+  inspect(ok.inserted, content="1")
+  let entries = match store.list_entries("user-42") {
+    Ok(es) => es
+    Err(_) => {
+      inspect("list failed", content="SHOULD NOT REACH")
+      return
+    }
+  }
+  let mut success_meta_clean = false
+  for entry in entries {
+    if entry.content.contains("花生") {
+      inspect(
+        entry.metadata.get("extraction_degraded") == None,
+        content="true",
+      )
+      success_meta_clean = true
+    }
+  }
+  inspect(success_meta_clean, content="true")
+  // 成功后再次降级：streak 应从 1 重新计（failures 已归零）
+  let again = match store.add("user-42", "又一次失败原文") {
+    Ok(s) => s
+    Err(err) => {
+      inspect(err.message(), content="SHOULD NOT REACH")
+      return
+    }
+  }
+  let mut streak1 = false
+  for n in again.notes {
+    if n.contains("streak 1/3") {
+      streak1 = true
+    }
+  }
+  inspect(streak1, content="true")
   ignore(store.close())
 }

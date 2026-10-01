@@ -78,3 +78,37 @@ Executed deepening children: synced architecture/docs routing (P2+P5), Trellis h
 ### Next Steps
 
 - None - task complete
+
+
+## Session 3: Architecture deepening wave 2
+
+**Date**: 2026-10-01
+**Task**: Architecture deepening wave 2
+**Branch**: `main`
+
+### Summary
+
+P1 Option B: package-private indexes/dedup; P6: private helpers for MemoryStore.add; P7: docs track retrieval fusion as W5/eval without splitting MemoryStore.
+
+### Main Changes
+
+- Detailed change bullets were not supplied; see the summary above.
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `d36cdc2` | (see git log) |
+| `5a90c93` | (see git log) |
+
+### Testing
+
+- Validation was not recorded for this session.
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- None - task complete

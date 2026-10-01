@@ -99,7 +99,7 @@ fn evaluate_semantic_record(pairs : Array[ConflictPairCase]) -> Unit {
 }
 
 ///|
-fn run_conflict_eval(fx : ConflictFixture) -> Double {
+fn run_conflict_eval(fx : ConflictFixture) -> ConflictReport {
   let (ok, total, min_sim) = evaluate_near_duplicate(fx.near_duplicate)
   let rate = if total == 0 { 0.0 } else { ok.to_double() / total.to_double() }
   println("### Near-duplicate supersede (scored)")
@@ -115,5 +115,5 @@ fn run_conflict_eval(fx : ConflictFixture) -> Double {
   }
   println("")
   evaluate_semantic_record(fx.semantic)
-  rate
+  ConflictReport::{ ok, total, rate, }
 }

@@ -11,7 +11,7 @@
 | **L0** | 纯工程离线 | 每次 push/PR → `test-pipeline` | 无 | `moon test`（四后端）+ `moon check` | 阻塞合并 |
 | **L1** | Mock LLM | 同 L0（包内 `*_test.mbt`） | 无（脚本化 Provider） | `src/llm_extractor/*_test.mbt` | 阻塞合并 |
 | **L2** | Live LLM | **仅** `release-pipeline` | 要（DeepSeek） | `moon run ci/gates/live-llm --target native` | **阻塞发版** |
-| **L3** | 基准评测 | push/PR → `eval-locomo`（离线）；api/live 手工 | 离线零密钥；api/live 可选 | `moon run ci/eval/locomo --target native` | 离线阻塞合并；api/live 不进 push CI |
+| **L3** | 基准评测 | push/PR → `eval-locomo`（离线）；api/live 手工；发版后三档归档 | 离线零密钥；api/live 可选 | `moon run ci/eval/locomo --target native`；结果树 `benchmarks/locomo/` | 离线阻塞合并；api/live 不进 push CI；归档不阻断已发版 |
 
 ```mermaid
 graph LR

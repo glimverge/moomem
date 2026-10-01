@@ -6,17 +6,24 @@ fn contains_ci(hay : String, needle : String) -> Bool {
 }
 
 ///|
-fn run_extraction_offline_skip() -> Unit {
+fn run_extraction_offline_skip() -> ExtractionReport {
   println("### Extraction precision")
   println("")
   println(
     "extraction precision: SKIPPED (requires --live; RawExtractor stores raw text)",
   )
   println("")
+  ExtractionReport::{
+    skipped: true,
+    precision: 0.0,
+    hit: 0,
+    denom: 0,
+    model: "",
+  }
 }
 
 ///|
-fn run_extraction_live(cases : Array[ExtractionCase]) -> Double {
+fn run_extraction_live(cases : Array[ExtractionCase]) -> ExtractionReport {
   // Read DeepSeek env only in --live path
   let api_key = require_env("DEEPSEEK_API_KEY")
   let base_url = normalize_base_url(require_env("DEEPSEEK_BASE_URL"))
@@ -113,5 +120,11 @@ fn run_extraction_live(cases : Array[ExtractionCase]) -> Double {
     }
     println("")
   }
-  precision
+  ExtractionReport::{
+    skipped: false,
+    precision,
+    hit: hits,
+    denom,
+    model,
+  }
 }

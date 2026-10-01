@@ -17,7 +17,7 @@ on:
           - alpha
           - beta
       dry_run:
-        description: "Skip mooncakes publish, git commit/tag, and GitHub Release (quality + live LLM still run)"
+        description: "Skip mooncakes publish, git commit/tag, GitHub Release, and LoCoMo archive (quality + live LLM still run)"
         type: boolean
         default: false
 
@@ -69,6 +69,10 @@ jobs:
     timeout-minutes: 10
     permissions:
       contents: write
+    outputs:
+      mod_version: ${{ steps.ver.outputs.mod_version }}
+      base_version: ${{ steps.ver.outputs.base_version }}
+      prerelease: ${{ steps.ver.outputs.prerelease }}
     env:
       # workflow_dispatch boolean inputs are strings on github.event.inputs
       DRY_RUN: ${{ github.event.inputs.dry_run == 'true' }}
@@ -141,3 +145,71 @@ jobs:
             ```bash
             moon add ${{ env.MODULE_NAME }}@${{ steps.ver.outputs.mod_version }}
             ```
+
+  # After a successful publish/tag: archive offline + api + live LoCoMo scores.
+  # Gate misses in api/live are recorded as fail status but do not fail this job.
+  # Process/network errors do fail the job (visible red X) without rolling back publish.
+  benchmark-archive:
+    name: Archive LoCoMo Benchmark
+    needs: release
+    if: github.event.inputs.dry_run != 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    permissions:
+      contents: write
+      actions: write
+    env:
+      DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
+      DEEPSEEK_BASE_URL: ${{ vars.DEEPSEEK_BASE_URL }}
+      DEEPSEEK_MODEL: ${{ vars.DEEPSEEK_MODEL }}
+      # Prefer MOOMEM_EMBED_*; fall back to QWEN_* mapping inside the archive script.
+      MOOMEM_EMBED_API_KEY: ${{ secrets.MOOMEM_EMBED_API_KEY || secrets.QWEN_API_KEY }}
+      MOOMEM_EMBED_BASE_URL: ${{ vars.MOOMEM_EMBED_BASE_URL || vars.QWEN_BASE_URL }}
+      MOOMEM_EMBED_MODEL: ${{ vars.MOOMEM_EMBED_MODEL || vars.QWEN_MODEL }}
+      QWEN_API_KEY: ${{ secrets.QWEN_API_KEY }}
+      QWEN_BASE_URL: ${{ vars.QWEN_BASE_URL }}
+      QWEN_MODEL: ${{ vars.QWEN_MODEL }}
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup MoonBit
+        uses: ./.github/actions/setup-moonbit
+        with:
+          version: ${{ env.MOON_VERSION }}
+          cache: "false"
+
+      - name: Require DeepSeek configuration
+        run: bash scripts/ci/require-deepseek-config.sh
+
+      - name: Require embedding API configuration
+        run: |
+          set -euo pipefail
+          if [[ -z "${MOOMEM_EMBED_API_KEY:-}" && -z "${QWEN_API_KEY:-}" ]]; then
+            echo "Missing MOOMEM_EMBED_API_KEY / QWEN_API_KEY secret for api-mode archive" >&2
+            exit 1
+          fi
+          if [[ -z "${MOOMEM_EMBED_BASE_URL:-}" && -z "${QWEN_BASE_URL:-}" ]]; then
+            echo "Missing MOOMEM_EMBED_BASE_URL / QWEN_BASE_URL var for api-mode archive" >&2
+            exit 1
+          fi
+          if [[ -z "${MOOMEM_EMBED_MODEL:-}" && -z "${QWEN_MODEL:-}" ]]; then
+            echo "Missing MOOMEM_EMBED_MODEL / QWEN_MODEL var for api-mode archive" >&2
+            exit 1
+          fi
+
+      - name: Run LoCoMo archive (offline + api + live)
+        env:
+          NEW_VERSION: ${{ needs.release.outputs.mod_version }}
+          GIT_TAG: v${{ needs.release.outputs.mod_version }}
+        run: bash scripts/ci/run-locomo-benchmark-archive.sh
+
+      # GITHUB_TOKEN pushes do not re-trigger workflow runs; dispatch Pages explicitly.
+      - name: Trigger Pages deploy
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh workflow run "Deploy Rspress site to Pages" --ref main

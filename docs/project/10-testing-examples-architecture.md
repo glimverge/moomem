@@ -12,7 +12,7 @@
 | 纯工程单测/e2e | L0 | 无 | `moon test`（包旁 `*_test.mbt` / `*_wbtest.mbt`） | push 阻塞 |
 | Mock LLM 契约/对抗 | L1 | 无（脚本 Provider） | `moon test`（`src/llm_extractor/*_test.mbt`） | push 阻塞 |
 | Live LLM 发版门禁 | L2 / **gate** | DeepSeek | `moon run ci/gates/live-llm --target native` | **仅** release |
-| 基准评测 | L3 / **eval** | 离线默认；api/live 可选 | `moon run ci/eval/locomo --target native` | 离线 push；live 手工 |
+| 基准评测 | L3 / **eval** | 离线默认；api/live 可选 | `moon run ci/eval/locomo --target native` | 离线 push；live 手工；**发版后**三档归档 → `benchmarks/locomo/` + 站点 `/benchmark` |
 | 调参台 | **tool**（非正式 L） | 无 | `moon run ci/tools/retrieval-tuning --target native` | **不进 CI** |
 | 场景示例 | **example** | 无（mock） | `moon run examples/<scene> --target native` | smoke 矩阵 |
 
@@ -58,6 +58,7 @@ ci/
     locomo/                   # L3 eval（含 data/）
   tools/
     retrieval-tuning/         # tool（U1；不进 CI）
+benchmarks/locomo/            # 发版后三档结果归档（站点消费；非语料）
 ```
 
 ## 3. 历史路径对照（已迁移）

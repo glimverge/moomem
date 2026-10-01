@@ -10,6 +10,11 @@
     "activeMatch": "/api/"
   },
   {
+    "text": "Benchmark",
+    "link": "/benchmark/",
+    "activeMatch": "/benchmark"
+  },
+  {
     "text": "Document",
     "link": "https://rspress.rs/"
   }

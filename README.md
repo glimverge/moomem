@@ -1,66 +1,56 @@
-# moomem
+# heyq02/moomem
 
-[![Test Status](https://img.shields.io/github/actions/workflow/status/glimverge/moomem/test-pipeline.yml?style=flat-square&label=Test)](https://github.com/glimverge/moomem/actions)
-[![MoonBit](https://img.shields.io/badge/MoonBit-0.2.2-black?style=flat-square)](https://www.moonbitlang.com/)
-[![License](https://img.shields.io/badge/License-MIT-blue?style=flat-square)](LICENSE)
+![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/glimverge/moomem/release-pipeline.yml)
+![GitHub License](https://img.shields.io/github/license/glimverge/moomem)
+![GitHub commit activity](https://img.shields.io/github/commit-activity/w/glimverge/moomem)
 
-> Embedded agent memory for MoonBit — zero deploy, crash-safe persistence, structural user isolation.
+> MoonBit 嵌入式 Agent 记忆层 —— 零部署、崩溃可恢复、按用户结构隔离。
 
-[Features](#features) • [Getting started](#getting-started) • [API](#public-api) • [CLI](#cli) • [LLM injection](#llm-injection) • [Examples](#examples) • [Docs](#documentation)
+[特性](#特性) · [上手](#上手) · [公开-API](#公开-api) · [CLI](#cli) · [LLM-注入](#llm-注入) · [示例](#示例) · [文档](#文档)
 
-**moomem** gives your MoonBit agent long-term memory in a few lines of code: extract facts, hybrid-search them, supersede conflicts, and survive process restarts — without standing up a server.
+**moomem** 用几行代码给 MoonBit Agent 加上长期记忆：提取事实、混合检索、冲突覆盖、进程重启后仍可恢复——无需单独起服务。
 
-```
-moomem v0.2.2  ·  moonbitlang/x@0.5.5  ·  mizchi/llm@0.3.2 (llm_extractor / CLI --llm only)  ·  Apache-2.0
-```
+## 特性
 
-## Features
+- **两行接入** — `MemoryStore::open` + `add` / `recall`；聚合根上仅 6 个公开方法
+- **默认零 API Key** — 嵌入 / 提取 / 冲突均为可注入 trait，缺省离线确定性实现
+- **混合检索** — 向量 + BM25，RRF 融合；索引按 `user_id` 物理分片
+- **崩溃安全持久化** — 双槽 JSONL 快照 + `head` 指针；尾部半行可恢复
+- **结构级用户隔离** — 检索强制带 `user_id`，无全库召回接口，跨用户命中在结构上不可能
+- **可选 LLM 路径** — `src/llm_extractor` 对接 OpenAI 兼容端点做结构化提取与冲突判定（核心包不依赖 LLM）
 
-- **Two-line integrate** — `MemoryStore::open` + `add` / `recall`; six public methods on the aggregate root
-- **Zero API key by default** — embed / extract / conflict are injectable traits with offline defaults (hash embedder, raw extract, cosine judge)
-- **Hybrid retrieval** — vector + BM25, fused with RRF; indexes sharded by `user_id`
-- **Crash-safe persistence** — dual-slot JSONL snapshots + `head` pointer; truncated trailing lines recovered on open
-- **User isolation by structure** — every search takes `user_id`; no whole-store recall API; cross-user hits are impossible by design
-- **Optional LLM path** — `src/llm_extractor` wraps OpenAI-compatible providers for structured extraction and conflict judging (core stays free of LLM deps)
+## 上手
 
-## Getting started
+### 环境
 
-### Prerequisites
+- [moon](https://www.moonbitlang.com/) ≥ `0.1.20260920`（`moon version` 确认）
 
-- [moon](https://www.moonbitlang.com/) ≥ `0.1.20260920` (`moon version` to confirm)
-
-### Install
-
-```bash
-moon add moonbitlang/x    # disk persistence (fs only; locked behind persist.mbt)
-moon add mizchi/llm       # only if you use src/llm_extractor or CLI --llm
-```
+### 安装
 
 > [!NOTE]
-> Not published to mooncakes yet. Develop against this repo as a path dependency, or vendor `src/`.
+> 尚未发布到 mooncakes。本地开发请用本仓库做 path 依赖，或把 `src/` 拷进工程。
 
-After publish, add to your `moon.mod.json`:
+发布后在宿主 `moon.mod.json` 中加入：
 
 ```json
 {
   "deps": {
-    "moonbitlang/x": "0.5.5",
     "heyq02/moomem": "0.2.2"
   }
 }
 ```
 
-### Quick start
+### 快速开始
 
 ```moonbit
 fn main {
   let mem = @moomem.MemoryStore::open("./memory").unwrap()
 
-  // After a turn: extract → dedup → conflict → embed → dual index → flush
+  // 对话结束后写入：提取 → 去重 → 冲突 → 嵌入 → 双索引 → 落盘
   let summary = mem.add("user-42", "我对花生过敏").unwrap()
   println("extracted=\{summary.extracted} inserted=\{summary.inserted}")
 
-  // Before the next LLM call: hybrid recall, this user only
+  // LLM 调用前召回：混合检索，只返回该用户记忆
   let hits = mem.recall("user-42", "花生过敏", top_k=3).unwrap()
   for e in hits {
     println("[\{e.created_at}] \{e.content}")
@@ -70,9 +60,9 @@ fn main {
 }
 ```
 
-Reopen the same directory later — memories are intact and recall stays consistent.
+次日再 `open` 同一目录：记忆完整，recall 行为一致。
 
-### Try without writing code
+### 免写代码的 CLI 演示
 
 ```bash
 moon build src/cli --target native
@@ -86,40 +76,40 @@ $BIN export --db ./mem > backup.jsonl
 $BIN import --db ./mem --file backup.jsonl
 ```
 
-Optional LLM extraction (OpenAI-compatible; key from env only):
+可选 LLM 提取（OpenAI 兼容端点；密钥只读环境变量）：
 
 ```bash
 export MOOMEM_LLM_API_KEY=...
-# export MOOMEM_LLM_BASE_URL=https://api.deepseek.com   # optional
-# export MOOMEM_LLM_MODEL=deepseek-chat                  # optional; default gpt-4o-mini
+# export MOOMEM_LLM_BASE_URL=https://api.deepseek.com   # 可选
+# export MOOMEM_LLM_MODEL=deepseek-chat                  # 可选，缺省 gpt-4o-mini
 $BIN add --db ./mem --user user-42 --text "你好！我对花生过敏" --llm
-# also judge conflicts with LLM: add --llm-judge (implies --llm)
+# 同时启用 LLM 冲突判定：加 --llm-judge（隐含 --llm）
 ```
 
-## Public API
+## 公开 API
 
-| Method | Role | Returns |
-|--------|------|---------|
-| `open(path, config?)` | Open or create a store | `Result[MemoryStore, MoomemError]` |
-| `add(user_id, text)` | Extract → dedup → conflict → index → flush | `Result[AddSummary, MoomemError]` |
-| `recall(user_id, query, top_k?)` | Hybrid ranked recall (`Active` / `Unstructured` only) | `Result[Array[MemoryEntry], MoomemError]` |
-| `forget(user_id, target)` | Soft-delete `ById(id)` / `All` | `Result[Int, MoomemError]` |
-| `stats()` | Counts, bytes, truncate recovery, extractor mode | `Result[StoreStats, MoomemError]` |
-| `close()` | Flush and close (idempotent) | `Result[Unit, MoomemError]` |
+| 方法 | 语义 | 返回 |
+|------|------|------|
+| `open(path, config?)` | 打开或创建记忆库 | `Result[MemoryStore, MoomemError]` |
+| `add(user_id, text)` | 提取→去重→冲突→双索引→落盘 | `Result[AddSummary, MoomemError]` |
+| `recall(user_id, query, top_k?)` | 混合检索（仅 `Active` / `Unstructured`） | `Result[Array[MemoryEntry], MoomemError]` |
+| `forget(user_id, target)` | 软删除 `ById(id)` / `All` | `Result[Int, MoomemError]` |
+| `stats()` | 计数 / 字节 / 截断恢复 / 提取模式 | `Result[StoreStats, MoomemError]` |
+| `close()` | flush 后关闭（幂等） | `Result[Unit, MoomemError]` |
 
-Helpers: `export_jsonl` / `import_jsonl` / `list_entries(user_id)`.
+辅助：`export_jsonl` / `import_jsonl` / `list_entries(user_id)`。
 
-All fallible ops return `Result` — the library does not panic. `user_id` must be non-empty, ≤ 64 chars, charset `[A-Za-z0-9_\-.]` (path traversal rejected at every entrance).
+一切可失败操作返回 `Result`，全库禁 panic。`user_id`：非空、≤64 字符、字符集 `[A-Za-z0-9_\-.]`，入口强制校验（含路径穿越拒绝）。
 
-### Injection points
+### 注入点
 
-| Trait | Default (offline) | Production swap |
-|-------|-------------------|-----------------|
-| `Embedder` | `HashingEmbedder` (256-d bag-of-words) | Host / vcdb embedder |
-| `Extractor` | `RawExtractor` (store as unstructured) | `LlmExtractor` in `src/llm_extractor` |
-| `ConflictJudge` | `SimilarityJudge` (cosine + Jaccard, threshold 0.82) | `LlmConflictJudge` |
-| `PersistenceBackend` | native `FsBackend`; wasm/js `MemoryBackend` | IndexedDB glue, etc. |
-| `Clock` | `LogicalClock` | System clock / `FixedClock` in tests |
+| trait | 缺省（离线） | 生产替换 |
+|-------|--------------|----------|
+| `Embedder` | `HashingEmbedder`（256 维词袋哈希） | 宿主 / vcdb 嵌入 |
+| `Extractor` | `RawExtractor`（原文 unstructured 入库） | `src/llm_extractor` 的 `LlmExtractor` |
+| `ConflictJudge` | `SimilarityJudge`（余弦 + Jaccard，阈值 0.82） | `LlmConflictJudge` |
+| `PersistenceBackend` | native `FsBackend`；wasm/js `MemoryBackend` | IndexedDB 胶水等 |
+| `Clock` | `LogicalClock` | 系统时钟 / 测试用 `FixedClock` |
 
 ```moonbit
 let cfg : Config = Config::{
@@ -130,17 +120,14 @@ let cfg : Config = Config::{
 let store = MemoryStore::open("./memory", config=cfg).unwrap()
 ```
 
-## LLM injection
+## LLM 注入
 
-Core `src/` stays free of third-party LLM deps. LLM capability lives in **`src/llm_extractor`** (`mizchi/llm@0.3.2`, trait layer only).
+核心库默认不走 LLM；可选能力在 **`src/llm_extractor`**。
 
 ```moonbit
-// Host moon.pkg.json imports:
-//   "heyq02/moomem/src"  "heyq02/moomem/src/llm_extractor"  "mizchi/llm/openai"
-
 let provider = @openai.OpenAIProvider::new(
   "sk-...",
-  endpoint=OpenAIEndpoint::OpenAI,   // or Custom(base_url="https://...")
+  endpoint=OpenAIEndpoint::OpenAI,   // 或 Custom(base_url="https://...")
   model="gpt-4o-mini",
 )
 let extractor = @llm_extractor.LlmExtractor::new(provider)
@@ -154,46 +141,46 @@ let cfg : Config = Config::{
 let store = MemoryStore::open("./memory", config=cfg).unwrap()
 ```
 
-Extraction keeps reusable facts (`fact` / `preference` / `event` + source `span`), drops chit-chat, and degrades visibly on failure (`AddSummary.degraded` / `notes` / entry metadata) instead of failing the store silently.
+提取保留可复用事实（`fact` / `preference` / `event` + 原文 `span`），丢弃寒暄；失败时降级可见（`AddSummary.degraded` / `notes` / 条目 metadata），不会静默吞掉。
 
 > [!TIP]
-> Mock `Provider` yourself in the host package — `mizchi/llm`'s built-in mocks are not exported across packages. See `examples/llm-extractor` and `src/llm_extractor/*_test.mbt` for zero-network patterns.
+> 请在宿主包内自行 mock `Provider`。零网络范例见 `examples/llm-extractor` 与 `src/llm_extractor/*_test.mbt`。
 
-## Persistence
+## 持久化
 
-On disk under `open(path)`:
-
-```
-<path>/moomem/slot0.jsonl   # snapshot slot A (header + one JSON entry per line)
-<path>/moomem/slot1.jsonl   # snapshot slot B
-<path>/moomem/head          # "0" or "1" — current slot
-```
-
-Each `add` / `forget` / `close` rewrites the **inactive** slot fully, then updates `head`. Mid-write crash keeps the previous slot; a damaged `head` falls back to the parseable slot with the higher generation. Trailing half-lines are dropped and counted in `stats.truncated_recovered`.
+`open(path)` 目录布局：
 
 ```
-(empty) → Active → Superseded   (conflict Replace; superseded_by set)
-                → Deleted       (forget; soft-delete, kept for audit/export)
+<path>/moomem/slot0.jsonl   # 快照槽 A（首行 header + 每行一条 entry JSON）
+<path>/moomem/slot1.jsonl   # 快照槽 B
+<path>/moomem/head          # "0" 或 "1"，指向当前有效槽
 ```
 
-`recall` never returns `Superseded` / `Deleted`.
+每次 `add` / `forget` / `close` 完整重写**非当前槽**，成功后再写 `head`。写槽中途崩溃 → 旧槽仍有效；`head` 损坏 → 回退到可解析且 gen 更大的槽。尾部半行丢弃并计入 `stats.truncated_recovered`。
+
+```
+(空) → Active → Superseded   （冲突 Replace，记录 superseded_by）
+             → Deleted       （forget 软删除，快照保留可审计）
+```
+
+`recall` 永不返回 `Superseded` / `Deleted`。
 
 ## CLI
 
-| Command | Purpose |
-|---------|---------|
-| `add` | Write memory (`--db`, `--user`, `--text`; optional `--llm`, `--llm-judge`) |
-| `recall` | Hybrid recall (`--query`, optional `--top-k`) |
-| `list` | List entries (optional `--all`) |
-| `stats` | Store stats |
-| `export` / `import` | JSONL backup / restore |
-| `help` | Usage |
+| 命令 | 用途 |
+|------|------|
+| `add` | 写入（`--db` / `--user` / `--text`；可选 `--llm`、`--llm-judge`） |
+| `recall` | 混合召回（`--query`，可选 `--top-k`） |
+| `list` | 列出条目（可选 `--all`） |
+| `stats` | 库统计 |
+| `export` / `import` | JSONL 备份 / 恢复 |
+| `help` | 用法 |
 
-Env vars for LLM mode: `MOOMEM_LLM_API_KEY`, `MOOMEM_LLM_BASE_URL`, `MOOMEM_LLM_MODEL`. Flag values override env.
+LLM 相关环境变量：`MOOMEM_LLM_API_KEY`、`MOOMEM_LLM_BASE_URL`、`MOOMEM_LLM_MODEL`。CLI 旗标优先于环境变量。
 
-## Examples
+## 示例
 
-All examples are mock-driven and offline:
+全部为 mock 驱动、零网络：
 
 ```bash
 moon run examples/basic-store --target native
@@ -202,78 +189,76 @@ moon run examples/conflict-supersede --target native
 moon run examples/cli-smoke --target native
 ```
 
-## Testing and eval
+## 测试与评测
 
 ```bash
-moon test                         # native (core + llm_extractor + cli)
-moon test --target wasm           # four backends; native-only disk/CLI tests excluded
+moon test                         # native（核心 + llm_extractor + cli）
+moon test --target wasm           # 四后端；native 专属磁盘/CLI 测试除外
 moon test --target wasm-gc
 moon test --target js
 
-moon run ci/tools/retrieval-tuning --target native   # offline param grid
-moon run ci/eval/locomo --target native              # LoCoMo subset; look for LOCOMO_PASS
+moon run ci/tools/retrieval-tuning --target native   # 离线调参台
+moon run ci/eval/locomo --target native              # LoCoMo 子集；成功日志含 LOCOMO_PASS
 moon run ci/eval/locomo --target native -- --report /tmp/offline.json
 ```
 
-Optional live tiers (not in push CI):
+可选 live 档（不进 push CI）：
 
 ```bash
-moon run ci/eval/locomo --target native -- --embedder api   # needs MOOMEM_EMBED_*
-moon run ci/eval/locomo --target native -- --live           # needs DEEPSEEK_*
+moon run ci/eval/locomo --target native -- --embedder api   # 需 MOOMEM_EMBED_*
+moon run ci/eval/locomo --target native -- --live           # 需 DEEPSEEK_*
 ```
 
-After a successful (non dry-run) release, job `benchmark-archive` runs offline + api + live,
-writes `benchmarks/locomo/results/<version>.json`, and commits with `chore(benchmark):`.
-Site page: `site/docs/benchmark/` (nav **Benchmark**). Local dry archive (no push):
+正式发版成功后（非 dry-run），`benchmark-archive` job 会跑 offline + api + live，写入 `benchmarks/locomo/results/<version>.json` 并以 `chore(benchmark):` 提交。站点页：`site/docs/benchmark/`（导航 **Benchmark**）。本地试跑归档（不 push）：
 
 ```bash
 set -a && source .env && set +a   # QWEN_* + DEEPSEEK_*
 NEW_VERSION=0.0.0-dev SKIP_COMMIT=1 bash scripts/ci/run-locomo-benchmark-archive.sh
 ```
 
-`QWEN_*` maps to `MOOMEM_EMBED_*` when the latter are unset. Result JSON never stores API keys.
+`QWEN_*` 在未设置 `MOOMEM_EMBED_*` 时会映射过去。结果 JSON 永不写入 API Key。
 
-LoCoMo slice licensing: see [`ci/eval/locomo/data/README.md`](ci/eval/locomo/data/README.md) (CC BY-NC 4.0). Offline hashing embedder may underperform pure BM25; the ≥15% hybrid gain target applies under `--embedder api`.
+LoCoMo 数据许可见 [`ci/eval/locomo/data/README.md`](ci/eval/locomo/data/README.md)（CC BY-NC 4.0）。离线 hashing 嵌入可能弱于纯 BM25；≥15% 混合增益目标仅在 `--embedder api` 下评估。
 
-## Project structure
+## 项目结构
 
 ```
-src/                 Core library (MemoryStore orchestration)
-  llm_extractor/     Optional LLM Extractor + ConflictJudge adapters
+src/                 核心库（MemoryStore 编排）
+  llm_extractor/     可选 LLM 提取 / 冲突判定适配
   cli/               add / recall / list / stats / export / import
-examples/            E2 demos (basic-store, llm-extractor, conflict-supersede, cli-smoke)
+examples/            E2 演示（basic-store / llm-extractor / conflict-supersede / cli-smoke）
 ci/
-  gates/             Live LLM release gates
-  eval/locomo/       L3 LoCoMo harness + data
-  tools/             Offline retrieval tuning
-benchmarks/locomo/   Release-archived LoCoMo scores (site consumes)
-docs/                Project docs (architecture, PRD, eval reports)
-site/                Rspress docs site (GitHub Pages)
+  gates/             Live LLM 发版门禁
+  eval/locomo/       L3 LoCoMo harness + 数据
+  tools/             离线检索调参
+benchmarks/locomo/   发版归档的 LoCoMo 分数（站点消费）
+docs/                项目文档（架构 / PRD / 评测报告）
+site/                Rspress 文档站（GitHub Pages）
 ```
 
-## Security boundaries
+## 安全边界
 
 > [!IMPORTANT]
-> **moomem does not authenticate callers.** It is an embedded library: anything that can call the API can read and write the whole store. Isolation is structural (`user_id` shards + required `user_id` on search), not a replacement for host process trust.
+> **库不做角色鉴权。** moomem 是嵌入式库，信任边界在宿主进程：能调用 API 的代码即拥有该记忆库全部读写权。用户隔离是结构保证（`user_id` 分片 + 检索强制带 user_id），不能替代宿主信任模型。
 
-- `user_id` never enters filesystem paths; `/`, `\`, whitespace, and control chars are rejected
-- LLM keys are injected by the host — the library never persists secrets
-- Shared storage ACLs are the host's responsibility
+- `user_id` 不进入文件系统路径；禁止 `/`、`\`、空白与控制字符
+- LLM 密钥由宿主注入，库不持久化任何密钥
+- 共享存储上的目录级 ACL 责任归宿主
 
-## Known limitations
+## 已知限制
 
-- Persistence is **full dual-slot snapshots** (intentional deviation from append-only JSONL): `moonbitlang/x/fs` has no append/rename API
-- Default `HashingEmbedder` has no real semantics — inject a production embedder for synonym recall
-- Default `SimilarityJudge` covers near-duplicate updates; semantic moves (e.g. city change) need `LlmConflictJudge`
-- Single-writer model; no concurrent writers in v0.1
-- wasm/js default to in-process `MemoryBackend` unless you inject persistence
+- 持久化为**双槽全量快照**（对「追加写 JSONL」的有意偏差）：当前文件系统 API 无 append/rename
+- 缺省 `HashingEmbedder` 无真实语义——同义召回需注入生产级嵌入
+- 缺省 `SimilarityJudge` 主要覆盖近重复更新；语义型变更（如搬家）需 `LlmConflictJudge`
+- 单写者模型；v0.1 不支持并发写
+- wasm/js 缺省为进程内 `MemoryBackend`，磁盘持久化需宿主注入
 
-Details and edge cases: [docs/project/07-w3.1-verification.md](docs/project/07-w3.1-verification.md), [docs/project/architecture.md](docs/project/architecture.md).
+细节与边界场景：[docs/project/07-w3.1-verification.md](docs/project/07-w3.1-verification.md)、[docs/project/architecture.md](docs/project/architecture.md)。
 
-## Documentation
+## 文档
 
-- [Docs index](docs/README.md) — map of project / resources / archive
-- [Architecture](docs/project/architecture.md) — modules, injection, dual-slot persistence
-- [PRD](docs/project/03-prd.md) — product requirements
-- [Testing & examples layout](docs/project/10-testing-examples-architecture.md)
-- [LoCoMo eval report](docs/project/08-w4-eval-report.md)
+- [文档索引](docs/README.md) — 项目 / 资源 / 归档地图
+- [架构设计](docs/project/architecture.md) — 模块、注入点、双槽持久化
+- [PRD](docs/project/03-prd.md) — 产品需求
+- [测试与示例落点](docs/project/10-testing-examples-architecture.md)
+- [LoCoMo 评测报告](docs/project/08-w4-eval-report.md)

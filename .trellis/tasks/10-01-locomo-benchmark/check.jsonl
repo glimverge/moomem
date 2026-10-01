@@ -1,1 +1,6 @@
-{"_example": "Fill with {\"file\": \"<path>\", \"reason\": \"<why>\"}. Put spec/research files only — no code paths. Run `python3 .trellis/scripts/get_context.py --mode packages` to list available specs. Delete this line once real entries are added."}
+{"file": ".trellis/spec/library/quality-guidelines.md", "reason": "Verify push still offline-only; archive does not weaken L0/L1/L2 rules"}
+{"file": ".trellis/spec/library/directory-structure.md", "reason": "Check new paths match where-new-code / eval conventions"}
+{"file": "docs/project/10-testing-examples-architecture.md", "reason": "Cross-check capability model after archive+site landing"}
+{"file": "spec/spec-process-cicd-release-pipeline.md", "reason": "Release secrets scoped; dry-run skips archive; no rollback of publish on api miss"}
+{"file": "ci/eval/locomo/data/README.md", "reason": "License/attribution not stripped; no full dataset committed"}
+{"file": "docs/project/08-w4-eval-report.md", "reason": "Displayed metrics stay consistent with established LoCoMo scoring vocab"}

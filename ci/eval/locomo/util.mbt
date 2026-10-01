@@ -85,6 +85,8 @@ struct CliOpts {
   embedder : String // hashing | api
   live : Bool
   limit : Int // 0 = no limit
+  report : String // "" = no report file
+  report_only_exit : Bool // write report then exit 0 even if gates fail
   help : Bool
 }
 
@@ -95,6 +97,8 @@ fn parse_args() -> CliOpts {
   let mut embedder = "hashing"
   let mut live = false
   let mut limit = 0
+  let mut report = ""
+  let mut report_only_exit = false
   let mut help = false
   let mut i = if args.length() > 0 { 1 } else { 0 }
   while i < args.length() {
@@ -103,6 +107,8 @@ fn parse_args() -> CliOpts {
       help = true
     } else if a == "--live" {
       live = true
+    } else if a == "--report-only-exit" {
+      report_only_exit = true
     } else if a == "--fixture" {
       i = i + 1
       if i >= args.length() {
@@ -124,12 +130,18 @@ fn parse_args() -> CliOpts {
         fail("--limit requires an integer")
       }
       limit = parse_int_arg(args[i], "--limit")
+    } else if a == "--report" {
+      i = i + 1
+      if i >= args.length() {
+        fail("--report requires a path")
+      }
+      report = args[i]
     } else {
       ()
     }
     i = i + 1
   }
-  CliOpts::{ fixture, embedder, live, limit, help, }
+  CliOpts::{ fixture, embedder, live, limit, report, report_only_exit, help, }
 }
 
 ///|
@@ -139,6 +151,10 @@ fn print_help() -> Unit {
   println("  --embedder hashing|api   default hashing (offline)")
   println("  --live               run extraction precision with DeepSeek")
   println("  --limit <n>          score at most n retrieval QA items")
+  println("  --report <path>      write machine-readable JSON for this mode")
+  println("                       (or env MOOMEM_LOCOMO_REPORT)")
+  println("  --report-only-exit   after writing report, exit 0 even if gates fail")
+  println("                       (archive use; push offline keeps hard fail)")
   println("  --help")
 }
 

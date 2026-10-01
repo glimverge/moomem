@@ -13,6 +13,7 @@
 | `src/cli/` | Native CLI binary (`is-main`); L0 `cli_wbtest` | core + llm_extractor + `mizchi/llm/openai` + `x/fs` + `env` |
 | `ci/gates/live-llm/` | L2 Live LLM release gate | separate package |
 | `ci/eval/locomo/` | L3 LoCoMo eval harness + `data/` | separate package |
+| `benchmarks/locomo/` | Release-archived LoCoMo scores (site `/benchmark`) | metrics JSON only |
 | `ci/tools/retrieval-tuning/` | Offline retrieval tuning tool (U1; **not in CI**) | separate package |
 | `examples/<scene>/` | E2 scene demos: `basic-store`, `llm-extractor`, `conflict-supersede`, `cli-smoke` | — |
 | `docs/project/` | Architecture, PRD reports; testing/examples architecture = doc **10** | — |
@@ -79,7 +80,7 @@ Align with [doc 10 decision tree](../../../docs/project/10-testing-examples-arch
 | Asserted offline regression (core) | Package-side `src/*_test.mbt` / `*_wbtest.mbt` (L0) |
 | Asserted mock-LLM contract | `src/llm_extractor/*_test.mbt` (L1) |
 | Real LLM blocking release | `ci/gates/live-llm/` (L2) |
-| Benchmark / corpus eval | `ci/eval/locomo/` (L3) |
+| Benchmark / corpus eval | `ci/eval/locomo/` (L3); release archives → `benchmarks/locomo/` |
 | Sweep / calibrate Config, not a gate | `ci/tools/retrieval-tuning/` (tool) |
 | Teachable runnable demo (no AC suite) | `examples/<scene>/` (E2) |
 

@@ -1,0 +1,26 @@
+# LoCoMo Benchmark
+
+Release-archived L3 scores from `ci/eval/locomo` (offline + api + live). Metrics only —
+the LoCoMo conversation subset stays under `ci/eval/locomo/data/` (CC BY-NC 4.0).
+
+import { BenchmarkPage } from '../../components/BenchmarkPage';
+
+<BenchmarkPage />
+
+## How scores are produced
+
+1. Push CI keeps the offline hard gate (`moon run ci/eval/locomo`).
+2. After a successful (non dry-run) release, `benchmark-archive` runs all three modes
+   and commits `benchmarks/locomo/results/<version>.json`.
+3. This page is rebuilt by the existing Pages deploy on `main`.
+
+Local archive dry-run (writes `0.0.0-dev`, no push):
+
+```bash
+set -a && source .env && set +a
+NEW_VERSION=0.0.0-dev SKIP_COMMIT=1 bash scripts/ci/run-locomo-benchmark-archive.sh
+```
+
+Env mapping for api mode: `QWEN_API_KEY` / `QWEN_BASE_URL` / `QWEN_MODEL` →
+`MOOMEM_EMBED_API_KEY` / `MOOMEM_EMBED_BASE_URL` / `MOOMEM_EMBED_MODEL`.
+Live mode reads `DEEPSEEK_*` only.

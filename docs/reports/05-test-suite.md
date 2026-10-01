@@ -9,7 +9,7 @@
 | **L0** | 纯工程离线 | 每次 push/PR → `test-pipeline` | 无 | `moon test`（四后端）+ `moon check` | 阻塞合并 |
 | **L1** | Mock LLM | 同 L0（包内 `*_test.mbt`） | 无（脚本化 Provider） | `src/llm_extractor/*_test.mbt` | 阻塞合并 |
 | **L2** | Live LLM | **仅** `release-pipeline` | 要（DeepSeek） | `moon run ci/llm_live --target native` | **阻塞发版** |
-| **L3** | 基准评测 | 手工 / 赛前专项（W4） | 可选 LLM | LoCoMo 子集脚本（待建） | 赛季加分，非合并门禁 |
+| **L3** | 基准评测 | push/PR → `eval-locomo`（离线）；api/live 手工 | 离线零密钥；api/live 可选 | `moon run ci/locomo --target native` | 离线阻塞合并；api/live 不进 push CI |
 
 ```mermaid
 graph LR
@@ -172,16 +172,30 @@ moon run ci/llm_live --target native
 
 ---
 
-## 5. L3 · W4 评测（规划，未实现）
+## 5. L3 · W4 评测（已实现）
 
-| 指标（PRD §16） | 目标 | 依赖 |
-|-----------------|------|------|
-| 混合检索 Recall@5 vs 单路 BM25 | 增益 ≥15% | LoCoMo 子集 + 可复现嵌入 |
-| 提取 Precision | ≥0.8 | 金标准标注 + L2 同类 Provider |
-| supersede 正确率 | ≥80% | 冲突对金标准 |
-| 跨用户渗透 | 0 | 与 L0/L2 一致 |
+| 项 | 值 |
+|----|-----|
+| 代码 | `ci/locomo/` |
+| 离线命令 | `moon run ci/locomo --target native` → `LOCOMO_PASS` |
+| 数据 | `ci/locomo/data/`（LoCoMo 子集 CC BY-NC 4.0；勿改） |
+| CI | `test-pipeline.yml` → job `eval-locomo`（`needs: test`） |
 
-产出物：评测报告 Markdown + 可复现命令；**不**并入日常 CI。
+| 用例 ID | 场景 | 离线断言 |
+|---------|------|----------|
+| L3-R01 | Hybrid vs BM25-only Recall@5 / MRR@5（+ NoBackfill 对照） | 出表；hashing 下不强制 hybrid≥bm25 / 15%（`TARGET_15PCT` 仅 `--embedder api`） |
+| L3-C01 | 近重复 supersede（20 组） | 正确率 ≥80% |
+| L3-C02 | 语义冲突（10 组） | 只记录 cos/jac/status |
+| L3-P01 | 磁盘 reopen id 集合一致 | 1/1 |
+| L3-I01 | 跨 user 渗透 | 0 |
+| L3-E01 | 提取 Precision | 离线 SKIP；`--live` 时 ≥0.8（DeepSeek） |
+
+| 指标（PRD §16） | 目标 | 离线实测（hashing, 2026-10-01） |
+|-----------------|------|----------------------------------|
+| 混合检索 Recall@5 vs 单路 BM25 | 增益 ≥15%（需真实嵌入） | Hybrid 0.335 vs BM25 0.435（−23%；api 档另测） |
+| 提取 Precision | ≥0.8 | SKIPPED（`--live`） |
+| supersede 正确率 | ≥80% | 19/20 = 0.950 |
+| 跨用户渗透 | 0 | 0 |
 
 ---
 
@@ -189,7 +203,7 @@ moon run ci/llm_live --target native
 
 | Workflow | 跑哪些层 |
 |----------|----------|
-| `test-pipeline.yml` | L0 + L1（四后端）+ examples 冒烟 |
+| `test-pipeline.yml` | L0 + L1（四后端）+ examples 冒烟 + **L3 离线** `eval-locomo` |
 | `release-pipeline.yml` | 调用 test-pipeline → **L2** → publish |
 
 规格：[spec-process-cicd-test-pipeline](../../spec/spec-process-cicd-test-pipeline.md)、[spec-process-cicd-release-pipeline](../../spec/spec-process-cicd-release-pipeline.md)。
@@ -202,11 +216,11 @@ moon run ci/llm_live --target native
 |----|------|------|
 | L0/L1 现网 112/99 | ✅ | W3.1 后计数（W3 增量：W3-A 配置用例 6、W3-C/D CLI 用例 4；W3.1 增量：TC-A1~A3 三通道、TC-A4/A5 断言、TC-C4/C5 host 匹配）；新增用例同步改本表 ID |
 | L2 场景从冒烟扩为矩阵 | ✅（本轮实现） | 发版必跑；失败不降级为 skip |
-| L3 LoCoMo | ⏳ | 进度文档 P1；独立目录 `ci/locomo/` 候选 |
+| L3 LoCoMo | ✅ | `ci/locomo` + `eval-locomo`；08 报告待产品侧 |
 | CLI 真 LLM 接线 | ✅ W3-C 已接线（`--llm`，native 门控） | L0 覆盖参数解析与配置构造；真实调用归 L2 |
 | 缺省冲突判定的语义档缺口 | ⚠️ 已实测记录 | 缺省 SimilarityJudge 仅覆盖近重复式更新（住址式实测 0.471→Ignore）；语义档由 L2-07 覆盖，见 README 限制第 4 条 |
 | 代理环境下的传输失败分类 | ⚠️ 环境依赖 | `HTTP_PROXY` 生效时无 `StreamEvent::Error`，落回 `invalid JSON` + 多 1 次调用；见 README 限制第 10 条 |
-| 闲聊（空提取）不清零失败计数 | ⚠️ 缺用例 | 与"连续 3 次失败"语义有出入；最小修复与用例建议见 [07 报告](07-w3.1-verification.md) §5 |
+| hashing 混合检索低于 BM25 | ⚠️ 预期内 | 无语义嵌入时 RRF 噪声；质量主张走 `--embedder api` |
 | AC-03 在 Raw 路径 | 设计如此不过滤 | 文档已声明；勿当 bug |
 
 ---
@@ -217,5 +231,6 @@ moon run ci/llm_live --target native
 |------|------|
 | 2026-10-01 | 初版：四层体系 + AC 映射 + 现有用例编目；L2 扩场景与发版门禁对齐 |
 | 2026-10-01 | W3.1：L1 增 TC-A1~A3（ReturnRaw 可观测）；L0 增 TC-A4/A5；CLI 增 TC-C4/C5（localhost 精确匹配） |
+| 2026-10-01 | W4：L3 `ci/locomo` 离线 harness + `eval-locomo` CI；W4-0 闲聊清零计数；native 112→114 |
 | 2026-10-01 | W3.1-C：`StreamEvent::Error` 原因统一 `transport error:` 前缀；解析失败保留 `invalid JSON:`（断言最小修补） |
 | 2026-10-01 | W3.1 独立复验：112/99×3 与全部 DoD 复现；新增两项 P3 残留（代理环境传输失败分类、闲聊不清零计数），见 [07 报告](07-w3.1-verification.md) |

@@ -21,7 +21,7 @@ env:
   # Dated CDN pins (e.g. 0.1.20260920) return 403; always install latest.
   MOON_VERSION: "latest"
   # Documented native baseline (core + llm_extractor + cli); suite only grows
-  NATIVE_TEST_BASELINE: "97"
+  NATIVE_TEST_BASELINE: "114"
 
 jobs:
   check:
@@ -94,3 +94,20 @@ jobs:
 
       - name: moon run examples (mock, zero network)
         run: moon run examples --target native
+
+  eval-locomo:
+    name: L3 Eval (offline, native)
+    needs: test
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup MoonBit
+        uses: ./.github/actions/setup-moonbit
+        with:
+          version: ${{ env.MOON_VERSION }}
+
+      - name: moon run ci/locomo (offline)
+        run: moon run ci/locomo --target native

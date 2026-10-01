@@ -91,6 +91,27 @@ moon test --target js
 moon run ci/tuning --target native   # 零网络离线调参台（检索/冲突参数网格扫描）
 ```
 
+### 5) L3 评测（LoCoMo 子集）
+
+离线（零网络、零密钥；`test-pipeline` 的 `eval-locomo` job 同此命令）：
+
+```bash
+moon run ci/locomo --target native
+# 成功日志含 LOCOMO_PASS
+```
+
+可选档位：
+
+```bash
+# 真实嵌入 API（需 MOOMEM_EMBED_API_KEY 等；不进 push CI）
+moon run ci/locomo --target native -- --embedder api
+
+# 提取 Precision（需 DEEPSEEK_*；仅 --live 时读密钥）
+moon run ci/locomo --target native -- --live
+```
+
+数据与许可说明见 `ci/locomo/data/README.md`（LoCoMo 派生切片为 CC BY-NC 4.0）。离线 hashing 下混合检索可能低于纯 BM25（无语义嵌入）；≥15% 增益仅在 `--embedder api` 下评估（`TARGET_15PCT`）。
+
 ---
 
 ## 公开 API（6 个方法）

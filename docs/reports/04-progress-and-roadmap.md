@@ -37,19 +37,20 @@
 10-01| W3 里程碑:参数 Config 化(W3-A)、版本常量同步(W3-D)、离线调参台 ci/tuning(W3-B,135 组网格,缺省组 12/12·1.000·3/3·0 过门禁)、CLI `--llm` 接线(W3-C,native 门控 + 仅 env 读密钥);native 97→107,wasm 系 90→96| ✅ 完成(独立验证通过,见 [06-w3-qa-verification.md](06-w3-qa-verification.md))| 
 10-01| W3 独立验证:1 项 P1(提取器 ReturnRaw 降级不可见)、2 项 P3(本地端点判定过宽、传输失败误报为非法 JSON)、1 项 P2 记录(缺省冲突判定仅覆盖近重复式更新,实测语义型住址更新相似度 0.471)| ✅ 修复规格已产出并落地(见 [spec/spec-feature-w3.1-observability-hardening.md](../../spec/spec-feature-w3.1-observability-hardening.md))| 
 10-01| W3.1 补丁:A-`ExtractedFact.degraded`/`degrade_reason` + store 自报降级消费(三通道可见,修复 P1);B-本地端点 host 精确匹配;C-传输失败与解析失败分类;native 107→112,wasm 系 96→99| ✅ 完成(独立复验通过,见 [07-w3.1-verification.md](07-w3.1-verification.md));余 2 项 P3 残留(R1 代理环境分类、R2 闲聊不清零计数)| 
-—| W4:LoCoMo 评测集接入与量化指标(Recall@5、提取 Precision、supersede 正确率)| 🚧 规格与数据资产已产出,交 Cursor 执行(见 [spec/spec-feature-w4-locomo-eval.md](../../spec/spec-feature-w4-locomo-eval.md);数据见 ci/locomo/data/)  
+10-01| W4-0:闲聊(`Ok([])`)清零 `extraction_failures`(连续失败熔断语义)| ✅ 随 W4 前置落地  
+10-01| W4:LoCoMo L3 离线 harness(`ci/locomo`)+ test-pipeline `eval-locomo`| ✅ 完成；离线门禁 `LOCOMO_PASS`。实测(hashing)：Hybrid Recall@5 **77/230 (0.335)** / MRR@5 **0.199**；BM25-only **100/230 (0.435)** / **0.310**（hashing 下 hybrid 低于 BM25，`TARGET_15PCT` 仅 `--embedder api`）；近重复 supersede **19/20 (0.950)**；隔离渗透 **0**；持久化 reopen **1/1**；提取离线 SKIP（`--live`）。报告正文由产品侧写 [08](08-w4-eval-report.md)  
   
 进度结论
 
-PRD 四周里程碑中 W1(纯工程闭环)与 W2(LLM 提取适配)已在首个开发日内全部完成,进度大幅超前;W4 的评测材料(LoCoMo 基准)与官方测试套件交叉验证为冲季度奖的核心加分项,建议验收截止前完成。
+PRD 四周里程碑中 W1–W3.1 与 W4 harness 已落地；量化数字见上表与 `moon run ci/locomo --target native` 输出。产品侧待补 08 评测报告与 v0.2.2 发版决策。
 
 ## 三、后续规划(按优先级)
 
   * **P0 · 赛事申报(截止 10-31)** :飞书表单完成十月赛报名(最多 3 次提交,以最后一次有效提交为准);确认已加入赛事交流群且群昵称为 GitHub ID(奖金发放硬性条件);仓库需保持连续提交记录。
   * **P1 · 官方测试套件交叉验证** : 四层体系见 [05-test-suite.md](05-test-suite.md)（L0 离线 + L1 Mock LLM 进 test-pipeline；L2 Live LLM 进 release-pipeline）；持续用 moonbitlang/core 范式复核并保持 GitHub Action 绿标。
-  * **P1 · W4 评测闭环** : 接入 LoCoMo 多轮对话记忆基准子集（体系中的 **L3**），产出 PRD 第 16 章量化指标；建议优先于 W3。
+  * ~~**P1 · W4 评测闭环**~~ :✅ harness 已完成(`ci/locomo` + CI)；08 报告与 api/live 数字由产品侧补齐。
   * ~~**P1 · W3.1 补丁(独立验证发现)**~~ :✅ 已完成(10-01,A/B/C 三项落地并独立复验通过,见 [07 报告](07-w3.1-verification.md))。
-  * **P2 · W3.1 残留收敛** :R2 闲聊不清零失败计数(三行修复 + 一条 L1 用例,见 07 §5);R1 代理环境下传输失败分类(建议先向 mizchi/llm 上游提 issue,不在本项目内改)。
+  * **P2 · W3.1 残留收敛** :R1 代理环境下传输失败分类(建议先向 mizchi/llm 上游提 issue,不在本项目内改)。R2 已随 W4-0 修复。
   * **P2 · 工程债** :moon.mod.json → moon.mod 格式迁移(工具链已通告弃用,migrate 会重构模块配置布局,单独立项);向 mizchi/llm 上游提 MockProvider impl 未导出的小 PR;评估 v0.2.2 发布(含 W3 / W3.1 全部改动)。
   * **P3 · 赛后动作** :Q3 开放问题——评估向 moon-agent 提集成 PR(记忆层作为其 BufferMemory 的持久化替代);十一月赛(第二赛季度开始)可滚动参赛,季度奖评定在赛季度收官。
 

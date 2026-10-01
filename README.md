@@ -248,6 +248,8 @@ recall 只返回 `Active` / `Unstructured`；`Superseded` / `Deleted` 物理保�
 7. `stats.bytes_on_disk` 为快照字符数（MemoryBackend 下为逻辑值），非精确磁盘字节
 8. wasm/js 后端缺省为进程内 `MemoryBackend`（无本地文件系统），磁盘持久化需宿主注入 `PersistenceBackend`
 9. 超长条目不做截断：缺省 `HashingEmbedder` 对内容长度无上限，本场景不会触发问题；注入生产级 Embedder 后请在 v0.2 评估长度上限与截断策略
+10. **HTTP 代理拦截本地端点时，传输失败会被报成 `invalid JSON`**（实测环境变量 `HTTP_PROXY` 生效时）：上游 `mizchi/llm` 的 SSE 传输仅在 curl **非零退出** 时上报 `StreamEvent::Error`，而代理通常返回 HTTP 200 + 纯文本错误体（退出码 0），既无错误事件也无 `data:` 行，故落入 JSON 解析失败分支、并多消耗 1 次调用预算。**关闭代理后同一场景正确输出 `transport error: … curl: (7) Failed to connect`**。详见 [docs/reports/07-w3.1-verification.md](docs/reports/07-w3.1-verification.md) §4
+11. **连续失败计数的清零条件为「成功且有 ≥1 条事实」**：提取成功但结果为空（纯闲聊）时不重置计数。因此「失败 → 闲聊 → 失败 → 闲聊 → 失败」会触发熔断，与"连续 3 次失败"的字面语义略有出入（只会提前、不会漏报）。见 07 报告 §5
 
 ## 项目结构
 

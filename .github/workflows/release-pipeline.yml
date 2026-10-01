@@ -38,7 +38,7 @@ jobs:
     name: Live LLM Gate (DeepSeek)
     needs: quality
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 25
     permissions:
       contents: read
     env:
@@ -56,34 +56,10 @@ jobs:
           cache: "false"
 
       - name: Require DeepSeek configuration
-        run: |
-          set -euo pipefail
-          missing=0
-          if [[ -z "${DEEPSEEK_API_KEY:-}" ]]; then
-            echo "Missing secret DEEPSEEK_API_KEY" >&2
-            missing=1
-          fi
-          if [[ -z "${DEEPSEEK_BASE_URL:-}" ]]; then
-            echo "Missing variable DEEPSEEK_BASE_URL" >&2
-            missing=1
-          fi
-          if [[ -z "${DEEPSEEK_MODEL:-}" ]]; then
-            echo "Missing variable DEEPSEEK_MODEL" >&2
-            missing=1
-          fi
-          if [[ "${missing}" -ne 0 ]]; then
-            echo "Configure repo Secrets/Variables before release." >&2
-            exit 1
-          fi
-          # Do not print key; show non-secret config only
-          echo "DEEPSEEK_BASE_URL=${DEEPSEEK_BASE_URL}"
-          echo "DEEPSEEK_MODEL=${DEEPSEEK_MODEL}"
+        run: bash scripts/ci/require-deepseek-config.sh
 
       - name: Run live LLM gate
-        run: |
-          set -euo pipefail
-          moon run ci/llm_live --target native | tee /tmp/llm-live.log
-          grep -q '^LIVE_LLM_PASS$' /tmp/llm-live.log
+        run: bash scripts/ci/run-llm-live-gate.sh
 
   release:
     name: Publish mooncakes
@@ -112,83 +88,7 @@ jobs:
 
       - name: Bump version
         id: ver
-        env:
-          BUMP: ${{ env.BUMP }}
-        run: |
-          set -euo pipefail
-
-          parse_version() {
-            local v="$1"
-            if [[ "${v}" =~ ^([0-9]+)\.([0-9]+)\.([0-9]+)(-(alpha|beta)\.([0-9]+))?$ ]]; then
-              MAJOR="${BASH_REMATCH[1]}"
-              MINOR="${BASH_REMATCH[2]}"
-              PATCH="${BASH_REMATCH[3]}"
-              PRE_KIND="${BASH_REMATCH[5]:-}"
-              PRE_NUM="${BASH_REMATCH[6]:-0}"
-            else
-              echo "Unsupported version format: ${v} (want X.Y.Z or X.Y.Z-alpha.N / X.Y.Z-beta.N)" >&2
-              exit 1
-            fi
-          }
-
-          bump_version() {
-            local kind="$1"
-            case "${kind}" in
-              major)
-                echo "$((MAJOR + 1)).0.0"
-                ;;
-              minor)
-                echo "${MAJOR}.$((MINOR + 1)).0"
-                ;;
-              patch)
-                echo "${MAJOR}.${MINOR}.$((PATCH + 1))"
-                ;;
-              alpha)
-                if [[ "${PRE_KIND}" == "alpha" ]]; then
-                  echo "${MAJOR}.${MINOR}.${PATCH}-alpha.$((PRE_NUM + 1))"
-                elif [[ "${PRE_KIND}" == "beta" ]]; then
-                  echo "${MAJOR}.${MINOR}.${PATCH}-alpha.1"
-                else
-                  echo "${MAJOR}.${MINOR}.$((PATCH + 1))-alpha.1"
-                fi
-                ;;
-              beta)
-                if [[ "${PRE_KIND}" == "beta" ]]; then
-                  echo "${MAJOR}.${MINOR}.${PATCH}-beta.$((PRE_NUM + 1))"
-                elif [[ "${PRE_KIND}" == "alpha" ]]; then
-                  echo "${MAJOR}.${MINOR}.${PATCH}-beta.1"
-                else
-                  echo "${MAJOR}.${MINOR}.$((PATCH + 1))-beta.1"
-                fi
-                ;;
-              *)
-                echo "Unknown bump type: ${kind}" >&2
-                exit 1
-                ;;
-            esac
-          }
-
-          base_version="$(sed -nE 's/^version[[:space:]]*=[[:space:]]*"([^"]+)".*/\1/p' moon.mod | head -n1)"
-          if [[ -z "${base_version}" ]]; then
-            echo "Could not parse version from moon.mod" >&2
-            exit 1
-          fi
-          parse_version "${base_version}"
-
-          new_version="$(bump_version "${BUMP}")"
-          is_prerelease=false
-          if [[ "${new_version}" == *"-alpha."* || "${new_version}" == *"-beta."* ]]; then
-            is_prerelease=true
-          fi
-
-          tmp="$(mktemp)"
-          sed -E "s/^version[[:space:]]*=[[:space:]]*\"[^\"]+\"/version = \"${new_version}\"/" moon.mod > "${tmp}"
-          mv "${tmp}" moon.mod
-
-          echo "Bump ${BUMP}: ${base_version} → ${new_version}"
-          echo "base_version=${base_version}" >> "$GITHUB_OUTPUT"
-          echo "mod_version=${new_version}" >> "$GITHUB_OUTPUT"
-          echo "prerelease=${is_prerelease}" >> "$GITHUB_OUTPUT"
+        run: bash scripts/ci/bump-version.sh
 
       - name: Package module
         run: moon package -v
@@ -197,18 +97,7 @@ jobs:
         if: env.DRY_RUN != 'true'
         env:
           MOONCAKES_TOKEN: ${{ secrets.MOONCAKES_TOKEN }}
-        run: |
-          set -euo pipefail
-          if [[ -z "${MOONCAKES_TOKEN:-}" ]]; then
-            echo "MOONCAKES_TOKEN secret is not set." >&2
-            echo "1) Locally: moon login" >&2
-            echo "2) Copy full contents of ~/.moon/credentials.json" >&2
-            echo "3) GitHub → Settings → Secrets → Actions → MOONCAKES_TOKEN" >&2
-            exit 1
-          fi
-          mkdir -p "$HOME/.moon"
-          printf '%s' "${MOONCAKES_TOKEN}" > "$HOME/.moon/credentials.json"
-          chmod 600 "$HOME/.moon/credentials.json"
+        run: bash scripts/ci/configure-mooncakes-credentials.sh
 
       - name: Verify mooncakes identity
         if: env.DRY_RUN != 'true'
@@ -223,33 +112,14 @@ jobs:
         env:
           NEW_VERSION: ${{ steps.ver.outputs.mod_version }}
           BASE_VERSION: ${{ steps.ver.outputs.base_version }}
-          BUMP: ${{ env.BUMP }}
-        run: |
-          set -euo pipefail
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-
-          tag="v${NEW_VERSION}"
-          if git rev-parse "${tag}" >/dev/null 2>&1; then
-            echo "Tag ${tag} already exists" >&2
-            exit 1
-          fi
-
-          git add moon.mod
-          git commit -m "chore: release ${tag} (${BUMP} from ${BASE_VERSION})"
-          git tag "${tag}"
-
-          git push origin "HEAD:${GITHUB_REF_NAME}"
-          git push origin "${tag}"
+        run: bash scripts/ci/commit-release-tag.sh
 
       - name: Dry-run summary
         if: env.DRY_RUN == 'true'
-        run: |
-          set -euo pipefail
-          echo "Dry-run complete for ${MODULE_NAME}@${{ steps.ver.outputs.mod_version }}"
-          echo "Would bump: ${{ steps.ver.outputs.base_version }} → ${{ steps.ver.outputs.mod_version }} (${{ env.BUMP }})"
-          echo "Skipped: moon publish, git commit/tag, GitHub Release"
-          echo "Completed gates: quality + live LLM"
+        env:
+          BASE_VERSION: ${{ steps.ver.outputs.base_version }}
+          MOD_VERSION: ${{ steps.ver.outputs.mod_version }}
+        run: bash scripts/ci/dry-run-summary.sh
 
       - name: Cleanup mooncakes credentials
         if: always()

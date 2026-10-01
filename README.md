@@ -237,17 +237,18 @@ recall 只返回 `Active` / `Unstructured`；`Superseded` / `Deleted` 物理保�
 - LLM 密钥由宿主注入，**库不持久化任何密钥**
 - 若宿主将记忆库目录置于共享存储，目录级访问控制的隔离责任归宿主
 
-## v0.1 已知限制
+## 已知限制
 
 1. **持久化为双槽全量快照**（对 PRD"追加写 JSONL"的有意偏差）：`moonbitlang/x/fs` 无 append/rename API，追加日志无法实现；万级以上条目的高频写入场景建议关注 v0.2（native 侧 extern C 追加写 / x/fs 出 append API 后切回日志追加）
-2. recall 在命中数不足 top_k 时会用该用户最新条目**补齐**（零命中仍返回空列表，不编造）
+2. recall 在命中数不足 top_k 时会用该用户最新条目**补齐**（零命中仍返回空列表，不编造）；该策略可通过 `Config.backfill = RecallBackfill::NoBackfill` 关闭
 3. 缺省 `HashingEmbedder` 无语义能力：字面无重叠的语义关联（如"午餐"↔"花生过敏"）召回不到，需注入真实嵌入模型
-4. `SimilarityJudge` 的冲突判定依赖候选窗口（向量+关键词各 8 条）内能检索到旧事实；语义相反但字面/向量均不相关的冲突不会被发现，需注入 LLM 判定
+4. **缺省 `SimilarityJudge` 的冲突判定仅覆盖"近重复式"事实更新**（实测：`严重过敏原清单包含花生制品项` → `...海鲜制品项`，相似度 0.828，刚过 0.82 阈值）。语义型更新在缺省离线路径下**不会**触发 supersede——例如 PRD AC-04 的原始场景"我住在北京市海淀区" → "我住在深圳市南山区"，实测相似度仅 0.471（cos 0.471 / Jaccard 0.259），判定为 Ignore。**AC-04 的语义路径由注入 `LlmConflictJudge` 覆盖**（见 `ci/llm_live` L2-07）；离线档位由 `ci/tuning` 语料覆盖。这也意味着 `supersede_threshold` 上调（如 0.90）会显著削弱近重复档的召回（实测 supersede 3/3 → 1/3）
 5. recall 环节的嵌入失败降级为 BM25 单路，但**不**在该次结果上标记 degraded（add 环节的降级标记完整）
 6. superseded / deleted 的恢复 API 未开放（v0.2 候选，`InvalidOperation` 预留）
 7. `stats.bytes_on_disk` 为快照字符数（MemoryBackend 下为逻辑值），非精确磁盘字节
 8. wasm/js 后端缺省为进程内 `MemoryBackend`（无本地文件系统），磁盘持久化需宿主注入 `PersistenceBackend`
 9. 超长条目不做截断：缺省 `HashingEmbedder` 对内容长度无上限，本场景不会触发问题；注入生产级 Embedder 后请在 v0.2 评估长度上限与截断策略
+10. **CLI `--llm` 的提取失败降级目前在输出中不可见**（`degraded=false`、条目 metadata 仅有 `extractor: "llm"`）：`LlmExtractor` 缺省策略 `ReturnRaw` 把失败转成原文入库而不返回错误，store 的降级检测挂在错误分支上。修复规格见 `spec/spec-feature-w3.1-observability-hardening.md`（W3.1-A）
 
 ## 项目结构
 

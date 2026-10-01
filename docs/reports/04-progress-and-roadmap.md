@@ -2,10 +2,10 @@
 
 项目| moomem —— MoonBit 嵌入式 Agent 记忆层库(2026 MoonBit 黑客松十月赛参赛项目)  
 ---|---  
-当前版本| v0.2.1(已发布 mooncakes,警告清零后的干净版本)  
+当前版本| v0.2.2(moon.mod 已置 0.2.2,尚未 tag/发布;最新 tag 为 v0.2.1)  
 代码仓库| https://github.com/glimverge/moomem(main 分支,tag v0.1.0 / v0.2.0 / v0.2.1)  
 包页面| https://mooncakes.io/docs/heyq02/moomem@0.2.1  
-测试状态| native 97/97;wasm / wasm-gc / js 各 90/90;moon check 0 errors 0 warnings  
+测试状态| native 107/107;wasm / wasm-gc / js 各 96/96;moon check 0 errors 0 warnings  
 赛事截止| 十月赛报名与验收截止 2026-10-31(飞书表单提交,最多 3 次)  
   
 一句话定位
@@ -34,7 +34,8 @@
 10-01| git 仓库初始化(commit b929e3e)+ mooncakes 发布 v0.1.0,生态时间戳抢占| ✅ 完成  
 10-01| W2 里程碑:基于 mizchi/llm 0.3.2 的 LlmExtractor + LlmConflictJudge 适配器(独立包,核心零依赖铁律保持);新增 35 用例,QA 判定 PASS 零源码 bug| ✅ 完成  
 10-01| 警告清理:299 → 0(零行为变更,derive(Show) 手写替换经字节级对照验证);GitHub 推送 + mooncakes 发布 v0.2.0 / v0.2.1| ✅ 完成  
-—| W3:混合检索调优(冲突阈值/RRF 参数)、CLI 接线 LLM 提取| 🚧 规格已产出,交 Cursor 执行(见 [spec/spec-feature-w3-retrieval-tuning-cli-llm.md](../../spec/spec-feature-w3-retrieval-tuning-cli-llm.md))| 
+10-01| W3 里程碑:参数 Config 化(W3-A)、版本常量同步(W3-D)、离线调参台 ci/tuning(W3-B,135 组网格,缺省组 12/12·1.000·3/3·0 过门禁)、CLI `--llm` 接线(W3-C,native 门控 + 仅 env 读密钥);native 97→107,wasm 系 90→96| ✅ 完成(独立验证通过,见 [06-w3-qa-verification.md](06-w3-qa-verification.md))| 
+10-01| W3 独立验证:1 项 P1(提取器 ReturnRaw 降级不可见)、2 项 P3(本地端点判定过宽、传输失败误报为非法 JSON)、1 项 P2 记录(缺省冲突判定仅覆盖近重复式更新,实测语义型住址更新相似度 0.471)| 🚧 修复规格已产出(见 [spec/spec-feature-w3.1-observability-hardening.md](../../spec/spec-feature-w3.1-observability-hardening.md)),交 Cursor 执行| 
 —| W4:LoCoMo 评测集接入与量化指标(Recall@5、提取 Precision、supersede 正确率)| ⏳ 待启动  
   
 进度结论
@@ -46,8 +47,8 @@ PRD 四周里程碑中 W1(纯工程闭环)与 W2(LLM 提取适配)已在首个�
   * **P0 · 赛事申报(截止 10-31)** :飞书表单完成十月赛报名(最多 3 次提交,以最后一次有效提交为准);确认已加入赛事交流群且群昵称为 GitHub ID(奖金发放硬性条件);仓库需保持连续提交记录。
   * **P1 · 官方测试套件交叉验证** : 四层体系见 [05-test-suite.md](05-test-suite.md)（L0 离线 + L1 Mock LLM 进 test-pipeline；L2 Live LLM 进 release-pipeline）；持续用 moonbitlang/core 范式复核并保持 GitHub Action 绿标。
   * **P1 · W4 评测闭环** : 接入 LoCoMo 多轮对话记忆基准子集（体系中的 **L3**），产出 PRD 第 16 章量化指标；建议优先于 W3。
-  * **P2 · W3 功能迭代** :冲突候选窗口 k=8 / 阈值 0.82 调参(AC-04 用例集上);CLI 接线 LLM 提取(需引入 ffi/http 与密钥管理,先做独立评审);recall 命中不足补齐策略可配置化。
-  * **P2 · 工程债** :moon.mod.json → moon.mod 格式迁移(工具链已通告弃用,migrate 会重构模块配置布局,单独立项);向 mizchi/llm 上游提 MockProvider impl 未导出的小 PR。
+  * **P1 · W3.1 补丁(独立验证发现)** :提取器 ReturnRaw 降级可观测性(P1,影响"AI 可解释"证据链)、CLI 本地端点精确匹配与传输失败原因分类(各 P3);规格见 spec/spec-feature-w3.1-observability-hardening.md。
+  * **P2 · 工程债** :moon.mod.json → moon.mod 格式迁移(工具链已通告弃用,migrate 会重构模块配置布局,单独立项);向 mizchi/llm 上游提 MockProvider impl 未导出的小 PR;评估 v0.2.2 发布(含 W3 全部改动)。
   * **P3 · 赛后动作** :Q3 开放问题——评估向 moon-agent 提集成 PR(记忆层作为其 BufferMemory 的持久化替代);十一月赛(第二赛季度开始)可滚动参赛,季度奖评定在赛季度收官。
 
 ## 四、风险与注意事项

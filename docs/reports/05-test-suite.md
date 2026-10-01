@@ -43,7 +43,7 @@ graph LR
 
 ## 2. L0 · 纯工程离线（无 LLM）
 
-包路径均在 `src/`（+ `src/cli`）。`moon test --target native` ≈ **97**；wasm 系跳过 `#cfg(native)` 磁盘/CLI ≈ **90**。
+包路径均在 `src/`（+ `src/cli`）。`moon test --target native` ≈ **107**；wasm 系跳过 `#cfg(native)` 磁盘/CLI ≈ **96**。（W3 前为 97/90）
 
 ### 2.1 类型 / 编解码 / user_id — `types_test.mbt`
 
@@ -200,10 +200,11 @@ moon run ci/llm_live --target native
 
 | 项 | 状态 | 建议 |
 |----|------|------|
-| L0/L1 现网 97/90 | ✅ | 保持；新增用例同步改本表 ID |
+| L0/L1 现网 107/96 | ✅ | W3 后计数（新增 W3-A 配置用例 6 个、W3-C/D CLI 用例 4 个）；新增用例同步改本表 ID |
 | L2 场景从冒烟扩为矩阵 | ✅（本轮实现） | 发版必跑；失败不降级为 skip |
 | L3 LoCoMo | ⏳ | 进度文档 P1；独立目录 `ci/locomo/` 候选 |
-| CLI 真 LLM 接线 | ⏸ W3 暂缓 | 不进 L0 |
+| CLI 真 LLM 接线 | ✅ W3-C 已接线（`--llm`，native 门控） | L0 覆盖参数解析与配置构造；真实调用归 L2 |
+| 缺省冲突判定的语义档缺口 | ⚠️ 已实测记录 | 缺省 SimilarityJudge 仅覆盖近重复式更新（住址式实测 0.471→Ignore）；语义档由 L2-07 覆盖，见 README 限制第 4 条 |
 | AC-03 在 Raw 路径 | 设计如此不过滤 | 文档已声明；勿当 bug |
 
 ---

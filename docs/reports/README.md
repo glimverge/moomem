@@ -9,7 +9,9 @@ moomem 全生命周期文档（选题调研 → 竞品复核 → PRD → 进度�
 | 01 | [选题调研报告 v1.0](01-topic-research.md) | ⚠️ 历史文档：四线调研（语言/赛事/生态/竞品）与六维选题框架；其 moonpatch 推荐已被 v2 推翻，仅作方法论留档 |
 | 02 | [竞品分析与生态复核报告 v2.0](02-competitive-analysis.md) | **当前有效版本**：MoonBit vs Rust/Go/TS 对比、mooncakes 生态复核、九轮查重，确认 Agent 持久化记忆为唯一空位 |
 | 03 | [产品需求文档 PRD v1.1](03-prd.md) | 22 章 implementation-ready PRD；含 FR-01~10、AC-01~07 验收标准、四周里程碑、风险登记册与 Q1/Q2 决议 |
-| 04 | [进度与规划（2026-10-01）](04-progress-and-roadmap.md) | 里程碑进度（W1/W2 完成、v0.2.1 已发布）、P0~P3 后续规划、验收六条对照 |
+| 04 | [进度与规划（2026-10-01）](04-progress-and-roadmap.md) | 里程碑进度（W1/W2/W3 完成、v0.2.2 待发布）、P0~P3 后续规划、验收六条对照 |
+| 05 | [测试用例体系（2026-10-01）](05-test-suite.md) | L0~L3 四层测试体系：离线门禁 / Mock LLM / Live LLM / 基准评测，及 AC 映射 |
+| 06 | [W3 独立验证报告（2026-10-01）](06-w3-qa-verification.md) | W3 交付的独立复验：验收项逐条实测、四项实测发现（含相似度实测数据）、偏离项裁定 |
 | 05 | [测试用例体系](05-test-suite.md) | 四层测试（L0 离线 / L1 Mock LLM / L2 Live LLM / L3 LoCoMo）；AC/FR 映射与 CI·发版门禁 |
 
 另有架构设计文档 [`../architecture.md`](../architecture.md)（模块划分、注入点、双槽快照持久化）及配套 Mermaid 图（类图 / add·recall 时序）。

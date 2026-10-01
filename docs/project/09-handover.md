@@ -17,7 +17,7 @@
 
 资产| 位置| 说明  
 ---|---|---  
-代码仓库(单一事实源)| github.com/glimverge/moomem| main 分支;含 docs/(PARA:project 主体 + resources 调研 + archive 归档含 feature-specs)、spec/(现行 2 份 process 流水线规格)、ci/(gates/live-llm · eval/locomo · tools/retrieval-tuning)、.github/workflows(测试 + 发布流水线)  
+代码仓库(单一事实源)| github.com/glimverge/moomem| main 分支;含 docs/(PARA:project 主体 + resources 调研 + archive 含 feature/process-specs)、.trellis/spec/(编码约定 + CI iron rules)、ci/(gates/live-llm · eval/locomo · tools/retrieval-tuning)、.github/workflows(测试 + 发布流水线)  
 包发布| mooncakes.io/docs/heyq02/moomem@0.2.1| 模块名 heyq02/moomem(owner 段必须 = mooncakes 用户名 heyq02,改名曾踩坑)  
 FlowUs 工作区| 「临界微光」(id 08cef79b-6e4e-47a1-996d-ba0e4d256143)| PARA 四层:1 · 项目 → 容器页「moomem · MoonBit 黑客松(十月赛)」(d32231d7)→ PRD / 进度 / 竞品 / 选题各页;3 · 资源、4 · 归档另有骨架  
 本地工作区| ~/WorkBuddy/2026-09-30-23-46-23/| moomem/ 代码仓 + outputs/ 四份 HTML 报告原件 + .workbuddy/memory/(逐日工作日志,含全部坑位记录)  
@@ -43,7 +43,7 @@ FlowUs 工作区| 「临界微光」(id 08cef79b-6e4e-47a1-996d-ba0e4d256143)| P
 10-01| ✅ W1 v0.1.0 实现 + git + mooncakes 发布| 架构师→工程师→QA 流水线;QA 抓出 2 个源码 bug(CLI --all 解析 / import 绕过 user_id 校验)  
 10-01| ✅ W2 LLM 提取适配器(独立包)| +35 用例;核心零依赖铁律经 QA 逐文件核验  
 10-01| ✅ v0.2.0/0.2.1 警告清零 299→0(字节级对照验证)| moon.mod.json → moon.mod 格式已迁移(工具链弃用通告所致)  
-10-01| ✅ W3 参数 Config 化 + 离线调参台 ci/tuning + CLI --llm 接线 + 版本同步| 由我方出规格书(spec/)、Cursor 执行、我方独立复验;复验发现 1 项 P1(提取器降级不可见)+ 3 项 P2/P3  
+10-01| ✅ W3 参数 Config 化 + 离线调参台 ci/tuning + CLI --llm 接线 + 版本同步| 由我方出规格书(现已归档于 docs/archive/feature-specs/)、Cursor 执行、我方独立复验;复验发现 1 项 P1(提取器降级不可见)+ 3 项 P2/P3  
 10-01| ✅ W3.1 可观测性补丁(A 降级三通道 / B host 精确匹配 / C 传输失败分类)| 复验确认全部落地;余 2 项 P3 残留(R1 见 §6,R2 已随 W4-0 修复)  
 10-01| ✅ W4 LoCoMo L3 评测 harness(ci/locomo)+ CI 接线 + 三档实测 + 08 评测报告| W4-0 顺带修复 R2(闲聊清零失败计数);数据资产 ci/locomo/data/(CC BY-NC 4.0,不可删署名)  
   
@@ -100,7 +100,7 @@ FlowUs CLI| ~/.local/bin/flowus v0.3.11(绝对路径);OAuth 凭证 ~/.flowus/cre
   
 ## 九、协作模式与文档体系(交接对象的行事规则)
 
-  * **分工** :产品/规格/验证/文档归本席(AI 助手侧,产出 process `spec/` 与 docs/);编码执行归 Cursor。三份已完成 feature 规格书现归档于 [`docs/archive/feature-specs/`](../archive/feature-specs/)(spec-feature-w3 / w3.1 / w4),仍是这一模式的完整范本:§1 行号级代码事实表 + 红线 + DoD 命令 + grep 断言。
+  * **分工** :产品/规格/验证/文档归本席(AI 助手侧,产出 docs/ 与 Trellis specs);编码执行归 Cursor。已完成 feature 规格书归档于 [`docs/archive/feature-specs/`](../archive/feature-specs/)(spec-feature-w3 / w3.1 / w4);CI 长文规格归档于 [`docs/archive/process-specs/`](../archive/process-specs/),现行红线在 [`.trellis/spec/library/quality-guidelines.md`](../../.trellis/spec/library/quality-guidelines.md)。feature 规格仍是协作范本:§1 行号级代码事实表 + 红线 + DoD 命令 + grep 断言。
   * **验证文化** :执行方报告一律不采信,逐条独立复跑;三份独立验证报告(06/07/08)即证据链,也是赛事「AI 可解释」验收标准的材料。
   * **单一事实源** :仓库 docs/(PARA:project 主体 + resources 资源 + archive 归档,README 总索引);FlowUs 是云端镜像(PARA:1 · 项目下);两处数字以仓库为准,改动先改仓库再同步 FlowUs。
   * **提交纪律** :文档与代码分离提交;commit message 用 conventional 前缀(docs(spec)/fix(core)/ci(eval) 等);不混入无关改动(工作区曾出现 release-pipeline.yml 遗留改动,单独处理)。

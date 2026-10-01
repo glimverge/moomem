@@ -213,7 +213,7 @@ moon run ci/gates/live-llm --target native
 | `test-pipeline.yml` | L0 + L1（四后端）+ examples 冒烟 + **L3 离线** `eval-locomo` |
 | `release-pipeline.yml` | 调用 test-pipeline → **L2** → publish |
 
-规格：[spec-process-cicd-test-pipeline](../../spec/spec-process-cicd-test-pipeline.md)、[spec-process-cicd-release-pipeline](../../spec/spec-process-cicd-release-pipeline.md)。
+耐久红线：[`.trellis/spec/library/quality-guidelines.md`](../../.trellis/spec/library/quality-guidelines.md)（CI iron rules）；实现：[`test-pipeline.yml`](../../.github/workflows/test-pipeline.yml)、[`release-pipeline.yml`](../../.github/workflows/release-pipeline.yml)。长文史料：[process-specs](../archive/process-specs/)。
 
 ---
 

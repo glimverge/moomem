@@ -16,8 +16,9 @@
 | `ci/tools/retrieval-tuning/` | Offline retrieval tuning tool (U1; **not in CI**) | separate package |
 | `examples/<scene>/` | E2 scene demos: `basic-store`, `llm-extractor`, `conflict-supersede`, `cli-smoke` | — |
 | `docs/project/` | Architecture, PRD reports; testing/examples architecture = doc **10** | — |
-| `spec/` | Feature/process specs (CI pipelines, W3/W4) — **not** Trellis coding specs | — |
-| `.trellis/spec/` | AI coding guidelines (this tree) | — |
+| `docs/archive/` | Archived feature + process long-form specs (史料) | — |
+| `.trellis/spec/` | AI coding guidelines + CI iron rules (this tree) | — |
+| `.github/workflows/` | CI / release **implementation** (living SoT for pipelines) | — |
 
 Module identity: `heyq02/moomem` at version `0.2.2` (`moon.mod`, `MOOMEM_VERSION` in `src/lib.mbt`).
 

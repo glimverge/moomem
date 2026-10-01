@@ -7,8 +7,9 @@
 | Intent | Tree |
 |--------|------|
 | Product narrative / architecture / handover | `docs/project/` |
-| Feature & process acceptance (W3/W4, CI) | `spec/` |
-| AI coding conventions (this tree, esp. `library/`) | `.trellis/spec/` |
+| Archived feature / process long-form specs | `docs/archive/` |
+| CI / release implementation | `.github/workflows/` |
+| AI coding conventions + CI iron rules (this tree, esp. `library/`) | `.trellis/spec/` |
 
 Full index: [`docs/README.md`](../../../docs/README.md) →「Where to look」.
 

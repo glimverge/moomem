@@ -6,6 +6,7 @@
 
 | 路径 | 内容 |
 |------|------|
-| [`feature-specs/`](feature-specs/) | 已完成里程碑的功能规格书（W3 / W3.1 / W4），仅作史料与范本；**不再作为执行依据** |
+| [`feature-specs/`](feature-specs/) | 已完成里程碑的功能规格书（W3 / W3.1 / W4），仅作史料与范本 |
+| [`process-specs/`](process-specs/) | CI·发布长文规格（test / release）；**现行真相源为 YAML + Trellis quality iron rules** |
 
-仍生效的 CI·发布**流程**规格留在仓库根 [`spec/`](../../spec/)（process 契约）。
+耐久 CI 红线：[`.trellis/spec/library/quality-guidelines.md`](../../.trellis/spec/library/quality-guidelines.md)。实现：[`.github/workflows/`](../../.github/workflows/)。

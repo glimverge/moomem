@@ -1,4 +1,5 @@
-# Spec: spec/spec-process-cicd-release-pipeline.md
+# Living rules: .trellis/spec/library/quality-guidelines.md (CI iron rules)
+# Archived long-form: docs/archive/process-specs/spec-process-cicd-release-pipeline.md
 name: Release Pipeline
 
 on:

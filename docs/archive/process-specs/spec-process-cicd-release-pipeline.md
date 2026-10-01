@@ -4,8 +4,11 @@ version: 1.1
 date_created: 2026-10-01
 last_updated: 2026-10-01
 owner: DevOps Team
-tags: [process, cicd, github-actions, automation, moonbit, mooncakes, release, deepseek, live-llm]
+tags: [process, cicd, github-actions, automation, moonbit, mooncakes, release, deepseek, live-llm, archived]
+status: archived
 ---
+
+> **已归档（史料）**：现行真相源为 [`.github/workflows/release-pipeline.yml`](../../../.github/workflows/release-pipeline.yml) + [`.trellis/spec/library/quality-guidelines.md`](../../../.trellis/spec/library/quality-guidelines.md)（CI iron rules）+ [`docs/project/10-testing-examples-architecture.md`](../../project/10-testing-examples-architecture.md)。勿再把本文当执行依据。
 
 ## Workflow Overview
 
@@ -255,6 +258,7 @@ live_llm_status: boolean      # LIVE_LLM_PASS observed
 ## Related Specifications
 
 - [Test Pipeline](./spec-process-cicd-test-pipeline.md)
-- [Architecture](../docs/project/architecture.md)
-- [README](../README.md)
-- Implementation: [`.github/workflows/release-pipeline.yml`](../.github/workflows/release-pipeline.yml)
+- [Architecture](../../project/architecture.md)
+- [README](../../../README.md)
+- Implementation: [`.github/workflows/release-pipeline.yml`](../../../.github/workflows/release-pipeline.yml)
+- Living rules: [`.trellis/spec/library/quality-guidelines.md`](../../../.trellis/spec/library/quality-guidelines.md)

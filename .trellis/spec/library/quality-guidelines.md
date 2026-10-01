@@ -37,6 +37,23 @@ Architecture authority for layers, CI iron rules, and where gates/eval/tools/exa
 
 Iron rules: L0/L1 never read `DEEPSEEK_*`; L2 never joins push CI; examples never depend on live keys.
 
+### CI / release iron rules (durable)
+
+Executable workflow truth: [`.github/workflows/test-pipeline.yml`](../../../.github/workflows/test-pipeline.yml) and [`release-pipeline.yml`](../../../.github/workflows/release-pipeline.yml). Long-form process specs are **archived** under [`docs/archive/process-specs/`](../../../docs/archive/process-specs/) (not living contracts).
+
+| Rule | Meaning |
+|------|---------|
+| Push/PR is offline | `test-pipeline` never injects `DEEPSEEK_*` / `MOONCAKES_TOKEN`; no live LLM endpoints on the green path |
+| Fail closed | Any failed check / matrix target / example smoke fails the aggregate gate |
+| Four targets + smoke | native + wasm + wasm-gc + js after `moon check`; native-only FS/CLI stay cfg-gated; examples smoke on native |
+| Release order | `quality` (`workflow_call` → test-pipeline) → `llm-live` (`ci/gates/live-llm`, must log `LIVE_LLM_PASS`) → publish / tag side effects |
+| Dry-run still gates | `dry_run=true` skips registry / GitHub Release only; quality + llm-live still run |
+| Version alignment | Publish/tag path requires git semver ↔ `moon.mod` `version` match before credentials write |
+| Secret scope | `DEEPSEEK_*` only on release `llm-live`; `MOONCAKES_TOKEN` only on publish job; never cache credentials under `~/.moon` |
+| Permissions | Offline quality: `contents: read`; write tokens only on the release job that needs them |
+
+When changing CI behavior: edit the YAML first (or same PR), then keep this table + [doc 10](../../../docs/project/10-testing-examples-architecture.md) aligned. Do not revive root `spec/` process docs as a second source of truth.
+
 ### Verification commands
 
 ```bash
@@ -85,7 +102,9 @@ Do not invent a parallel log subsystem unless product requirements change.
 | “Fix” retrieval fusion by exploding / splitting the store API | Keep `MemoryStore` facade; fusion is Config/eval work (P7/W5), not a module-interface deepen |
 | Frontend/ORM templates | N/A — this is a MoonBit library |
 | Live keys / `DEEPSEEK_*` in L0/L1 or examples | gates only (`ci/gates/live-llm`) |
+| `DEEPSEEK_*` / mooncakes secrets on push `test-pipeline` | release `llm-live` / publish jobs only |
 | Default CI for retrieval-tuning | keep as `ci/tools/retrieval-tuning` (U1; not in push CI) |
+| Treating archived `docs/archive/process-specs/` as living SoT | YAML + this file’s CI iron rules |
 
 ## When changing public behavior
 

@@ -4,8 +4,11 @@ version: 1.0
 date_created: 2026-10-01
 last_updated: 2026-10-01
 owner: DevOps Team
-tags: [process, cicd, github-actions, automation, moonbit, multi-target, regression]
+tags: [process, cicd, github-actions, automation, moonbit, multi-target, regression, archived]
+status: archived
 ---
+
+> **已归档（史料）**：现行真相源为 [`.github/workflows/test-pipeline.yml`](../../../.github/workflows/test-pipeline.yml) + [`.trellis/spec/library/quality-guidelines.md`](../../../.trellis/spec/library/quality-guidelines.md)（CI iron rules）+ [`docs/project/10-testing-examples-architecture.md`](../../project/10-testing-examples-architecture.md)。勿再把本文当执行依据。
 
 ## Workflow Overview
 
@@ -278,8 +281,9 @@ test_counts: string  # e.g. native=97 passed
 
 ## Related Specifications
 
-- [Architecture](../docs/project/architecture.md) — AC/FR mapping, backend matrix, test principles
-- [README](../README.md) — local commands, expected test counts, toolchain floor
+- [Architecture](../../project/architecture.md) — AC/FR mapping, backend matrix, test principles
+- [README](../../../README.md) — local commands, expected test counts, toolchain floor
 - Sequence / class diagrams under `docs/` — behavioral reference for e2e expectations
-- Implementation: [`.github/workflows/test-pipeline.yml`](../.github/workflows/test-pipeline.yml) + [`.github/actions/setup-moonbit`](../.github/actions/setup-moonbit/action.yml)
+- Implementation: [`.github/workflows/test-pipeline.yml`](../../../.github/workflows/test-pipeline.yml) + [`.github/actions/setup-moonbit`](../../../.github/actions/setup-moonbit/action.yml)
 - Downstream: [Release Pipeline](./spec-process-cicd-release-pipeline.md) (`workflow_call` consumer)
+- Living rules: [`.trellis/spec/library/quality-guidelines.md`](../../../.trellis/spec/library/quality-guidelines.md)

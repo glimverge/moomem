@@ -16,7 +16,7 @@ These guidelines describe what the code actually does today.
 | [Error Handling](./error-handling.md) | `MoomemError`, `Result`, no panic | Filled |
 | [Persistence](./persistence.md) | Dual-slot snapshot, FS package-import vs call-site isolation, backends | Filled |
 | [Trait Injection](./trait-injection.md) | Embedder / Extractor / ConflictJudge / PersistenceBackend / Clock | Filled |
-| [Quality Guidelines](./quality-guidelines.md) | Testing, naming, anti-patterns, verification commands | Filled |
+| [Quality Guidelines](./quality-guidelines.md) | Testing, naming, anti-patterns, CI/release iron rules, verification commands | Filled |
 
 ---
 

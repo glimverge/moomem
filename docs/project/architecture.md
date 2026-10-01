@@ -96,9 +96,9 @@ moomem/
 │   │   ├── sequence-diagram-recall.mermaid
 │   │   └── 03~10 编号报告（测试/示例架构权威 = 10）
 │   ├── resources/             # 调研与立项依据（选题/竞品）
-│   └── archive/               # 归档；含 feature-specs/（已完成 W3/W3.1/W4 规格）
-├── spec/                      # 现行 process 契约（CI·发布流水线）— 非 Trellis 编码规范
-├── .trellis/spec/             # AI 编码约定（改 src/ 前读 library/）
+│   └── archive/               # 归档：feature-specs/ + process-specs/
+├── .trellis/spec/             # AI 编码约定 + CI iron rules（改 src/ / 门禁前读 library/）
+├── .github/workflows/         # CI / 发布实现（真相源；长文规格已归档）
 ├── examples/                  # E2 场景演示（mock / 零网络）；见 [10](10-testing-examples-architecture.md)
 │   ├── basic-store/
 │   ├── llm-extractor/

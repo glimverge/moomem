@@ -8,4 +8,4 @@ W3 / W3.1 / W4 里程碑执行规格，**仅作史料与协作范本**，不再�
 | [`spec-feature-w3.1-observability-hardening.md`](spec-feature-w3.1-observability-hardening.md) | W3.1 可观测性加固 |
 | [`spec-feature-w4-locomo-eval.md`](spec-feature-w4-locomo-eval.md) | W4 LoCoMo 评测闭环 |
 
-现行 CI·发布流程契约：[`spec/`](../../../spec/)。编码约定：[`.trellis/spec/`](../../../.trellis/spec/)。
+现行 CI 红线：[`.trellis/spec/library/quality-guidelines.md`](../../../.trellis/spec/library/quality-guidelines.md)。实现：[`.github/workflows/`](../../../.github/workflows/)。编码约定：[`.trellis/spec/`](../../../.trellis/spec/)。

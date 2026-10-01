@@ -10,8 +10,9 @@
 |---------|--------|-------|
 | 产品叙事、架构设计、PRD、进度、验证/评测报告、交接 | [`docs/project/`](project/)（本树） | 编码细则或 CI 验收条款 |
 | 测试 / 门禁 / 评测 / 调参 / 示例**落点**（决策树、目标目录） | [`project/10-testing-examples-architecture.md`](project/10-testing-examples-architecture.md) | [`05-test-suite`](project/05-test-suite.md) 用例编目 |
-| 现行 CI·发布流程验收契约 | [`spec/`](../spec/)（process） | Trellis AI 改代码规则；已完成 feature 规格 |
-| 已完成里程碑功能规格（W3 / W3.1 / W4，史料） | [`archive/feature-specs/`](archive/feature-specs/) | 现行执行依据 |
+| CI / 发布**耐久红线**（给 AI） | [`.trellis/spec/library/quality-guidelines.md`](../.trellis/spec/library/quality-guidelines.md) § CI iron rules | 已归档的长文 process 规格 |
+| CI / 发布**实现** | [`.github/workflows/`](../.github/workflows/) | 产品 PRD |
+| 已归档规格（feature W3–W4 + process 长文） | [`archive/`](archive/) | 现行执行依据 |
 | AI / 维护者改 `src/` 前的包层约定与编码规范 | [`.trellis/spec/`](../.trellis/spec/)（尤其 `library/`） | 产品 PRD 正文 |
 
 调研立项材料在 [`resources/`](resources/)；赛季整体归档目标仍在 [`archive/`](archive/)。
@@ -22,7 +23,7 @@
 |------|-----------------|------|
 | [`project/`](project/README.md) | 1 · 项目 → 「moomem · MoonBit 黑客松（十月赛）」容器页 | 项目主体文档：架构设计、PRD、进度规划、测试体系、验证报告、交接总结 |
 | [`resources/`](resources/README.md) | 3 · 资源 → 选题调研 / 竞品分析两页 | 立项依据与调研材料（决策支持，非执行文档） |
-| [`archive/`](archive/README.md) | 4 · 归档 | 已含 `feature-specs/`（W3/W3.1/W4）；赛季结束后 `project/` 整体迁入 |
+| [`archive/`](archive/README.md) | 4 · 归档 | `feature-specs/` + `process-specs/`；赛季结束后 `project/` 整体迁入 |
 
 ## 阅读顺序
 
@@ -42,7 +43,7 @@
 
 ## docs 之外的文档类资产
 
-- [`spec/`](../spec/)：现行 process 契约（CI·发布流水线）——与 `.trellis/spec` 分工见上方「Where to look」
-- [`archive/feature-specs/`](archive/feature-specs/)：已完成 feature 规格（W3 / W3.1 / W4），仅史料/范本
-- [`.trellis/spec/`](../.trellis/spec/)：AI 编码约定（目录结构、错误/持久化/测试等层规）——改核心库前先读
+- [`.github/workflows/`](../.github/workflows/)：CI / 发布流水线**实现**（真相源）
+- [`.trellis/spec/`](../.trellis/spec/)：AI 编码约定 + CI iron rules（`library/quality-guidelines.md`）——改核心库 / 改门禁边界前先读
+- [`archive/feature-specs/`](archive/feature-specs/) / [`archive/process-specs/`](archive/process-specs/)：已归档长文规格（史料）
 - [`ci/eval/locomo/data/README.md`](../ci/eval/locomo/data/README.md)：评测数据资产说明（LoCoMo 派生切片，CC BY-NC 4.0）

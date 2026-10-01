@@ -9,7 +9,7 @@ executor: Cursor (AI coding agent) - execute tasks in order W3-A → W3-D → W3
 language: MoonBit (moon toolchain, module heyq02/moomem, version 0.2.2)
 ---
 
-> **历史路径注**：文中 `ci/tuning` / `ci/llm_live` / `moon run examples` 为 W3 当日路径；现行入口见 [`docs/project/10-testing-examples-architecture.md`](../docs/project/10-testing-examples-architecture.md)（`ci/tools/retrieval-tuning`、`ci/gates/live-llm`、`examples/<scene>`）。
+> **历史路径注**：文中 `ci/tuning` / `ci/llm_live` / `moon run examples` 为 W3 当日路径；现行入口见 [`docs/project/10-testing-examples-architecture.md`](../../project/10-testing-examples-architecture.md)（`ci/tools/retrieval-tuning`、`ci/gates/live-llm`、`examples/<scene>`）。
 
 # W3 工程任务规格书：混合检索调优 + CLI 接线 LLM
 

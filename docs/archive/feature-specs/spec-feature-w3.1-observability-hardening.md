@@ -9,11 +9,11 @@ executor: Cursor (AI coding agent)
 depends_on: docs/project/06-w3-qa-verification.md (发现 F1/F2/F3)
 ---
 
-> **历史路径注**：文中 `ci/tuning` 等为补丁当日路径；现行入口见 [`docs/project/10-testing-examples-architecture.md`](../docs/project/10-testing-examples-architecture.md)。
+> **历史路径注**：文中 `ci/tuning` 等为补丁当日路径；现行入口见 [`docs/project/10-testing-examples-architecture.md`](../../project/10-testing-examples-architecture.md)。
 
 # W3.1 补丁规格书：提取降级可观测性 + CLI 加固
 
-> 起因：W3 独立验证发现三项问题（详见 [06-w3-qa-verification.md](../docs/project/06-w3-qa-verification.md) §3）。本规格为修复依据。
+> 起因：W3 独立验证发现三项问题（详见 [06-w3-qa-verification.md](../../project/06-w3-qa-verification.md) §3）。本规格为修复依据。
 > 执行顺序：W3.1-A（P1）→ W3.1-B（P3）→ W3.1-C（P3）。红线与验收命令沿用 [W3 规格 §8/§7](spec-feature-w3-retrieval-tuning-cli-llm.md)。
 
 ## 1. W3.1-A（P1）提取器 ReturnRaw 降级必须在三个通道可见

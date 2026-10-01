@@ -1,6 +1,6 @@
 # W4 工程任务规格书：LoCoMo 评测闭环（Cursor 执行版）
 
-> **历史路径注**：文中 `ci/locomo` / `ci/llm_live` / `ci/tuning` / `moon run examples` 为 W4 当日路径；现行入口见 [`docs/project/10-testing-examples-architecture.md`](../docs/project/10-testing-examples-architecture.md)（`ci/eval/locomo`、`ci/gates/live-llm`、`ci/tools/retrieval-tuning`、`examples/<scene>`）。
+> **历史路径注**：文中 `ci/locomo` / `ci/llm_live` / `ci/tuning` / `moon run examples` 为 W4 当日路径；现行入口见 [`docs/project/10-testing-examples-architecture.md`](../../project/10-testing-examples-architecture.md)（`ci/eval/locomo`、`ci/gates/live-llm`、`ci/tools/retrieval-tuning`、`examples/<scene>`）。
 
 > 目标：把 PRD 第 16 章的量化指标从「承诺」变成「可复现数字」，产出 PRD §18 的 W4 交付物
 > （LoCoMo 子集评测报告 + 三后端 CI + 文档 + README）。

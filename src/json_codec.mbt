@@ -7,7 +7,7 @@
 //   {entry JSON}
 //   ...
 //
-// 内部函数采用 raise 风格传播错误，公开函数统一返回 Result[T, MoomemError]。
+// 内部函数采用 raise 风格传播错误，包内入口统一返回 Result[T, MoomemError]。
 
 // ---------------------------------------------------------------------------
 // MemoryEntry 编解码
@@ -15,7 +15,7 @@
 
 ///|
 /// MemoryEntry → Json（字段名与磁盘格式一一对应，恢复时不必重算 keywords）。
-pub fn entry_to_json(e : MemoryEntry) -> Json {
+fn entry_to_json(e : MemoryEntry) -> Json {
   let obj : Map[String, Json] = Map([])
   obj.set("id", Json::string(e.id))
   obj.set("user_id", Json::string(e.user_id))
@@ -39,7 +39,7 @@ pub fn entry_to_json(e : MemoryEntry) -> Json {
 
 ///|
 /// Json → MemoryEntry；字段缺失 / 类型不符 → StoreCorrupted。
-pub fn entry_from_json(j : Json) -> Result[MemoryEntry, MoomemError] {
+fn entry_from_json(j : Json) -> Result[MemoryEntry, MoomemError] {
   Ok(entry_from_json_impl(j)) catch {
     e => Err(e)
   }
@@ -257,7 +257,7 @@ fn snapshot_header_to_json(v : Int, gen : Int, clock : Int64) -> Json {
 
 ///|
 /// 解析 header 行；校验版本号。返回 (v, gen, clock)。
-pub fn parse_snapshot_header(
+fn parse_snapshot_header(
   j : Json,
 ) -> Result[(Int, Int, Int64), MoomemError] {
   try {
@@ -284,7 +284,7 @@ pub fn parse_snapshot_header(
 
 ///|
 /// 解析单行 JSON（空行 / 语法错误 → StoreCorrupted）。
-pub fn parse_json_line(line : String) -> Result[Json, MoomemError] {
+fn parse_json_line(line : String) -> Result[Json, MoomemError] {
   try {
     let trimmed = line.trim()
     if trimmed.length() == 0 {
@@ -298,7 +298,7 @@ pub fn parse_json_line(line : String) -> Result[Json, MoomemError] {
 
 ///|
 /// 组装完整快照文本：header 行 + 每条 entry 一行 JSON。
-pub fn build_snapshot_text(
+fn build_snapshot_text(
   gen : Int,
   clock : Int64,
   entries : Array[MemoryEntry],
@@ -317,7 +317,7 @@ pub fn build_snapshot_text(
 
 ///|
 /// 快照解析结果：header 代数与时钟 + 条目列表（按文件序） + 截断计数。
-pub struct SnapshotParseResult {
+priv struct SnapshotParseResult {
   gen : Int
   clock : Int64
   entries : Array[MemoryEntry]
@@ -330,7 +330,7 @@ pub struct SnapshotParseResult {
 ///   - 首行必须是合法 header 且版本匹配，否则 StoreCorrupted；
 ///   - 尾部不完整行（半行损坏）丢弃并计入 truncated_recovered；
 ///   - 中部损坏行不属于尾部截断，报 StoreCorrupted。
-pub fn parse_snapshot_text(
+fn parse_snapshot_text(
   text : String,
 ) -> Result[SnapshotParseResult, MoomemError] {
   Ok(parse_snapshot_text_impl(text)) catch {

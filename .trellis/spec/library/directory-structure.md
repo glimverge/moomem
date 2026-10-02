@@ -36,14 +36,17 @@ Core library layers:
 | Dedup | `dedup.mbt` | Per-user content fingerprints |
 | Indexes | `index_vector.mbt`, `index_keyword.mbt`, `ranker.mbt` | Per-user shards + BM25 + RRF |
 | Persistence | `persist.mbt` | `PersistenceBackend`, `FsBackend`, `MemoryBackend` — **only non-test core `@fs` call site** (`moon.pkg` may still import `x/fs`) |
-| Orchestration | `store.mbt` | `MemoryStore` aggregate root (host API); indexes/dedup/`rrf` are package-private; `tokenize` / similarity helpers stay `pub` for CI — see [Public API and Types](./public-api-and-types.md). `add` is a thin orchestrator over package-private stage helpers (extract/degrade, dedup, conflict/supersede, embed+index insert, flush) — not a second aggregate. |
+| Orchestration | `store.mbt` | `MemoryStore` aggregate root (host API); indexes/dedup/`rrf`/`tokenize`/similarity/snapshot codec are package-private — see [Public API and Types](./public-api-and-types.md). `add` is a thin orchestrator over package-private stage helpers (extract/degrade, dedup, conflict/supersede, embed+index insert, flush) — not a second aggregate. |
 
 ## Tests
 
 Black-box tests sit beside sources as `*_test.mbt`; white-box as `*_wbtest.mbt` (**T1**：包旁测试不外迁):
 
 - `types_test.mbt` — codec, `validate_user_id`
-- `extractor_test.mbt` — injection / raw mode + pub diagnostic helpers
+- `extractor_test.mbt` — injection / raw mode (black-box)
+- `diag_wbtest.mbt` — tokenize / cosine / jaccard / SimilarityJudge
+- `json_codec_wbtest.mbt` — snapshot codec
+- crash-injection tests live in `persist.mbt` (the injectors are package-private)
 - `index_wbtest.mbt` — VectorIndex / KeywordIndex / DedupIndex / rrf (package-private)
 - `persist_test.mbt` — dual-slot, head corruption, `MemoryBackend` crash inject
 - `store_e2e_test.mbt` — AC-01..05 end-to-end

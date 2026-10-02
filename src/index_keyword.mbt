@@ -38,7 +38,7 @@ fn is_latin_word_char(c : Char) -> Bool {
 /// 分词器：CJK 逐字出单字 token，相邻 CJK 字额外出二元组 token；
 /// 拉丁字母数字连续串出一个词 token（小写化）；其余字符为分隔符。
 /// 确定性、无外部依赖，三后端一致；被 BM25 索引与 HashingEmbedder 共用。
-pub fn tokenize(text : String) -> Array[String] {
+fn tokenize(text : String) -> Array[String] {
   let tokens : Array[String] = []
   let buf = StringBuilder()
   let mut prev_cjk : Char? = None

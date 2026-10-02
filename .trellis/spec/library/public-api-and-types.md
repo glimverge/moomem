@@ -1,6 +1,6 @@
 # Public API and Types
 
-> Host-facing surface vs package-private indexes vs CI diagnostic helpers.
+> Host-facing surface vs package-private indexes and diagnostics.
 
 ## Host surface (`MemoryStore`)
 
@@ -42,17 +42,19 @@ These types/fns are **not** `pub`. They live inside `MemoryStore` (`priv vec_ind
 
 Do **not** re-export these as a host “IndexStore” API. Do not treat abstract type names that may still appear in tooling as a second facade.
 
-## Supported CI / black-box diagnostic helpers (`pub`)
+## Package-private diagnostics
 
-Cross-package callers need these; keep them `pub`:
+Not host API. Same-package code and `*_wbtest.mbt` may call them. Other packages must not.
 
-| Symbol | Location | Role |
-|--------|----------|------|
-| `tokenize` | `index_keyword.mbt` | Tokenization for BM25 / diagnostics |
-| `cosine_similarity` | `embedder.mbt` | Vector similarity |
-| `keyword_jaccard` | `conflict.mbt` | Lexical overlap |
+| Symbol | Location | Covered by |
+|--------|----------|------------|
+| `tokenize` | `index_keyword.mbt` | `src/diag_wbtest.mbt`, `src/index_wbtest.mbt` |
+| `cosine_similarity` | `embedder.mbt` | `src/diag_wbtest.mbt` |
+| `keyword_jaccard` | `conflict.mbt` | `src/diag_wbtest.mbt` |
+| snapshot codec (`entry_to_json`, `parse_snapshot_text`, …) | `json_codec.mbt` | `src/json_codec_wbtest.mbt` |
+| `MemoryBackend::peek` / `set_fail_next_save` / `set_simulate_partial_write` | `persist.mbt` | tests in `src/persist.mbt` |
 
-Diagnostic caller outside the core package: `ci/eval/locomo/conflict_eval.mbt` (uses tokenize / cosine / jaccard — not a host product path). Black-box tests in `extractor_test.mbt` also cover these helpers.
+`ci/eval/locomo/conflict_eval.mbt` prints cos/jac from functions inside the eval package. The scored supersede check uses `MemoryStore` only.
 
 ## Core types (`src/types.mbt`)
 
@@ -127,7 +129,7 @@ Invariant: `recall` only returns recallable statuses; superseded/deleted remain 
 - Hard-deleting rows from the snapshot on `forget` (current semantics are soft-delete).
 - Validating `user_id` only in CLI — library entrances must call `validate_user_id`.
 - Changing `MOOMEM_VERSION` without aligning `moon.mod` (release pipeline owns mod version; constant is manual sync — see comment in `lib.mbt`).
-- Treating package-private indexes / `rrf` / diagnostic helpers as the host API, or inventing a parallel IndexStore facade for callers.
+- Treating package-private indexes / `rrf` / `tokenize` / similarity / snapshot codec as the host API, or re-exporting them for CI.
 - Re-`pub`ing `VectorIndex` / `KeywordIndex` / `DedupIndex` without a Trellis decision (Option B already narrowed them).
 - Splitting `MemoryStore` or adding a second recall API to “fix” fusion — fusion is `Config` + `ranker.mbt` only.
 - Tuning adaptive thresholds on LoCoMo scored QA (use `ci/tools/retrieval-tuning` independent set).

@@ -76,7 +76,7 @@ fn hashing_embed_one(text : String, dims : Int) -> Array[Double] {
 
 ///|
 /// 两向量余弦相似度；长度为 0 或不相等时返回 0.0（不 panic）。
-pub fn cosine_similarity(a : Array[Double], b : Array[Double]) -> Double {
+fn cosine_similarity(a : Array[Double], b : Array[Double]) -> Double {
   if a.length() == 0 || a.length() != b.length() {
     return 0.0
   }

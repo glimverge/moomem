@@ -84,13 +84,13 @@ pub extend MemoryBackend with PersistenceBackend::{save, load}
 
 ///|
 /// 当前保存的快照（测试观察用）。
-pub fn MemoryBackend::peek(self : MemoryBackend) -> String? {
+fn MemoryBackend::peek(self : MemoryBackend) -> String? {
   self.snapshot
 }
 
 ///|
 /// 测试注入：模拟进程被杀的半写状态（save 只写入前 n 个字符）；None = 完整写入。
-pub fn MemoryBackend::set_simulate_partial_write(
+fn MemoryBackend::set_simulate_partial_write(
   self : MemoryBackend,
   n : Int?,
 ) -> Unit {
@@ -99,7 +99,7 @@ pub fn MemoryBackend::set_simulate_partial_write(
 
 ///|
 /// 测试注入：下一次 save 直接失败（模拟 IO 错误）。
-pub fn MemoryBackend::set_fail_next_save(
+fn MemoryBackend::set_fail_next_save(
   self : MemoryBackend,
   fail : Bool,
 ) -> Unit {
@@ -392,4 +392,72 @@ pub fn default_backend(
   // 注入自己的持久化适配（如浏览器 IndexedDB 胶水）。
   let backend = MemoryBackend::new()
   Ok(backend as &PersistenceBackend)
+}
+
+///|
+test "MemoryBackend: simulated save failure surfaces IoFailure" {
+  let backend = MemoryBackend::new()
+  backend.set_fail_next_save(true)
+  let failed = match backend.save("whatever") {
+    Err(IoFailure(_)) => true
+    _ => false
+  }
+  inspect(failed, content="true")
+  inspect(backend.peek() == None, content="true")
+}
+
+///|
+test "MemoryBackend: partial write stores only the prefix" {
+  let backend = MemoryBackend::new()
+  backend.set_simulate_partial_write(Some(4))
+  let saved = match backend.save("abcdefgh") {
+    Ok(_) => true
+    Err(_) => false
+  }
+  inspect(saved, content="true")
+  inspect(backend.peek() == Some("abcd"), content="true")
+}
+
+///|
+test "crash recovery: partial write (killed mid-flush) truncates tail" {
+  let e1 : MemoryEntry = MemoryEntry::{
+    id: "000000000001-00aa",
+    user_id: "user-42",
+    content: "我对花生过敏",
+    kind: Unstructured,
+    embedding: [],
+    keywords: tokenize("我对花生过敏"),
+    status: Active,
+    created_at: 1L,
+    superseded_by: None,
+    seq: 1,
+    metadata: Map([]),
+  }
+  let e2 : MemoryEntry = MemoryEntry::{
+    id: "000000000002-00bb",
+    user_id: "user-42",
+    content: "我住在深圳",
+    kind: Unstructured,
+    embedding: [],
+    keywords: tokenize("我住在深圳"),
+    status: Active,
+    created_at: 2L,
+    superseded_by: None,
+    seq: 2,
+    metadata: Map([]),
+  }
+  let full = build_snapshot_text(3, 2L, [e1, e2])
+  let cut = full.length() - 10
+  let partial = full[:cut].to_owned()
+  let result = match parse_snapshot_text(partial) {
+    Ok(r) => r
+    Err(e) => {
+      inspect(e.message(), content="SHOULD NOT REACH")
+      return
+    }
+  }
+  inspect(result.gen, content="3")
+  inspect(result.entries.length(), content="1")
+  inspect(result.entries[0].content, content="我对花生过敏")
+  inspect(result.truncated_recovered, content="1")
 }

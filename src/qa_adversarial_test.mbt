@@ -113,6 +113,32 @@ fn qa_nn(n : Int) -> String {
   }
 }
 
+///|
+/// 一行快照条目 JSON。字段与 README 快照节一致，不调用包内编解码。
+fn qa_entry_line(
+  id : String,
+  user_id : String,
+  content : String,
+  embedding : Array[Double],
+  keywords : Array[String],
+  created_at : Int,
+  seq : Int,
+) -> String {
+  let obj : Map[String, Json] = Map([])
+  obj.set("id", Json::string(id))
+  obj.set("user_id", Json::string(user_id))
+  obj.set("content", Json::string(content))
+  obj.set("kind", Json::string("unstructured"))
+  obj.set("embedding", Json::array(embedding.map(v => Json::number(v))))
+  obj.set("keywords", Json::array(keywords.map(k => Json::string(k))))
+  obj.set("status", Json::string("active"))
+  obj.set("created_at", Json::number(created_at.to_double()))
+  obj.set("superseded_by", Json::null())
+  obj.set("seq", Json::number(seq.to_double()))
+  obj.set("metadata", Json::object(Map([])))
+  Json::object(obj).stringify()
+}
+
 // ---------------------------------------------------------------------------
 // 空库与未知用户
 // ---------------------------------------------------------------------------
@@ -929,26 +955,26 @@ test "QA: import tolerates corrupted lines; dim-mismatched entry keyword-recalla
       return
     }
   }
-  let mk_entry = (id : String, seq : Int, emb : Array[Double], content : String) => @src.MemoryEntry::{
-    id,
-    user_id: "qa-io",
-    content,
-    kind: Unstructured,
-    embedding: emb,
-    keywords: @src.tokenize(content),
-    status: Active,
-    created_at: seq.to_int64(),
-    superseded_by: None,
-    seq,
-    metadata: Map([]),
-  }
-  let good1 = mk_entry("000000000001-0001", 1, [], "导入有效条目一")
-  let good2 = mk_entry("000000000002-0002", 2, [], "导入有效条目二")
-  // 中间夹一行损坏 JSON:跳过而非整体失败(PRD 15 章"损坏行跳过")
-  let jsonl = @src.entry_to_json(good1).stringify() +
-    "\n{这不是合法的JSON!!!\n" +
-    @src.entry_to_json(good2).stringify() +
-    "\n"
+  let good1 = qa_entry_line(
+    "000000000001-0001",
+    "qa-io",
+    "导入有效条目一",
+    [],
+    [],
+    1,
+    1,
+  )
+  let good2 = qa_entry_line(
+    "000000000002-0002",
+    "qa-io",
+    "导入有效条目二",
+    [],
+    [],
+    2,
+    2,
+  )
+  // 中间夹一行损坏 JSON:跳过而非整体失败
+  let jsonl = good1 + "\n{这不是合法的JSON!!!\n" + good2 + "\n"
   let (imported, skipped) = match store.import_jsonl(jsonl) {
     Ok(pair) => pair
     Err(e) => {
@@ -967,11 +993,15 @@ test "QA: import tolerates corrupted lines; dim-mismatched entry keyword-recalla
   }
   inspect(st.total, content="2")
   // 嵌入维度与配置不符(如配置变更后导入):仅入关键词索引,仍可召回
-  let odd = mk_entry(
+  // 查询「维度锚点」的分词要能命中 keywords。字段名与 README 快照行一致。
+  let odd = qa_entry_line(
     "000000000100-0064",
-    100,
-    [0.5, 0.5, 0.5],
+    "qa-io",
     "维度锚点记忆",
+    [0.5, 0.5, 0.5],
+    ["维", "度", "锚", "点", "记", "忆", "维度", "度锚", "锚点", "点记", "记忆"],
+    100,
+    100,
   )
   let backend2 = @src.MemoryBackend::new()
   let store2 = match qa_open_default(backend2) {
@@ -982,7 +1012,7 @@ test "QA: import tolerates corrupted lines; dim-mismatched entry keyword-recalla
     }
   }
   let (imported2, skipped2) = match
-    store2.import_jsonl(@src.entry_to_json(odd).stringify()) {
+    store2.import_jsonl(odd) {
     Ok(pair) => pair
     Err(e) => {
       inspect(e.message(), content="SHOULD NOT REACH")
@@ -1053,22 +1083,17 @@ test "QA: import must not silently accept entries with illegal user_id" {
       return
     }
   }
-  let evil : @src.MemoryEntry = @src.MemoryEntry::{
-    id: "000000000009-00ff",
-    user_id: "../evil",
-    content: "越权条目",
-    kind: Unstructured,
-    embedding: [],
-    keywords: @src.tokenize("越权条目"),
-    status: Active,
-    created_at: 9L,
-    superseded_by: None,
-    seq: 9,
-    metadata: Map([]),
-  }
+  let evil = qa_entry_line(
+    "000000000009-00ff",
+    "../evil",
+    "越权条目",
+    [],
+    [],
+    9,
+    9,
+  )
   // 契约:非法 user_id 的条目不得进入记忆库(逐行跳过或整体报错均可接受)
-  let imported = match
-    store.import_jsonl(@src.entry_to_json(evil).stringify()) {
+  let imported = match store.import_jsonl(evil) {
     Ok((n, _)) => n
     Err(_) => 0
   }

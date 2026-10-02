@@ -94,7 +94,7 @@ pub extend SimilarityJudge with ConflictJudge::{judge}
 ///|
 /// 关键词 Jaccard 重叠度：|token(new) ∩ keywords(cand)| / |并集|。
 /// 两侧均空时返回 0.0。
-pub fn keyword_jaccard(
+fn keyword_jaccard(
   new_content : String,
   cand_keywords : Array[String],
 ) -> Double {

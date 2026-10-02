@@ -31,9 +31,9 @@ D4 的契约是：`MemoryStore` 九个方法；`Config`、`MemoryEntry`、`AddSu
 
 ## Acceptance Criteria
 
-- [ ] `ci/` 与 `examples/` 不再引用 R1 列出的符号。
-- [ ] `moon test` 在 native 上失败数为 0。黑盒测试不再依赖 R1 的符号。
-- [ ] 宿主 README 上的九个方法签名不变。
+- [x] `ci/` 与 `examples/` 不再引用 R1 列出的符号。`conflict_eval.mbt` 的诊断 cos/jac 在评测包内计算。
+- [x] `moon test --target native`：122 passed，0 failed。黑盒测试不再依赖 R1 的符号。
+- [x] 宿主 README 上的九个方法签名未改。
 
 ## Out of scope
 

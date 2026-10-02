@@ -115,3 +115,41 @@ jobs:
 
       - name: moon run ci/eval/locomo (offline)
         run: moon run ci/eval/locomo --target native
+
+  coveralls:
+    name: Coveralls
+    needs: test
+    if: github.event_name != 'workflow_call'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup MoonBit
+        uses: ./.github/actions/setup-moonbit
+        with:
+          version: ${{ env.MOON_VERSION }}
+
+      - name: Collect src coverage
+        run: |
+          set -euo pipefail
+          moon test --enable-coverage --target native
+          summary="$(moon coverage report --ignore-missing-files -f summary -p heyq02/moomem/src | tee /dev/stderr | awk '/^Total: /{print $2}')"
+          num="${summary%/*}"
+          den="${summary#*/}"
+          echo "src coverage ${num}/${den}"
+          if (( num * 100 < den * 90 )); then
+            echo "src coverage ${num}/${den} is below 90%"
+            exit 1
+          fi
+          moon coverage report --ignore-missing-files -f coveralls -o coveralls.json -p heyq02/moomem/src
+
+      - name: Upload to Coveralls
+        uses: coverallsapp/github-action@v2
+        with:
+          file: coveralls.json
+          format: coveralls
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+        env:
+          COVERALLS_REPO_TOKEN: ${{ secrets.COVERALLS_REPO_TOKEN }}

@@ -43,13 +43,14 @@ Executable workflow truth: [`.github/workflows/test-pipeline.yml`](../../../.git
 
 | Rule | Meaning |
 |------|---------|
-| Push/PR is offline | `test-pipeline` never injects `MOONCAKES_TOKEN`; no model endpoints on the green path |
+| Push/PR test matrix is offline | `check` / `test` / smoke / eval never inject `MOONCAKES_TOKEN` or `COVERALLS_REPO_TOKEN`; no model endpoints |
 | Fail closed | Any failed check / matrix target / example smoke fails the aggregate gate |
+| Coveralls is push/PR only | `coveralls` job runs after `test`, skips `workflow_call` so release quality stays offline. `src/` points must stay ≥ 90% before upload. `COVERALLS_REPO_TOKEN` is read only there |
 | Four targets + smoke | native + wasm + wasm-gc + js after `moon check`; native-only FS stays cfg-gated; examples smoke on native |
 | Release order | `quality` (`workflow_call` → test-pipeline) → publish / tag side effects |
 | Dry-run still gates | `dry_run=true` skips registry / GitHub Release only; quality still runs |
 | Version alignment | Publish/tag path requires git semver ↔ `moon.mod` `version` match before credentials write |
-| Secret scope | `MOONCAKES_TOKEN` only on publish job; never cache credentials under `~/.moon` |
+| Secret scope | `MOONCAKES_TOKEN` only on publish job; `COVERALLS_REPO_TOKEN` only on the push/PR coveralls job; never cache credentials under `~/.moon` |
 | Permissions | Offline quality: `contents: read`; write tokens only on the release job that needs them |
 
 When changing CI behavior: edit the YAML first (or same PR), then keep this table aligned. Do not revive a second process-spec tree.

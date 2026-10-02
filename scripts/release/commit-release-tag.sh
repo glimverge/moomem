@@ -20,7 +20,8 @@ if git rev-parse "${tag}" >/dev/null 2>&1; then
   exit 1
 fi
 
-git add moon.mod
+# Stage both version carriers: moon.mod and src/lib.mbt (MOOMEM_VERSION).
+git add moon.mod src/lib.mbt
 git commit -m "chore: release ${tag} (${BUMP} from ${BASE_VERSION})"
 git tag "${tag}"
 

@@ -75,6 +75,26 @@ tmp="$(mktemp)"
 sed -E "s/^version[[:space:]]*=[[:space:]]*\"[^\"]+\"/version = \"${new_version}\"/" "${MOD_FILE}" > "${tmp}"
 mv "${tmp}" "${MOD_FILE}"
 
+# Keep MOOMEM_VERSION in src/lib.mbt in lockstep with moon.mod.
+# Two sources of truth for the package version drifted apart at least once
+# (v0.7.0 bumped moon.mod only), so the bump has to write both.
+LIB_FILE="${ROOT}/src/lib.mbt"
+if [[ -f "${LIB_FILE}" ]]; then
+  if ! grep -q 'MOOMEM_VERSION' "${LIB_FILE}"; then
+    echo "Warning: ${LIB_FILE} has no MOOMEM_VERSION constant; skipped" >&2
+  else
+    lib_tmp="$(mktemp)"
+    sed -E "s/(MOOMEM_VERSION[[:space:]]*:[[:space:]]*String[[:space:]]*=[[:space:]]*\")[^\"]+(\")/\1${new_version}\2/" "${LIB_FILE}" > "${lib_tmp}"
+    if cmp -s "${LIB_FILE}" "${lib_tmp}"; then
+      echo "Warning: MOOMEM_VERSION pattern matched nothing in ${LIB_FILE}; update it by hand" >&2
+      rm -f "${lib_tmp}"
+    else
+      mv "${lib_tmp}" "${LIB_FILE}"
+      echo "Synced MOOMEM_VERSION -> ${new_version}"
+    fi
+  fi
+fi
+
 echo "Bump ${BUMP}: ${base_version} → ${new_version}"
 
 if [[ -n "${GITHUB_OUTPUT:-}" ]]; then

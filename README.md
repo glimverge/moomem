@@ -102,7 +102,7 @@ fn main {
 | 步骤 | 测什么 | 为什么 | 怎样算过 |
 |------|--------|--------|----------|
 | 静态检查 | `moon check --target native` | 类型和编译错误要在跑用例之前拦住 | 退出码 0 |
-| 单元 / 集成 | `moon test` 在 native、wasm、wasm-gc、js 上各跑一遍。覆盖嵌入与相似度、抽取、冲突判定、编解码、崩溃恢复、存储端到端（隔离、supersede、forget、导入导出）、配置 | 库宣称四个后端都能用，核心契约不能只在 native 上成立。磁盘双槽依赖本地文件系统，相关用例只在 native 编译 | 每个后端失败数为 0，且通过数等于总数。native 用例数不得低于 72，防止静默删用例 |
+| 单元 / 集成 | `moon test` 在 native、wasm、wasm-gc、js 上各跑一遍。覆盖嵌入与相似度、抽取、冲突判定、编解码、崩溃恢复、存储端到端（隔离、supersede、forget、导入导出）、配置 | 库宣称四个后端都能用，核心契约不能只在 native 上成立。磁盘双槽依赖本地文件系统，相关用例只在 native 编译 | 每个后端失败数为 0，且通过数等于总数。native 用例数不得低于 73，防止静默删用例 |
 | 示例冒烟 | native、零网络跑三个示例：`basic-store`（写入再召回）、`conflict-supersede`（住址变更后旧事实被覆盖）、`cli-smoke`（库侧走一遍 add / recall / list） | 文档里的主路径要从入口跑通，且不依赖密钥或外网 | 三个 `moon run` 退出码都是 0 |
 | L3 离线评测 | `moon run ci/eval/locomo --target native`。在 LoCoMo 子集上检查：近重复事实是否 supersede、重启后条目 id 是否一致、跨用户检索是否泄漏。混合检索相对 BM25 的分数会打印出来。提取精度在这一档跳过 | 前三步保证实现正确；这一步保证记忆质量没有悄悄变差。离线没有真实嵌入，整段原文入库，提取 Precision 没有意义 | 打印 `LOCOMO_PASS`。硬门槛：跨用户泄漏 0、重启一致、近重复 supersede ≥ 80% |
 

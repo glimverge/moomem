@@ -1,17 +1,15 @@
-// 端到端黑盒测试：MemoryStore 六方法全链路（T04/T05 验收）。
-// 覆盖：AC-01 持久化重启一致 / AC-02 跨用户零渗透 / AC-04 冲突 supersede /
-//       AC-05 LLM 不可用降级 / 崩溃恢复 / user_id 非法拒绝 / 导入导出等价。
+// 端到端黑盒测试：MemoryStore 的写入、召回、遗忘、统计、关闭、导入导出。
 
 // ---------------------------------------------------------------------------
-// 测试用 mock 注入（注入 mock 而非 mock 框架，架构文档 7.8）
+// 本文件专用 mock。前缀 Store，与同包其它测试符号分开。
 // ---------------------------------------------------------------------------
 
 ///|
-/// 恒 Replace 裁决（AC-04：注入确定性 judge 验收状态机）
-struct AlwaysReplaceJudge {}
+/// 恒 Replace 裁决，用来固定冲突状态机。
+struct StoreAlwaysReplaceJudge {}
 
 ///|
-impl ConflictJudge for AlwaysReplaceJudge with fn judge(_, _, candidates) {
+impl ConflictJudge for StoreAlwaysReplaceJudge with fn judge(_, _, candidates) {
   Ok(
     candidates.map(c => @src.ConflictVerdict::{
       existing: c,
@@ -21,36 +19,35 @@ impl ConflictJudge for AlwaysReplaceJudge with fn judge(_, _, candidates) {
 }
 
 ///|
-/// 恒失败提取器（AC-05：LLM 不可用降级）
-struct FailingExtractor {}
+/// 恒失败提取器，用来走提取失败降级。
+struct StoreFailingExtractor {}
 
 ///|
-impl Extractor for FailingExtractor with fn extract(_, _, _) {
+impl Extractor for StoreFailingExtractor with fn extract(_, _, _) {
   Err(@src.MoomemError::ExtractionFailure("llm service unavailable (mock)"))
 }
 
 ///|
-impl Extractor for FailingExtractor with fn mode(_) {
+impl Extractor for StoreFailingExtractor with fn mode(_) {
   "llm"
 }
 
 ///|
-/// 主题 mock 嵌入器（AC-04：模拟语义嵌入把"住址"类陈述映射到相近向量，
-/// 使冲突候选检索能命中语义相关但字面不同的旧事实）
-struct ResidenceTopicEmbedder {}
+/// 把含「住 / 搬到」的句子映射到同一方向，用来召回字面不同的旧事实。
+struct StoreResidenceEmbedder {}
 
 ///|
-impl Embedder for ResidenceTopicEmbedder with fn embed(_self, texts) {
-  Ok(texts.map(t => residence_topic_vec(t)))
+impl Embedder for StoreResidenceEmbedder with fn embed(_self, texts) {
+  Ok(texts.map(t => store_residence_vector(t)))
 }
 
 ///|
-impl Embedder for ResidenceTopicEmbedder with fn dim(_self) {
+impl Embedder for StoreResidenceEmbedder with fn dim(_self) {
   @src.DEFAULT_DIM
 }
 
 ///|
-fn residence_topic_vec(text : String) -> Array[Double] {
+fn store_residence_vector(text : String) -> Array[Double] {
   let v = Array::make(@src.DEFAULT_DIM, 0.0)
   if text.contains("住") || text.contains("搬到") {
     v[0] = 1.0
@@ -62,7 +59,7 @@ fn residence_topic_vec(text : String) -> Array[Double] {
 
 ///|
 /// 用 MemoryBackend 构造 store 的辅助（缺省确定性注入点；None 走缺省实现）
-fn open_memory_store(
+fn store_open(
   backend : &@src.PersistenceBackend,
   judge : &@src.ConflictJudge?,
   extractor : &@src.Extractor?,
@@ -81,18 +78,18 @@ fn open_memory_store(
 }
 
 ///|
-fn ids_of(entries : Array[@src.MemoryEntry]) -> Array[String] {
+fn store_entry_ids(entries : Array[@src.MemoryEntry]) -> Array[String] {
   entries.map(e => e.id)
 }
 
 // ---------------------------------------------------------------------------
-// AC-01 持久化：重启后 recall 结果集一致
+// 持久化：重启后 recall 结果集一致
 // ---------------------------------------------------------------------------
 
 ///|
-test "AC-01: restart consistency via MemoryBackend" {
+test "restart: recall set matches after reopen" {
   let backend = @src.MemoryBackend::new()
-  let store1 = match open_memory_store(backend, None, None, None, None) {
+  let store1 = match store_open(backend, None, None, None, None) {
     Ok(s) => s
     Err(e) => {
       inspect(e.message(), content="SHOULD NOT REACH")
@@ -111,10 +108,10 @@ test "AC-01: restart consistency via MemoryBackend" {
   }
   // 命中条目排第一（top_k 补齐可能带上该 user 的其他条目，属预期行为）
   inspect(before[0].content, content="我对花生过敏")
-  let before_ids = ids_of(before)
+  let before_ids = store_entry_ids(before)
   ignore(store1.close())
   // "进程重启"：同一后端重新 open
-  let store2 = match open_memory_store(backend, None, None, None, None) {
+  let store2 = match store_open(backend, None, None, None, None) {
     Ok(s) => s
     Err(e) => {
       inspect(e.message(), content="SHOULD NOT REACH")
@@ -129,7 +126,7 @@ test "AC-01: restart consistency via MemoryBackend" {
     }
   }
   inspect(after.length(), content="\{before_ids.length()}") // 结果集与终止前一致
-  inspect(ids_of(after) == before_ids, content="true")
+  inspect(store_entry_ids(after) == before_ids, content="true")
   inspect(after[0].content, content="我对花生过敏")
   inspect(after[0].created_at, content="\{before[0].created_at}")
   // seq 恢复续接：新条目 id 不与旧 id 冲突，seq 单调
@@ -153,13 +150,13 @@ test "AC-01: restart consistency via MemoryBackend" {
 }
 
 // ---------------------------------------------------------------------------
-// AC-02 隔离：跨用户检索零渗透
+// 隔离：跨用户检索零渗透
 // ---------------------------------------------------------------------------
 
 ///|
-test "AC-02: zero cross-user leakage" {
+test "isolation: zero cross-user leakage" {
   let backend = @src.MemoryBackend::new()
-  let store = match open_memory_store(backend, None, None, None, None) {
+  let store = match store_open(backend, None, None, None, None) {
     Ok(s) => s
     Err(e) => {
       inspect(e.message(), content="SHOULD NOT REACH")
@@ -191,7 +188,7 @@ test "AC-02: zero cross-user leakage" {
     }
     // 结构性断言:召回 id 全部来自 user-A 分片
     let user_a_ids = match store.list_entries("user-A") {
-      Ok(es) => ids_of(es)
+      Ok(es) => store_entry_ids(es)
       Err(_) => {
         inspect("list failed", content="SHOULD NOT REACH")
         return
@@ -249,19 +246,19 @@ test "AC-02: zero cross-user leakage" {
 }
 
 // ---------------------------------------------------------------------------
-// AC-04 冲突：新事实覆盖旧事实（supersede）
+// 冲突：新事实覆盖旧事实
 // ---------------------------------------------------------------------------
 
 ///|
-test "AC-04: supersede old fact on conflict (injected deterministic judge)" {
+test "conflict: supersede old fact (injected deterministic judge)" {
   let backend = @src.MemoryBackend::new()
-  let judge : &@src.ConflictJudge = AlwaysReplaceJudge::{ }
+  let judge : &@src.ConflictJudge = StoreAlwaysReplaceJudge::{ }
   // 注入"语义"mock 嵌入器：使"住址"类陈述在候选检索中互相可见
-  //（缺省 HashingEmbedder 下"北京/深圳"字面零重叠，语义冲突需 LLM 嵌入方可命中，
-  //  此处用确定性 mock 等价模拟，验收状态机本身）
-  let embedder : &@src.Embedder = ResidenceTopicEmbedder::{ }
+  // 缺省 HashingEmbedder 下「北京 / 深圳」字面零重叠，召不回对方。
+  // 这里用确定性向量只固定状态机。
+  let embedder : &@src.Embedder = StoreResidenceEmbedder::{ }
   let store = match
-    open_memory_store(backend, Some(judge), None, None, Some(embedder)) {
+    store_open(backend, Some(judge), None, None, Some(embedder)) {
     Ok(s) => s
     Err(e) => {
       inspect(e.message(), content="SHOULD NOT REACH")
@@ -344,15 +341,15 @@ test "AC-04: supersede old fact on conflict (injected deterministic judge)" {
 }
 
 // ---------------------------------------------------------------------------
-// AC-05 降级：LLM 不可用时 unstructured 入库且 recall 正常
+// 降级：提取失败时 unstructured 入库，且仍可 recall
 // ---------------------------------------------------------------------------
 
 ///|
-test "AC-05: degraded mode with failing extractor" {
+test "degrade: failing extractor stores unstructured and stays recallable" {
   let backend = @src.MemoryBackend::new()
-  let extractor : &@src.Extractor = FailingExtractor::{ }
+  let extractor : &@src.Extractor = StoreFailingExtractor::{ }
   let store = match
-    open_memory_store(backend, None, Some(extractor), None, None) {
+    store_open(backend, None, Some(extractor), None, None) {
     Ok(s) => s
     Err(e) => {
       inspect(e.message(), content="SHOULD NOT REACH")
@@ -389,7 +386,7 @@ test "AC-05: degraded mode with failing extractor" {
   inspect(recalled.length() >= 1, content="true")
   inspect(recalled[0].content, content="我对花生过敏")
   inspect(recalled[0].kind == Unstructured, content="true")
-  // 降级标记写入 metadata（12.3 可解释）
+  // 降级标记写入 metadata
   let degraded_tag = match recalled[0].metadata.get("extraction_degraded") {
     Some(Json::String(s)) => s
     _ => "MISSING"
@@ -408,7 +405,7 @@ test "AC-05: degraded mode with failing extractor" {
     listed[0].metadata.get("extraction_degraded") == Some(Json::string("true")),
     content="true",
   )
-  // 连续第 3 次失败：返回错误（PRD 第 9 章）
+  // 连续第 3 次失败：返回错误
   let third = match store.add("user-42", "第三条记忆") {
     Ok(_) => "OK"
     Err(ExtractionFailure(_)) => "EXTRACTION_FAILURE"
@@ -435,7 +432,7 @@ test "AC-05: degraded mode with failing extractor" {
 ///|
 test "add: chitchat (blank) extracts zero and stores nothing" {
   let backend = @src.MemoryBackend::new()
-  let store = match open_memory_store(backend, None, None, None, None) {
+  let store = match store_open(backend, None, None, None, None) {
     Ok(s) => s
     Err(_) => {
       inspect("open failed", content="SHOULD NOT REACH")
@@ -465,7 +462,7 @@ test "add: chitchat (blank) extracts zero and stores nothing" {
 ///|
 test "add: exact duplicate not stored twice" {
   let backend = @src.MemoryBackend::new()
-  let store = match open_memory_store(backend, None, None, None, None) {
+  let store = match store_open(backend, None, None, None, None) {
     Ok(s) => s
     Err(_) => {
       inspect("open failed", content="SHOULD NOT REACH")
@@ -497,7 +494,7 @@ test "add: exact duplicate not stored twice" {
 ///|
 test "forget: soft delete removes from recall, keeps in snapshot" {
   let backend = @src.MemoryBackend::new()
-  let store = match open_memory_store(backend, None, None, None, None) {
+  let store = match store_open(backend, None, None, None, None) {
     Ok(s) => s
     Err(_) => {
       inspect("open failed", content="SHOULD NOT REACH")
@@ -601,7 +598,7 @@ test "forget: soft delete removes from recall, keeps in snapshot" {
 ///|
 test "recall: no result returns empty list, top_k respected" {
   let backend = @src.MemoryBackend::new()
-  let store = match open_memory_store(backend, None, None, None, None) {
+  let store = match store_open(backend, None, None, None, None) {
     Ok(s) => s
     Err(_) => {
       inspect("open failed", content="SHOULD NOT REACH")
@@ -634,7 +631,7 @@ test "recall: no result returns empty list, top_k respected" {
 test "clock: FixedClock makes created_at exactly assertable" {
   let backend = @src.MemoryBackend::new()
   let clock : &@src.Clock = @src.FixedClock::new(12345L)
-  let store = match open_memory_store(backend, None, None, Some(clock), None) {
+  let store = match store_open(backend, None, None, Some(clock), None) {
     Ok(s) => s
     Err(_) => {
       inspect("open failed", content="SHOULD NOT REACH")
@@ -656,7 +653,7 @@ test "clock: FixedClock makes created_at exactly assertable" {
 ///|
 test "closed store rejects all operations" {
   let backend = @src.MemoryBackend::new()
-  let store = match open_memory_store(backend, None, None, None, None) {
+  let store = match store_open(backend, None, None, None, None) {
     Ok(s) => s
     Err(_) => {
       inspect("open failed", content="SHOULD NOT REACH")
@@ -684,13 +681,13 @@ test "closed store rejects all operations" {
 }
 
 // ---------------------------------------------------------------------------
-// FR-08 导入导出等价
+// 导入导出等价
 // ---------------------------------------------------------------------------
 
 ///|
 test "export / import equivalence" {
   let backend_a = @src.MemoryBackend::new()
-  let store_a = match open_memory_store(backend_a, None, None, None, None) {
+  let store_a = match store_open(backend_a, None, None, None, None) {
     Ok(s) => s
     Err(_) => {
       inspect("open failed", content="SHOULD NOT REACH")
@@ -732,7 +729,7 @@ test "export / import equivalence" {
   inspect(line_count, content="4")
   // 导入到全新库
   let backend_b = @src.MemoryBackend::new()
-  let store_b = match open_memory_store(backend_b, None, None, None, None) {
+  let store_b = match store_open(backend_b, None, None, None, None) {
     Ok(s) => s
     Err(_) => {
       inspect("open failed", content="SHOULD NOT REACH")
@@ -795,7 +792,7 @@ test "export / import equivalence" {
 ///|
 test "stats: counts match reality including bytes and last write" {
   let backend = @src.MemoryBackend::new()
-  let store = match open_memory_store(backend, None, None, None, None) {
+  let store = match store_open(backend, None, None, None, None) {
     Ok(s) => s
     Err(_) => {
       inspect("open failed", content="SHOULD NOT REACH")

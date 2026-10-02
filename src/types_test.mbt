@@ -1,4 +1,4 @@
-// 黑盒测试：核心类型 / user_id 校验 / JSON 编解码往返（T01 验收）。
+// 黑盒测试：user_id 校验。
 
 ///|
 test "user_id: legal ids accepted" {

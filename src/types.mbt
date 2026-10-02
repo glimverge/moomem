@@ -1,11 +1,11 @@
 // moomem 核心类型：条目 / 状态 / 配置 / 统计 / 摘要。
-// 共享约定（架构文档第 7 章）在此落地：
+// 共享约定：
 //   - user_id 契约校验唯一实现 validate_user_id
 //   - id = "{seq 12位hex}-{rand 4 hex}"，seq 持久化恢复续接
 //   - created_at 为注入 Clock 的逻辑毫秒
 
 ///|
-/// 条目生命周期状态（状态机见架构文档 3.3 节）。
+/// 条目生命周期状态。
 /// Active / Unstructured 参与检索；Superseded / Deleted 保留于快照可审计但不可检索。
 pub(all) enum EntryStatus {
   Active
@@ -75,7 +75,7 @@ pub(all) struct MemoryEntry {
   mut superseded_by : String?
   /// 逻辑序号，持久化恢复计数器，永不复用
   seq : Int
-  /// AI 痕迹元数据（extractor / degraded / conflict_decision 等，满足可解释验收）
+  /// 痕迹元数据（extractor / degraded / conflict_decision 等）
   metadata : Map[String, Json]
 }
 
@@ -127,7 +127,7 @@ pub impl Show for ForgetTarget with fn output(self, logger) {
 pub extend ForgetTarget with Show::{to_string, output}
 
 ///|
-/// add 的返回摘要：让开发者看见"AI 理解了什么"（PRD 12.3）。
+/// add 的返回摘要：提取条数、入库条数、重复、覆盖与降级。
 pub struct AddSummary {
   /// 提取器产出的事实条数
   extracted : Int
@@ -155,7 +155,7 @@ pub impl Show for AddSummary with fn output(self, logger) {
 pub extend AddSummary with Show::{to_string, output}
 
 ///|
-/// stats 的返回结构（PRD FR-10）。
+/// stats 的返回结构。
 pub struct StoreStats {
   total : Int
   active : Int
@@ -167,9 +167,9 @@ pub struct StoreStats {
   bytes_on_disk : Int64
   /// 最近一次成功落盘的逻辑时钟；从未写盘为 None
   last_write_at : Int64?
-  /// 启动恢复时截断的尾部半行数（PRD 第 15 章）
+  /// 启动恢复时截断的尾部半行数
   truncated_recovered : Int
-  /// 当前提取器模式（"raw" | "llm"），AI 可解释验收
+  /// 当前提取器模式（"raw" | "llm"）
   extractor_mode : String
 }
 
@@ -319,7 +319,7 @@ pub const CONFLICT_CANDIDATES : Int = 8
 pub const COEXIST_BAND : Double = 0.15
 
 ///|
-/// 提取器连续失败降级上限（PRD 第 9 章）
+/// 提取器连续失败降级上限
 pub const MAX_EXTRACTION_FAILURES : Int = 3
 
 ///|
@@ -339,7 +339,7 @@ pub const DEFAULT_VECTOR_WEIGHT_LEXICAL : Double = 0.05
 pub const DEFAULT_VECTOR_WEIGHT_SEMANTIC : Double = 0.45
 
 // ---------------------------------------------------------------------------
-// user_id 契约（架构文档 7.4：唯一实现，所有入口调用）
+// user_id 契约：唯一实现，所有入口调用
 // ---------------------------------------------------------------------------
 
 ///|

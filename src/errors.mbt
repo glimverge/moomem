@@ -11,7 +11,7 @@ pub(all) suberror MoomemError {
   StoreCorrupted(String)
   /// fs 层错误包装
   IoFailure(String)
-  /// 提取器连续失败达到上限（PRD 第 9 章）
+  /// 提取器连续失败达到上限
   ExtractionFailure(String)
   /// 嵌入服务失败
   EmbeddingFailure(String)

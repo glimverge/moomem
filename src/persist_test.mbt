@@ -1,5 +1,5 @@
-// 黑盒测试：持久化层（双槽快照 / 崩溃恢复 / 后端抽象）（T04 验收）。
-// 崩溃注入优先用 MemoryBackend 构造（架构文档 7.8）；
+// 黑盒测试：双槽快照、崩溃恢复、后端抽象。
+// 崩溃注入优先用 MemoryBackend；
 // native 下的 FsBackend 走真实磁盘，用 #cfg(target="native") 隔离
 //（wasm/js 缺省后端为 MemoryBackend，无本地文件系统）。
 
@@ -55,7 +55,7 @@ test "FsBackend via store: write, reopen, consistent" {
     }
   }
   cleanup()
-  // 第一次打开：空库初始化（目录不存在则创建，FR-01）
+  // 第一次打开：目录不存在则创建
   let store1 = match @src.MemoryStore::open(dir) {
     Ok(s) => s
     Err(e) => {
@@ -81,7 +81,7 @@ test "FsBackend via store: write, reopen, consistent" {
   inspect(close_ok, content="true")
   // 快照文件与 head 已落盘
   inspect(@fs.path_exists("\{dir}/moomem/head"), content="true")
-  // 重新打开同一目录：记忆完整恢复（FR-01 重启后数据完整）
+  // 重新打开同一目录：记忆完整恢复
   let store2 = match @src.MemoryStore::open(dir) {
     Ok(s) => s
     Err(e) => {
@@ -227,7 +227,7 @@ test "FsBackend: snapshot tail corruption recovered on reopen" {
     slot_file,
     content[:content.length() - 12].to_owned(),
   )
-  // 重新打开：尾部半行丢弃并计数（PRD 第 15 章）
+  // 重新打开：尾部半行丢弃并计数
   let store2 = match @src.MemoryStore::open(dir) {
     Ok(s) => s
     Err(e) => {

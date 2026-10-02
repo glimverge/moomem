@@ -1,4 +1,4 @@
-// 注入点三：ConflictJudge（PRD 13.2 冲突判定契约）。
+// 注入点：ConflictJudge。宿主实现冲突判定；缺省是 SimilarityJudge。
 // 缺省实现 SimilarityJudge：嵌入余弦 + 关键词 Jaccard 的确定性规则判定。
 // 宿主可注入自己的 judge（Replace / Coexist / Ignore，判定依据写入 metadata）。
 

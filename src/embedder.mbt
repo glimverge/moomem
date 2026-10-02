@@ -1,4 +1,4 @@
-// 注入点一：Embedder（PRD v1.1 决议 Q1：一等注入 trait）。
+// 注入点：Embedder。宿主实现向量化；缺省是 HashingEmbedder。
 // 缺省实现 HashingEmbedder：确定性词袋哈希嵌入，无网络、O(n)。
 // Clock 注入点见 clock.mbt。
 

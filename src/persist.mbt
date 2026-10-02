@@ -1,10 +1,10 @@
 // 持久化层：PersistenceBackend trait + FsBackend（native，双槽快照 + head 指针）
 // + MemoryBackend（测试 / wasm-js 缺省）。
 //
-// 共享约定：本文件是全库唯一允许出现 moonbitlang/x/fs 调用的地方（RK-03 隔离策略）。
+// 本文件是全库唯一允许出现 moonbitlang/x/fs 调用的地方。
 // 后端差异（native→FsBackend，wasm/js→MemoryBackend）也只在此文件（#cfg）。
 //
-// 双槽快照方案（架构文档 1.4，对 PRD"追加写 JSONL"的有意偏差）：
+// 双槽快照：整份快照覆盖写入非当前槽，成功后再拨 head。
 //   <path>/moomem/slot0.jsonl   快照槽 A
 //   <path>/moomem/slot1.jsonl   快照槽 B
 //   <path>/moomem/head          内容 "0" 或 "1"，指向当前有效槽
@@ -190,7 +190,7 @@ fn snapshot_gen_of(content : String) -> Int? {
 ///|
 pub impl PersistenceBackend for FsBackend with fn load(self) {
   try {
-    // 确保目录结构存在（FR-01：目录不存在则创建）
+    // 目录不存在则创建
     mkdir_p(self.base_dir)
     mkdir_p(self.moomem_dir())
     let head_content : String? = if @fs.path_exists(self.head_path()) {
@@ -371,7 +371,7 @@ fn mkdir_p(path : String) -> Unit raise @fs.IOError {
 }
 
 // ---------------------------------------------------------------------------
-// 缺省后端选择（架构文档 1.5：native→FsBackend；wasm/js→MemoryBackend）
+// 缺省后端：native 用 FsBackend，wasm/js 用 MemoryBackend
 // ---------------------------------------------------------------------------
 
 ///|

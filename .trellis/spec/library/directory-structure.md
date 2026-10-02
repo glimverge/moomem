@@ -39,9 +39,12 @@ Core library layers:
 
 Black-box tests sit beside sources as `*_test.mbt`; white-box as `*_wbtest.mbt` (**T1**：包旁测试不外迁):
 
-- `types_test.mbt` — codec, `validate_user_id`
-- `extractor_test.mbt` — injection / raw mode (black-box)
-- `embedder_wbtest.mbt` — HashingEmbedder / cosine
+- `types_test.mbt` — `validate_user_id`
+- `errors_test.mbt` — `MoomemError` message / kind
+- `extractor_test.mbt` — RawExtractor
+- `embedder_test.mbt` — HashingEmbedder public behavior
+- `clock_test.mbt` — LogicalClock / FixedClock
+- `embedder_wbtest.mbt` — cosine
 - `conflict_wbtest.mbt` — SimilarityJudge / Jaccard
 - `index_vector_wbtest.mbt` — VectorIndex
 - `index_keyword_wbtest.mbt` — tokenize / KeywordIndex
@@ -50,7 +53,7 @@ Black-box tests sit beside sources as `*_test.mbt`; white-box as `*_wbtest.mbt` 
 - `json_codec_wbtest.mbt` — snapshot codec
 - crash-injection tests live in `persist.mbt` (the injectors are package-private)
 - `persist_test.mbt` — dual-slot, head corruption, `MemoryBackend` crash inject
-- `store_test.mbt` — AC-01..05 end-to-end
+- `store_test.mbt` — restart, isolation, supersede, degrade, import/export
 - `adversarial_test.mbt`, `config_test.mbt` — edge / config validation
 
 Eval / tools are **not** package-side tests — see decision table below.

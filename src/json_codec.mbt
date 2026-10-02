@@ -326,7 +326,7 @@ priv struct SnapshotParseResult {
 
 ///|
 /// 解析快照文本。
-/// 规则（架构文档 1.4 / PRD 第 15 章）：
+/// 规则：
 ///   - 首行必须是合法 header 且版本匹配，否则 StoreCorrupted；
 ///   - 尾部不完整行（半行损坏）丢弃并计入 truncated_recovered；
 ///   - 中部损坏行不属于尾部截断，报 StoreCorrupted。

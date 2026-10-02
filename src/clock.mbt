@@ -1,4 +1,4 @@
-// Clock 注入点（架构文档 1.2 C4：core 无 time 模块）。
+// Clock 注入点。核心库不读系统时间。
 // 与 Embedder 分文件，保持模块边界与文件 locality 一致。
 
 ///|

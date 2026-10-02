@@ -1,7 +1,7 @@
 // MemoryStore::add。仍是同一个聚合根上的方法。
 
 // ---------------------------------------------------------------------------
-// add（架构文档 4.1 全链路）— 编排薄壳 + 私有阶段助手
+// add：编排薄壳，阶段助手仍挂在同一个聚合根上
 // ---------------------------------------------------------------------------
 
 ///|
@@ -319,7 +319,7 @@ pub fn MemoryStore::add(
   let extraction_failed = outcome.extraction_failed
   let mut degraded = outcome.degraded
   if facts.length() == 0 {
-    // 提取成功但无事实（纯闲聊）同样属于成功，须清零连续失败计数（W4-0）
+    // 提取成功但无事实（纯闲聊）同样属于成功，须清零连续失败计数
     self.extraction_failures = 0
     return Ok(AddSummary::{
       extracted: 0,

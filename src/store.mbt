@@ -3,11 +3,11 @@
 // add 在 store_add.mbt，recall 在 store_recall.mbt，
 // forget / export / import / list 在 store_records.mbt。
 //
-// 状态机（架构文档 3.3）：
+// 状态机：
 //   (空)→Active          add 提取/直通成功
 //   Active→Superseded    judge 判定 Replace（置 superseded_by，双索引摘除）
 //   Active→Deleted       forget（软删除，快照保留可审计）
-//   其余迁移 v0.1 不开放（恢复 API 为 v0.2 候选）
+//   其余迁移不开放
 // 不变量：recall 只返回 Active / Unstructured；Superseded/Deleted 物理保留。
 
 ///|
@@ -53,7 +53,7 @@ pub struct MemoryStore {
   mut gen : Int
   /// 启动恢复时截断的尾部半行数
   truncated_recovered : Int
-  /// 提取器连续失败计数（PRD 第 9 章：连续 3 次返回错误）
+  /// 提取器连续失败计数（连续 3 次返回错误）
   mut extraction_failures : Int
   /// 最近一次成功落盘的逻辑时钟
   mut last_write_at : Int64
@@ -64,12 +64,12 @@ pub struct MemoryStore {
 }
 
 // ---------------------------------------------------------------------------
-// open / 恢复（架构文档 4.3）
+// open / 恢复
 // ---------------------------------------------------------------------------
 
 ///|
 /// 打开或创建记忆库。
-/// 目录不存在则创建；存在则加载快照并重建索引与计数器（FR-01）。
+/// 目录不存在则创建；存在则加载快照并重建索引与计数器。
 pub fn MemoryStore::open(
   path : String,
   config? : Config,
@@ -241,7 +241,7 @@ pub fn MemoryStore::open(
 
 ///|
 /// 重放恢复的条目：重建 entries/by_user/双索引/去重表/计数器。
-/// Active / Unstructured 入索引；Superseded / Deleted 不入（架构文档 4.3）。
+/// Active / Unstructured 入索引；Superseded / Deleted 不入。
 fn MemoryStore::restore_entries(
   self : MemoryStore,
   restored : Array[MemoryEntry],
@@ -290,7 +290,7 @@ fn MemoryStore::deindex_entry(self : MemoryStore, e : MemoryEntry) -> Unit {
 }
 
 // ---------------------------------------------------------------------------
-// stats（FR-10）
+// stats
 // ---------------------------------------------------------------------------
 
 ///|
@@ -334,7 +334,7 @@ pub fn MemoryStore::stats(
 }
 
 // ---------------------------------------------------------------------------
-// close（FR-01 / 单写者模型）
+// close（单写者）
 // ---------------------------------------------------------------------------
 
 ///|

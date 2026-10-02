@@ -1,13 +1,12 @@
-// QA 对抗性测试(Edward,黑盒补充):边缘场景 / 边界值 / 状态机不变量。
-// 独立于实现者自测编写;断言依据 PRD v1.0(8/9/15/17 章)与架构文档(7 章共享约定)。
-// 不改断言迁就实现:预期与实现冲突时按"源码 bug"路由。
+// 黑盒补充：边缘场景、边界值、状态机不变量。
+// 断言写的是契约。和实现冲突时，先当实现有问题。
 
 // ---------------------------------------------------------------------------
 // 测试辅助(前缀 adversarial_，与同包其它测试符号分开)
 // ---------------------------------------------------------------------------
 
 ///|
-/// 恒 Replace 裁决(独立于 store_test 的 AlwaysReplaceJudge 定义)
+/// 恒 Replace 裁决。与 store_test 里的 StoreAlwaysReplaceJudge 分开定义。
 struct AdversarialAlwaysReplaceJudge {}
 
 ///|
@@ -144,7 +143,7 @@ fn adversarial_entry_line(
 // ---------------------------------------------------------------------------
 
 ///|
-test "QA: empty store recall returns empty; unknown user returns empty" {
+test "empty store recall returns empty; unknown user returns empty" {
   let backend = @src.MemoryBackend::new()
   let store = match adversarial_open_default(backend) {
     Ok(s) => s
@@ -194,7 +193,7 @@ test "QA: empty store recall returns empty; unknown user returns empty" {
 // ---------------------------------------------------------------------------
 
 ///|
-test "QA: top_k boundaries (0 / negative / 3 / default / 51)" {
+test "top_k boundaries (0 / negative / 3 / default / 51)" {
   let backend = @src.MemoryBackend::new()
   let store = match adversarial_open_default(backend) {
     Ok(s) => s
@@ -264,7 +263,7 @@ test "QA: top_k boundaries (0 / negative / 3 / default / 51)" {
 // ---------------------------------------------------------------------------
 
 ///|
-test "QA: 55+ entries BM25/vector correctness, top_k cap 50, isolation at scale" {
+test "55+ entries BM25/vector correctness, top_k cap 50, isolation at scale" {
   let backend = @src.MemoryBackend::new()
   // 注入唯一维度嵌入器,保证 55 条互不相似(全部保持 active)
   let embedder : &@src.Embedder = AdversarialUniqueEmbedder::{ }
@@ -358,7 +357,7 @@ test "QA: 55+ entries BM25/vector correctness, top_k cap 50, isolation at scale"
 // ---------------------------------------------------------------------------
 
 ///|
-test "QA: supersede chain A->B->C; restore keeps superseded invisible" {
+test "supersede chain A->B->C; restore keeps superseded invisible" {
   let backend = @src.MemoryBackend::new()
   let embedder : &@src.Embedder = AdversarialOneHotEmbedder::{ }
   let judge : &@src.ConflictJudge = AdversarialAlwaysReplaceJudge::{ }
@@ -518,7 +517,7 @@ test "QA: supersede chain A->B->C; restore keeps superseded invisible" {
 // ---------------------------------------------------------------------------
 
 ///|
-test "QA: forget unregisters dedup fingerprint; re-add works" {
+test "forget unregisters dedup fingerprint; re-add works" {
   let backend = @src.MemoryBackend::new()
   let store = match adversarial_open_default(backend) {
     Ok(s) => s
@@ -583,11 +582,11 @@ test "QA: forget unregisters dedup fingerprint; re-add works" {
 }
 
 // ---------------------------------------------------------------------------
-// 超长条目(PRD 15 章):内容完整性
+// 超长条目：内容完整保留
 // ---------------------------------------------------------------------------
 
 ///|
-test "QA: very long entry stored intact, survives restart" {
+test "very long entry stored intact, survives restart" {
   let backend = @src.MemoryBackend::new()
   let store = match adversarial_open_default(backend) {
     Ok(s) => s
@@ -610,7 +609,7 @@ test "QA: very long entry stored intact, survives restart" {
     }
   }
   inspect(summary.inserted, content="1")
-  // 内容不丢字、不改写(PRD 9 章"不改写事实本身")
+  // 内容不丢字、不改写
   let recalled = match store.recall("qa-long", "长文本锚点", top_k=1) {
     Ok(r) => r
     Err(_) => {
@@ -620,7 +619,7 @@ test "QA: very long entry stored intact, survives restart" {
   }
   inspect(recalled.length(), content="1")
   inspect(recalled[0].content == long_text, content="true")
-  // 当前实现不做"截断+标记 truncated"(PRD 15 章边缘场景);此处记录实际行为:
+  // 缺省路径不截断，也不写 truncated 标记。此处记录实际行为：
   // 缺省 HashingEmbedder 无长度上限,故该场景不会触发,亦无 truncated 元数据
   inspect(recalled[0].metadata.get("truncated") == None, content="true")
   let st = match store.stats() {
@@ -657,7 +656,7 @@ test "QA: very long entry stored intact, survives restart" {
 // ---------------------------------------------------------------------------
 
 ///|
-test "QA: duplicate detection is normalization-based and per-user" {
+test "duplicate detection is normalization-based and per-user" {
   let backend = @src.MemoryBackend::new()
   let store = match adversarial_open_default(backend) {
     Ok(s) => s
@@ -710,7 +709,7 @@ test "QA: duplicate detection is normalization-based and per-user" {
 // ---------------------------------------------------------------------------
 
 ///|
-test "QA: zero-hit query returns empty even when user has entries" {
+test "zero-hit query returns empty even when user has entries" {
   let backend = @src.MemoryBackend::new()
   let store = match adversarial_open_default(backend) {
     Ok(s) => s
@@ -743,7 +742,7 @@ test "QA: zero-hit query returns empty even when user has entries" {
 // ---------------------------------------------------------------------------
 
 ///|
-test "QA: config validation rejects illegal values" {
+test "config validation rejects illegal values" {
   let backend : &@src.PersistenceBackend = @src.MemoryBackend::new()
   let mk_cfg = (dim : Int, rrf_k : Int, rc : Int, thr : Double) => {
     let cfg : @src.Config = @src.Config::{
@@ -781,7 +780,7 @@ test "QA: config validation rejects illegal values" {
 // ---------------------------------------------------------------------------
 
 ///|
-test "QA: LogicalClock strictly monotonic across reopen; FixedClock constant" {
+test "LogicalClock strictly monotonic across reopen; FixedClock constant" {
   let backend = @src.MemoryBackend::new()
   let store = match adversarial_open_default(backend) {
     Ok(s) => s
@@ -874,7 +873,7 @@ test "QA: LogicalClock strictly monotonic across reopen; FixedClock constant" {
 // ---------------------------------------------------------------------------
 
 ///|
-test "QA: user_id boundaries through store entrance" {
+test "user_id boundaries through store entrance" {
   let backend = @src.MemoryBackend::new()
   let store = match adversarial_open_default(backend) {
     Ok(s) => s
@@ -926,8 +925,7 @@ test "QA: user_id boundaries through store entrance" {
     }
     inspect(rejected, content="true")
   }
-  // 连串点与点中缀:字符集 [A-Za-z0-9_-.] 允许,仅精确 "."/".." 被禁
-  // (架构文档 7.4 契约原文:"不为 '.' / '..'";本用例固化该契约)
+  // 字符集允许点。只有精确 "." / ".." 被拒绝，更长的点串可以。
   let ok3dots = match store.add("...", "三连点用户") {
     Ok(s) => s.inserted == 1
     Err(_) => false
@@ -946,7 +944,7 @@ test "QA: user_id boundaries through store entrance" {
 // ---------------------------------------------------------------------------
 
 ///|
-test "QA: import tolerates corrupted lines; dim-mismatched entry keyword-recallable" {
+test "import tolerates corrupted lines; dim-mismatched entry keyword-recallable" {
   let backend = @src.MemoryBackend::new()
   let store = match adversarial_open_default(backend) {
     Ok(s) => s
@@ -1070,11 +1068,11 @@ test "QA: import tolerates corrupted lines; dim-mismatched entry keyword-recalla
 }
 
 // ---------------------------------------------------------------------------
-// 导入必须拒绝非法 user_id(PRD 15 章:"user_id 含路径穿越字符 → 拒绝")
+// 导入必须拒绝非法 user_id，含路径穿越字符的条目不得入库
 // ---------------------------------------------------------------------------
 
 ///|
-test "QA: import must not silently accept entries with illegal user_id" {
+test "import must not silently accept entries with illegal user_id" {
   let backend = @src.MemoryBackend::new()
   let store = match adversarial_open_default(backend) {
     Ok(s) => s
@@ -1114,7 +1112,7 @@ test "QA: import must not silently accept entries with illegal user_id" {
 // ---------------------------------------------------------------------------
 
 ///|
-test "QA: export/import overlapping content skipped via dedup" {
+test "export/import overlapping content skipped via dedup" {
   let backend_a = @src.MemoryBackend::new()
   let store_a = match adversarial_open_default(backend_a) {
     Ok(s) => s
@@ -1167,7 +1165,7 @@ test "QA: export/import overlapping content skipped via dedup" {
 // ---------------------------------------------------------------------------
 
 ///|
-test "QA: empty export and empty import are no-ops" {
+test "empty export and empty import are no-ops" {
   let backend = @src.MemoryBackend::new()
   let store = match adversarial_open_default(backend) {
     Ok(s) => s
@@ -1209,7 +1207,7 @@ test "QA: empty export and empty import are no-ops" {
 // ---------------------------------------------------------------------------
 
 ///|
-test "QA: closed store rejects forget/stats/export/import/list too" {
+test "closed store rejects forget/stats/export/import/list too" {
   let backend = @src.MemoryBackend::new()
   let store = match adversarial_open_default(backend) {
     Ok(s) => s

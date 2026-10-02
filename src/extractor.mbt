@@ -1,6 +1,5 @@
-// 注入点二：Extractor（PRD 第 9 章 / 13.1 提取契约）。
-// 缺省实现 RawExtractor：raw 直通模式——原文以 kind=Unstructured 入库，
-// 零 LLM Key 可跑（AC-05 降级路径的天然形态）。
+// 注入点：Extractor。宿主实现事实提取；缺省是 RawExtractor。
+// RawExtractor 把原文以 kind=Unstructured 入库，不调用模型。
 
 ///|
 /// 提取器产出的一条结构化事实。
@@ -35,20 +34,19 @@ pub extend ExtractedFact with Show::{to_string, output}
 ///|
 /// 事实提取抽象。结构化提取由宿主实现并注入。
 pub(open) trait Extractor {
-  /// 提取纪律（PRD 13.1）：只保留可复用信息；不改写事实本身；宁少勿错。
+  /// 只保留可复用信息；不改写事实本身；宁少勿错。
   /// 返回空数组 = 纯闲聊，不入库。
   fn extract(self : Self, user_id : String, text : String) -> Result[
     Array[ExtractedFact],
     MoomemError,
   ]
-  /// 提取模式标识："raw" | "llm"——记入 stats/export（12.3 可解释）。
+  /// 提取模式标识："raw" | "llm"。记入 stats 与 export。
   fn mode(self : Self) -> String
 }
 
 ///|
-/// 缺省提取器：原文直通（kind=Unstructured），不发生闲聊过滤——
-/// 原文即记忆，即 PRD 第 9 章的 raw 模式。
-/// 空白文本返回 0 条事实（提取结果为空 → 不入库）。
+/// 缺省提取器：原文直通（kind=Unstructured）。
+/// 空白文本返回 0 条事实，不入库。
 pub struct RawExtractor {}
 
 ///|

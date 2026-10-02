@@ -17,7 +17,7 @@ hero:
     alt: moomem
 features:
   - title: 两行接入
-    details: MemoryStore::open + add / recall；聚合根仅 6 个公开方法，默认零 API Key。
+    details: MemoryStore::open + add / recall。公开方法共 9 个，默认零 API Key。
     link: /guide/start/getting-started
   - title: 混合检索与隔离
     details: 向量 + BM25，缺省自适应融合（可回退等权 RRF）；索引按 user_id 物理分片，无全库召回接口。

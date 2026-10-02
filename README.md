@@ -14,7 +14,7 @@ LLM Agent 每次推理只依赖本轮上下文，进程结束即失忆。**moome
 
 ## 核心能力
 
-- **两行接入** — `MemoryStore::open` + `add` / `recall`；聚合根仅 6 个公开方法
+- **两行接入** — `MemoryStore::open` + `add` / `recall`。聚合根公开方法是 `open` / `add` / `recall` / `forget` / `stats` / `close` / `export_jsonl` / `import_jsonl` / `list_entries`
 - **默认零 API Key** — 嵌入 / 提取 / 冲突均为可注入 trait，缺省离线确定性实现
 - **混合检索** — 向量 + BM25；缺省查询自适应融合（`AdaptiveLexical`，可回退等权 RRF）；索引按 `user_id` 物理分片
 - **崩溃安全持久化** — 双槽 JSONL 快照 + `head` 指针
@@ -62,6 +62,28 @@ fn main {
 ```
 
 次日再 `open` 同一目录：记忆完整，recall 行为一致。免写代码的 CLI、注入示例与完整命令见文档站。
+
+## 快照
+
+磁盘上的真相是双槽快照，不是索引。`open` 读出条目后重建向量索引、BM25 和去重表。格式版本是 `SNAPSHOT_VERSION = 1`，和包版本分开。
+
+`open(path)` 使用这个目录：
+
+```
+<path>/moomem/slot0.jsonl
+<path>/moomem/slot1.jsonl
+<path>/moomem/head
+```
+
+`head` 的内容是 `0` 或 `1`，指向当前有效槽。每次写入先完整覆盖另一个槽，成功后再写 `head`。写槽中途崩溃时 `head` 仍指向旧槽。`head` 损坏时，选用 header 能解析且 `gen` 更大的槽。
+
+槽文件是 JSONL。第一行是 header：
+
+```json
+{"v":1,"gen":1,"clock":1}
+```
+
+`v` 必须等于 1。之后每行一条记忆，字段为 `id`、`user_id`、`content`、`kind`（`fact` / `preference` / `event` / `unstructured`）、`embedding`、`keywords`、`status`（`active` / `superseded` / `deleted` / `unstructured`）、`created_at`、`superseded_by`（字符串或 `null`）、`seq`、`metadata`。文件尾部写了一半的行会丢掉，并计入 `stats.truncated_recovered`。中间一行损坏则这次 `open` 失败。
 
 ## 文档
 

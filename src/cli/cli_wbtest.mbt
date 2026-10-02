@@ -80,8 +80,8 @@ test "QA cli: bad --top-k / unknown option / missing value rejected" {
 ///|
 #cfg(target="native")
 test "W3-D: MOOMEM_VERSION matches CLI usage and is not 0.1.x" {
-  // usage 首行含版本号；与公开常量一致，且已与 moon.mod 同步到 0.2.x
-  inspect(@src.MOOMEM_VERSION, content="0.2.2")
+  // usage 首行含版本号；与公开常量一致，且与 moon.mod 的 version 相同
+  inspect(@src.MOOMEM_VERSION, content="0.6.0")
   inspect(@src.MOOMEM_VERSION.has_prefix("0.1"), content="false")
 }
 

@@ -16,7 +16,7 @@ moomem 的定位是：**嵌入式零部署库**，不是服务端记忆平台。
 
 ## 核心能力
 
-- 两行接入：`MemoryStore::open` + `add` / `recall`（公开方法面 ≤ 6）
+- 两行接入：`MemoryStore::open` + `add` / `recall`。公开方法是 `open` / `add` / `recall` / `forget` / `stats` / `close` / `export_jsonl` / `import_jsonl` / `list_entries`
 - 默认零 API Key：嵌入 / 提取 / 冲突均为可注入 trait
 - 混合检索：向量 + BM25；缺省查询自适应融合（`AdaptiveLexical`，可回退等权 RRF）
 - 双槽快照持久化，崩溃可恢复

@@ -120,4 +120,4 @@
 - Q3. 已关闭。采纳 D4。
 - Q4. 已关闭。现行契约页是 `README.md`。偏移且停更的长文按 D5 删除。
 - Q5. 已关闭，并已执行。删除了整个 `docs/`（含 `10-testing-examples-architecture.md`）。README、文档站、Trellis 规范、流水线注释和评测数据说明里指向这些路径的链接已去掉。`.trellis/tasks/archive/` 里的旧任务记录保留，它们是当时的任务档案，不是现行产品资料。
-- Q6. 现行入口里还剩的漂移，下一刀改哪一处？`MOOMEM_VERSION` 仍是 `"0.2.2"`，README 仍没有与快照字节一致的布局说明。把 `tokenize` 等内部 `pub` 收成非公开会牵动评测包。
+- Q6. 已关闭。先改三处：`MOOMEM_VERSION` 与 `moon.mod` 对齐为 `0.6.0`；`README.md` 写入与 `persist.mbt` / `json_codec.mbt` 一致的快照布局；文档站介绍和首页的「6 个公开方法」改为 D4 的 9 个方法。`pub` 收紧与评测/黑盒测试改调用另立子任务，本父任务不改那些符号的可见性。

@@ -1,9 +1,9 @@
 {
-  "id": "core-logic-chain",
-  "name": "core-logic-chain",
-  "title": "找出核心逻辑链路并梳理项目混乱",
-  "description": "",
-  "status": "in_progress",
+  "id": "narrow-internal-pub",
+  "name": "narrow-internal-pub",
+  "title": "收紧内部 pub 并改评测与黑盒测试",
+  "description": "把 D4 划在契约外的 pub 符号收回包内，并改掉评测包和黑盒测试对它们的调用",
+  "status": "planning",
   "dev_type": null,
   "scope": null,
   "package": null,
@@ -18,10 +18,8 @@
   "commit": null,
   "pr_url": null,
   "subtasks": [],
-  "children": [
-    "10-02-narrow-internal-pub"
-  ],
-  "parent": null,
+  "children": [],
+  "parent": "10-02-core-logic-chain",
   "relatedFiles": [],
   "notes": "",
   "meta": {}

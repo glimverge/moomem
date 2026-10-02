@@ -6,7 +6,7 @@
   "scripts": {
     "test": "moon test",
     "test:cov": "moon test --enable-coverage",
-    "cov:bisect": "moon coverage report -f bisect",
+    "cov:bisect": "pnpm run test:cov && moon coverage report -f bisect",
     "cov:json": "moon coverage report -f coveralls",
     "cov:xml": "moon coverage report -f cobertura",
     "cov:html": "moon coverage report -f html"

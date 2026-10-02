@@ -43,7 +43,7 @@ pub impl Show for MoomemError with fn output(self, logger) {
 pub extend MoomemError with Show::{to_string, output}
 
 ///|
-/// 人类可读的错误消息（含上下文），供 CLI 与宿主程序展示。
+/// 人类可读的错误消息（含上下文），供宿主程序展示。
 pub fn MoomemError::message(self : MoomemError) -> String {
   match self {
     InvalidUserId(detail) => "invalid user_id: \{detail}"

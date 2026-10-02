@@ -58,7 +58,7 @@ MoonBit package graph isolation is coarser than call-site isolation today:
 |-------|------|
 | **Package import** | Core `src/moon.pkg` **may** (and does) import `moonbitlang/x/fs`. That import is unavoidable for `FsBackend`; it does **not** authorize `@fs` use elsewhere in core. |
 | **Non-test core call sites** | Only `src/persist.mbt` may call `@fs.*`. Enforce with review / `rg '@fs'` on non-test core sources — not by assuming the package graph prevents bleed. |
-| **Allowlisted exceptions** | `persist_test.mbt` (native FS fixtures / tear-down) and `src/cli/` (e.g. reading import files) may use `@fs`. Those are test/CLI adapters, not a second production persistence path inside the core aggregate. |
+| **Allowlisted exceptions** | `persist_test.mbt` (native FS fixtures / tear-down) may use `@fs`. That is a test adapter, not a second production persistence path inside the core aggregate. |
 
 Do **not** split a single-adapter `persist` subpackage solely to hide the `x/fs` import — one real consumer (`FsBackend`) does not justify the package churn. Prefer documenting and grepping call sites. A subpackage split is only worth revisiting if MoonBit gains finer isolation **and** there are multiple real FS consumers.
 

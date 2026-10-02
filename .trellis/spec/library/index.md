@@ -25,7 +25,7 @@ These guidelines describe what the code actually does today.
 Before changing library code:
 
 - [ ] Failures return `Result[T, MoomemError]` — never panic/abort in library paths
-- [ ] Filesystem `@fs` call sites in non-test core stay in `src/persist.mbt` only (`moon.pkg` may import `moonbitlang/x/fs`; `persist_test.mbt` / `src/cli/` are allowlisted)
+- [ ] Filesystem `@fs` call sites in non-test core stay in `src/persist.mbt` only (`moon.pkg` may import `moonbitlang/x/fs`; `persist_test.mbt` is allowlisted)
 - [ ] JSON encode/decode stays in `src/json_codec.mbt` only
 - [ ] Core package does not import `mizchi/llm` (optional adapters live in `src/llm_extractor/`)
 - [ ] Any index/search/dedup path takes an explicit `user_id` (no cross-user API)

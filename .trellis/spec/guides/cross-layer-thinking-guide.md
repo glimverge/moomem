@@ -10,14 +10,14 @@
 
 Common cross-layer bugs:
 
-- Host/CLI expects format A, library returns format B
+- Host expects format A, library returns format B
 - Persist stores snapshot X, codec transforms to Y, but loses fields
 - Multiple layers implement the same validation differently
 
 For **moomem** specifically, think in library layers (not web frontend/ORM):
 
 ```
-CLI / host → MemoryStore (store.mbt) → Extractor/Judge/Embedder
+host → MemoryStore (store.mbt) → Extractor/Judge/Embedder
                                     → Indexes (per user_id)
                                     → PersistenceBackend → json_codec
 ```
@@ -50,7 +50,7 @@ For each arrow, ask:
 
 | Boundary | Common Issues |
 | -------- | ------------- |
-| Host/CLI ↔ `MemoryStore` | Missing `Result` handling, invalid `user_id` |
+| Host ↔ `MemoryStore` | Missing `Result` handling, invalid `user_id` |
 | `MemoryStore` ↔ traits | Default vs injected behavior, degrade paths |
 | Store ↔ indexes | Forgetting to pass `user_id`; stale Active filters |
 | Persist ↔ `json_codec` | Header/gen/clock drift; half-line truncation |
@@ -268,4 +268,4 @@ MemoryStore.open  → PersistenceBackend.load → parse_snapshot_text → restor
 - [ ] Keep `@json.parse` out of `store.mbt` / `persist.mbt` / indexes
 - [ ] Do not add a parallel JSONL append path because x/fs has no append/rename
 - [ ] Cover truncated trailing lines via `truncated_recovered` (`parse_snapshot_text`)
-- [ ] CLI import/export goes through `MemoryStore` helpers, not a second codec
+- [ ] Host import/export goes through `MemoryStore` helpers, not a second codec

@@ -20,8 +20,8 @@ env:
   CI: "true"
   # Dated CDN pins (e.g. 0.1.20260920) return 403; always install latest.
   MOON_VERSION: "latest"
-  # Documented native baseline (core + llm_extractor + cli); suite only grows
-  NATIVE_TEST_BASELINE: "114"
+  # Documented native baseline (core + llm_extractor); suite only grows
+  NATIVE_TEST_BASELINE: "112"
 
 jobs:
   check:

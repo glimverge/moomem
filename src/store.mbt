@@ -1,6 +1,6 @@
 // MemoryStore —— 唯一有状态编排者（聚合根）。
 // 公开六方法：open / add / recall / forget / stats / close
-// 辅助方法：export_jsonl / import_jsonl / list_entries（CLI 与 FR-07/08 所需）。
+// 辅助方法：export_jsonl / import_jsonl / list_entries。
 //
 // 状态机（架构文档 3.3）：
 //   (空)→Active          add 提取/直通成功
@@ -953,7 +953,7 @@ fn MemoryStore::flush(self : MemoryStore) -> Result[Unit, MoomemError] {
 }
 
 // ---------------------------------------------------------------------------
-// 导入导出（FR-08；CLI 复用）
+// 导入导出
 // ---------------------------------------------------------------------------
 
 ///|
@@ -1046,11 +1046,11 @@ pub fn MemoryStore::import_jsonl(
 }
 
 // ---------------------------------------------------------------------------
-// list（FR-07 CLI 所需；仅枚举指定 user 的条目，保持隔离不变量）
+// list（仅枚举指定 user 的条目，保持隔离不变量）
 // ---------------------------------------------------------------------------
 
 ///|
-/// 枚举某 user 的全部条目（含 Superseded / Deleted，供 CLI list / 审计）。
+/// 枚举某 user 的全部条目（含 Superseded / Deleted，供审计）。
 pub fn MemoryStore::list_entries(
   self : MemoryStore,
   user_id : String,

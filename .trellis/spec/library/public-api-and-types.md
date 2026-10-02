@@ -4,7 +4,7 @@
 
 ## Host surface (`MemoryStore`)
 
-The **host API** for applications and the CLI is `MemoryStore` only (documented in `README.md` and `src/lib.mbt` / `src/store.mbt`).
+The **host API** for applications is `MemoryStore` only (documented in `README.md` and `src/lib.mbt` / `src/store.mbt`).
 
 | Method | Signature (conceptual) | Role |
 |--------|------------------------|------|
@@ -15,7 +15,7 @@ The **host API** for applications and the CLI is `MemoryStore` only (documented 
 | `stats` | `stats() -> Result[StoreStats, MoomemError]` | Counts, bytes, truncated_recovered, extractor_mode |
 | `close` | `close() -> Result[Unit, MoomemError]` | Flush + mark closed (idempotent) |
 
-Helpers used by CLI / FR-07/08 (also on `MemoryStore` in `store.mbt`):
+Helpers also on `MemoryStore` in `store.mbt`:
 
 - `export_jsonl` / `import_jsonl`
 - `list_entries(user_id, …)`
@@ -127,7 +127,7 @@ Invariant: `recall` only returns recallable statuses; superseded/deleted remain 
 - Adding a global "search all users" or admin dump that skips `user_id`.
 - Returning Superseded/Deleted from `recall`.
 - Hard-deleting rows from the snapshot on `forget` (current semantics are soft-delete).
-- Validating `user_id` only in CLI — library entrances must call `validate_user_id`.
+- Validating `user_id` only in a host wrapper — library entrances must call `validate_user_id`.
 - Changing `MOOMEM_VERSION` without aligning `moon.mod` (release pipeline owns mod version; constant is manual sync — see comment in `lib.mbt`).
 - Treating package-private indexes / `rrf` / `tokenize` / similarity / snapshot codec as the host API, or re-exporting them for CI.
 - Re-`pub`ing `VectorIndex` / `KeywordIndex` / `DedupIndex` without a Trellis decision (Option B already narrowed them).

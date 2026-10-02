@@ -31,26 +31,7 @@ fn main {
 }
 ```
 
-次日再 `open` 同一目录：记忆完整，recall 行为一致。
-
-## CLI 快速演示
-
-```bash
-# 直接跑包
-moon run src/cli --target native -- add \
-  --db ./mem --user user-42 --text "我对花生过敏"
-
-moon run src/cli --target native -- recall \
-  --db ./mem --user user-42 --query "花生过敏"
-```
-
-完整子命令与环境变量见 [CLI](/api/commands)。可选 LLM 提取：
-
-```bash
-export MOOMEM_LLM_API_KEY=...
-moon run src/cli --target native -- add \
-  --db ./mem --user user-42 --text "你好！我对花生过敏" --llm
-```
+次日再 `open` 同一目录：记忆完整，recall 行为一致。可选 LLM 提取见 [LLM 注入](/api/llm)。
 
 ## 零网络示例
 

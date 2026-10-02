@@ -50,7 +50,7 @@ The core library must stay testable with **zero network / zero API key**. `READM
 - Core `src/moon.pkg` must **not** import `mizchi/llm`
 - Header comment in `llm_extractor.mbt` states this iron rule
 
-Host wiring example: inject `LlmExtractor` / `LlmConflictJudge` into `Config` (see `README.md` W2 section). CLI wires the same via `src/cli/llm_wiring.mbt` (native only).
+Host wiring example: inject `LlmExtractor` / `LlmConflictJudge` into `Config` (see `site/docs/api/llm.md`).
 
 ## Injection in tests
 

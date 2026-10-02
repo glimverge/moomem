@@ -31,4 +31,4 @@ let store = MemoryStore::open("./memory", config=cfg).unwrap()
 请在宿主包内自行 mock `Provider`。零网络范例见仓库 `examples/llm-extractor` 与 `src/llm_extractor/*_test.mbt`。
 :::
 
-CLI 侧启用方式见 [CLI](/api/commands)。注入点总表见 [公开 API](/api/)。
+注入点总表见 [公开 API](/api/)。

@@ -21,7 +21,7 @@ Align with MoonBit core style (`read_file_to_string`, etc.).
 | Inject mocks; no mock framework | custom judges/extractors in e2e |
 | Crash/truncate via `MemoryBackend` | `persist_test.mbt`, AC-01 e2e |
 | Isolation / adversarial QA suites | `qa_adversarial_test.mbt` |
-| Multi-backend | `moon test --target wasm` (native-only FS/CLI excluded) |
+| Multi-backend | `moon test --target wasm` (native-only FS excluded) |
 
 Where gates, eval, tools, and examples land is the table below plus the workflow YAML. Do not add a second architecture essay.
 
@@ -45,7 +45,7 @@ Executable workflow truth: [`.github/workflows/test-pipeline.yml`](../../../.git
 |------|---------|
 | Push/PR is offline | `test-pipeline` never injects `DEEPSEEK_*` / `MOONCAKES_TOKEN`; no live LLM endpoints on the green path |
 | Fail closed | Any failed check / matrix target / example smoke fails the aggregate gate |
-| Four targets + smoke | native + wasm + wasm-gc + js after `moon check`; native-only FS/CLI stay cfg-gated; examples smoke on native |
+| Four targets + smoke | native + wasm + wasm-gc + js after `moon check`; native-only FS stays cfg-gated; examples smoke on native |
 | Release order | `quality` (`workflow_call` → test-pipeline) → `llm-live` (`ci/gates/live-llm`, must log `LIVE_LLM_PASS`) → publish / tag side effects |
 | Dry-run still gates | `dry_run=true` skips registry / GitHub Release only; quality + llm-live still run |
 | Version alignment | Publish/tag path requires git semver ↔ `moon.mod` `version` match before credentials write |
@@ -85,7 +85,7 @@ Core library has **no** logging facade. Observability channels that actually exi
 - `AddSummary.notes` / `degraded`
 - `MemoryEntry.metadata` (extractor mode, degrade flags, conflict traces)
 - `StoreStats.extractor_mode`, `truncated_recovered`
-- `MoomemError::message` / `kind` for hosts and CLI stderr
+- `MoomemError::message` / `kind` for hosts
 
 Do not invent a parallel log subsystem unless product requirements change.
 

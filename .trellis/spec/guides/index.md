@@ -39,12 +39,12 @@ These guides help you **ask the right questions before coding**.
 
 ### When to Think About Cross-Layer Issues
 
-- [ ] Feature touches 3+ layers (CLI/host, `MemoryStore`, traits, indexes, persist/codec)
+- [ ] Feature touches 3+ layers (host, `MemoryStore`, traits, indexes, persist/codec)
 - [ ] Snapshot / entry JSON shape changes
 - [ ] Multiple consumers need the same data (`AddSummary`, metadata, stats)
-- [ ] You're not sure whether logic belongs in core vs `llm_extractor` vs CLI
+- [ ] You're not sure whether logic belongs in core vs `llm_extractor`
 - [ ] You are adding an `EntryKind`/`EntryStatus`, snapshot header field, or `Config` knob
-- [ ] CLI or host code starts parsing snapshot JSON instead of using store APIs
+- [ ] Host code starts parsing snapshot JSON instead of using store APIs
 
 → Read [Cross-Layer Thinking Guide](./cross-layer-thinking-guide.md)
 

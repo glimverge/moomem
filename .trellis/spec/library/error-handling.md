@@ -23,7 +23,7 @@ Every fallible library operation returns `Result[T, MoomemError]`.
 
 Helpers:
 
-- `MoomemError::message` — human-readable string for CLI/hosts
+- `MoomemError::message` — human-readable string for hosts
 - `MoomemError::kind` — short snake_case category for metadata/logging
 - Hand-written `Show` — format `Variant(payload)`
 
@@ -39,11 +39,10 @@ Helpers:
 
 - No structured logging framework or log levels in the core library.
 - No exception types besides `MoomemError` for library failures.
-- CLI prints errors to stderr with a readable prefix and non-zero exit — that is CLI concern (`src/cli/main.mbt`), not a library logger.
 
 ## Anti-patterns
 
 - Calling `panic` / `abort` on bad `user_id`, missing files, or parse errors.
 - Swallowing errors into empty success without setting `degraded` / notes / metadata when the PRD requires observability.
-- Inventing ad-hoc `String` error returns from core public APIs (CLI helpers may use `Result[T, String]` for flag parsing only).
+- Inventing ad-hoc `String` error returns from core public APIs.
 - Forgetting to extend `Show` / `message` / `kind` when adding a variant.

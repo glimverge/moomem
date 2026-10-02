@@ -10,7 +10,6 @@
 |------|------|----------|
 | `src/` | Core library (`MemoryStore` aggregate); L0 包旁测试 | `moonbitlang/x/fs`, `moonbitlang/core/json` |
 | `src/llm_extractor/` | Optional LLM extract/judge adapters; L1 包旁测试 | `heyq02/moomem/src`, `mizchi/llm` |
-| `src/cli/` | Native CLI binary (`is-main`); L0 `cli_wbtest` | core + llm_extractor + `mizchi/llm/openai` + `x/fs` + `env` |
 | `ci/gates/live-llm/` | L2 Live LLM release gate | separate package |
 | `ci/eval/locomo/` | L3 LoCoMo eval harness + `data/` | separate package |
 | `benchmarks/locomo/` | Release-archived LoCoMo scores (site `/benchmark`) | metrics JSON only |
@@ -57,9 +56,8 @@ L1 mock-LLM tests live beside adapters: `src/llm_extractor/*_test.mbt`. Gates / 
 ## Package config reality
 
 - Core `src/moon.pkg` imports `moonbitlang/x/fs` even though **call sites** must stay in `persist.mbt` (architectural isolation, not package-graph isolation). Do not invent a single-adapter persist subpackage to paper over that; see [Persistence](./persistence.md).
-- Allowlisted `@fs` outside that rule: `persist_test.mbt`, `src/cli/`.
+- Allowlisted `@fs` outside that rule: `persist_test.mbt`.
 - `src/llm_extractor/moon.pkg` imports core + `mizchi/llm` only.
-- `src/cli/moon.pkg` uses `targets` to compile `llm_wiring.mbt` on native and `llm_wiring_stub.mbt` on non-native.
 
 ## Where new code goes
 
@@ -71,7 +69,6 @@ L1 mock-LLM tests live beside adapters: `src/llm_extractor/*_test.mbt`. Gates / 
 | Disk / crash-safety | `persist.mbt` only |
 | Orchestration of add/recall flows | `store.mbt` only — keep indexes/traits stateless or rebuildable |
 | LLM prompts / OpenAI client | `src/llm_extractor/` — never core |
-| CLI flags / env | `src/cli/main.mbt`, `llm_wiring*.mbt` |
 
 ## Where new tests / examples / gates go
 
@@ -91,8 +88,8 @@ Align with [Quality Guidelines](./quality-guidelines.md).
 ## Anti-patterns
 
 - Do **not** add React/web/ORM-style folders; this repo has no frontend.
-- Do **not** put `@fs.*` calls in non-test core outside `persist.mbt` (allowlist: `persist_test.mbt`, `src/cli/`).
-- Do **not** put `@json.parse` / entry serializers outside `json_codec.mbt` (CLI import reuses store helpers that call the codec).
+- Do **not** put `@fs.*` calls in non-test core outside `persist.mbt` (allowlist: `persist_test.mbt`).
+- Do **not** put `@json.parse` / entry serializers outside `json_codec.mbt`.
 - Do **not** grow a second aggregate alongside `MemoryStore`; it is the sole stateful orchestrator.
 - Do **not** move package-side `*_test.mbt` out of `src/` (T1).
 - Do **not** wire `retrieval-tuning` into CI by default (U1 tool).

@@ -1,4 +1,17 @@
-# Project Agents.md Guide
+# demo (`heyq02/demo`)
+
+Host sample that injects Qwen embeddings and DeepSeek extraction into moomem. This directory is its own MoonBit module. Library rules for the core package live in the repository-root `AGENTS.md` and `.trellis/spec/library/`.
+
+```bash
+cp .env.example .env    # DEEPSEEK_* and QWEN_*; never commit .env
+moon update
+moon run cmd/main
+moon test               # package tests stay offline; no API keys
+```
+
+`moon.mod` depends on published `heyq02/moomem` (currently `@0.7.0`). Edits under the parent `src/` do not affect this module until that pin changes. `memory/` is local runtime state and is gitignored.
+
+# MoonBit notes
 
 This is a [MoonBit](https://docs.moonbitlang.com) project.
 

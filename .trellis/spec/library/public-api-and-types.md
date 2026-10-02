@@ -48,9 +48,9 @@ Not host API. Same-package code and `*_wbtest.mbt` may call them. Other packages
 
 | Symbol | Location | Covered by |
 |--------|----------|------------|
-| `tokenize` | `index_keyword.mbt` | `src/diag_wbtest.mbt`, `src/index_wbtest.mbt` |
-| `cosine_similarity` | `embedder.mbt` | `src/diag_wbtest.mbt` |
-| `keyword_jaccard` | `conflict.mbt` | `src/diag_wbtest.mbt` |
+| `tokenize` | `index_keyword.mbt` | `src/similarity_wbtest.mbt`, `src/index_wbtest.mbt` |
+| `cosine_similarity` | `embedder.mbt` | `src/similarity_wbtest.mbt` |
+| `keyword_jaccard` | `conflict.mbt` | `src/similarity_wbtest.mbt` |
 | snapshot codec (`entry_to_json`, `parse_snapshot_text`, …) | `json_codec.mbt` | `src/json_codec_wbtest.mbt` |
 | `MemoryBackend::peek` / `set_fail_next_save` / `set_simulate_partial_write` | `persist.mbt` | tests in `src/persist.mbt` |
 
@@ -96,14 +96,14 @@ Rules (enforced at every store entrance — `add` / `recall` / `forget` / `list_
 - Reject `"."` and `".."` (path-component references)
 - Reject `/`, `\`, whitespace, control characters
 
-Tests: `types_test.mbt`, `qa_adversarial_test.mbt` ("user_id boundaries through store entrance").
+Tests: `types_test.mbt`, `adversarial_test.mbt` ("user_id boundaries through store entrance").
 
 ## Isolation (structural)
 
 - `VectorIndex` / `KeywordIndex` shard by `user_id` (`Map` of shards in `index_vector.mbt` / `index_keyword.mbt`).
 - `MemoryStore.by_user` and `DedupIndex` are also per-user.
 - Every search takes `user_id`; there is **no** whole-store recall API (`stats` is the only global view).
-- AC-02: `store_e2e_test.mbt` "zero cross-user leakage".
+- AC-02: `store_test.mbt` "zero cross-user leakage".
 
 ## State machine (as implemented)
 

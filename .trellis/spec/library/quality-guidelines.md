@@ -16,11 +16,11 @@ Align with MoonBit core style (`read_file_to_string`, etc.).
 
 | Practice | Evidence |
 |----------|----------|
-| Black-box `*_test.mbt` / white-box `*_wbtest.mbt` next to sources | `store_e2e_test.mbt`, `index_wbtest.mbt`, … |
+| Black-box `*_test.mbt` / white-box `*_wbtest.mbt` next to sources | `store_test.mbt`, `index_wbtest.mbt`, … |
 | Prefer `inspect(...)` deterministic assertions | throughout tests |
 | Inject mocks; no mock framework | custom judges/extractors in e2e |
 | Crash/truncate via `MemoryBackend` | `persist_test.mbt`, AC-01 e2e |
-| Isolation / adversarial QA suites | `qa_adversarial_test.mbt` |
+| Isolation / adversarial QA suites | `adversarial_test.mbt` |
 | Multi-backend | `moon test --target wasm` (native-only FS excluded) |
 
 Where gates, eval, tools, and examples land is the table below plus the workflow YAML. Do not add a second architecture essay.

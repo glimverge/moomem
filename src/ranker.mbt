@@ -27,25 +27,25 @@ fn rrf(lists : Array[Array[String]], k : Int, top_k : Int) -> Array[String] {
 }
 
 ///|
-/// 加权 RRF：score(id) = w_v/(k+rank_v) + w_b/(k+rank_b)；缺席通道贡献 0。
+/// 加权 RRF：score(id) = vector_weight/(k+vector_rank) + keyword_weight/(k+keyword_rank)；缺席通道贡献 0。
 /// 排序确定性：融合分降序，相同分按 id 升序。
 fn rrf_weighted(
-  vec_ids : Array[String],
-  kw_ids : Array[String],
+  vector_ids : Array[String],
+  keyword_ids : Array[String],
   k : Int,
   top_k : Int,
-  w_v : Double,
-  w_b : Double,
+  vector_weight : Double,
+  keyword_weight : Double,
 ) -> Array[String] {
   if k <= 0 {
     return []
   }
   let scores : Map[String, Double] = Map([])
-  if w_v > 0.0 {
-    for i = 0; i < vec_ids.length(); i = i + 1 {
-      let id = vec_ids[i]
+  if vector_weight > 0.0 {
+    for i = 0; i < vector_ids.length(); i = i + 1 {
+      let id = vector_ids[i]
       let rank = i + 1
-      let contribution = w_v / (k.to_double() + rank.to_double())
+      let contribution = vector_weight / (k.to_double() + rank.to_double())
       let cur = match scores.get(id) {
         Some(v) => v
         None => 0.0
@@ -53,11 +53,11 @@ fn rrf_weighted(
       scores.set(id, cur + contribution)
     }
   }
-  if w_b > 0.0 {
-    for i = 0; i < kw_ids.length(); i = i + 1 {
-      let id = kw_ids[i]
+  if keyword_weight > 0.0 {
+    for i = 0; i < keyword_ids.length(); i = i + 1 {
+      let id = keyword_ids[i]
       let rank = i + 1
-      let contribution = w_b / (k.to_double() + rank.to_double())
+      let contribution = keyword_weight / (k.to_double() + rank.to_double())
       let cur = match scores.get(id) {
         Some(v) => v
         None => 0.0
@@ -123,7 +123,7 @@ fn lexical_strong(
 /// 保证 adaptive 路径 Recall@5 不低于同库 BM25 单路（不改变计分子集）。
 fn protect_bm25_topk(
   fused : Array[String],
-  kw_ids : Array[String],
+  keyword_ids : Array[String],
   k : Int,
 ) -> Array[String] {
   let out : Array[String] = []
@@ -133,13 +133,13 @@ fn protect_bm25_topk(
     out.push(fused[i])
     in_out.set(fused[i], true)
   }
-  let protect_n = if k < kw_ids.length() { k } else { kw_ids.length() }
+  let protect_n = if k < keyword_ids.length() { k } else { keyword_ids.length() }
   let keep_set : Map[String, Bool] = Map([])
   for i = 0; i < protect_n; i = i + 1 {
-    keep_set.set(kw_ids[i], true)
+    keep_set.set(keyword_ids[i], true)
   }
   for i = 0; i < protect_n; i = i + 1 {
-    let id = kw_ids[i]
+    let id = keyword_ids[i]
     if in_out.contains(id) {
       continue
     }

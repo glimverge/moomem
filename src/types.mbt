@@ -99,9 +99,9 @@ pub impl Show for MemoryEntry with fn output(self, logger) {
     Some(id) => id
     None => "none"
   }
-  let kw_len = self.keywords.length()
-  let emb_len = self.embedding.length()
-  let text = "MemoryEntry::{ id: \{self.id}, user_id: \{self.user_id}, content: \{self.content}, kind: \{kind}, status: \{status}, created_at: \{self.created_at}, superseded_by: \{superseded_by}, seq: \{self.seq}, keywords: \{kw_len}, embedding_dim: \{emb_len} }"
+  let keyword_count = self.keywords.length()
+  let embedding_length = self.embedding.length()
+  let text = "MemoryEntry::{ id: \{self.id}, user_id: \{self.user_id}, content: \{self.content}, kind: \{kind}, status: \{status}, created_at: \{self.created_at}, superseded_by: \{superseded_by}, seq: \{self.seq}, keywords: \{keyword_count}, embedding_dim: \{embedding_length} }"
   logger.write_string(text)
 }
 

@@ -49,7 +49,7 @@ The repository does not ship a model client. A host that wants structured extrac
 
 Prefer injecting fakes over frameworks:
 
-- Failing extractor / always-replace judge in `store_e2e_test.mbt` (AC-04, AC-05)
+- Failing extractor / always-replace judge in `store_test.mbt` (AC-04, AC-05)
 - `FixedClock` for exact `created_at`
 - `MemoryBackend` for restart and crash simulation
 

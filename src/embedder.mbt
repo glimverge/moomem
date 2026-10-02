@@ -16,10 +16,10 @@ pub(open) trait Embedder {
 
 ///|
 /// 缺省嵌入器：小写化 → 分词（与 BM25 同一分词器 tokenize）→
-/// 每 token FNV-1a 哈希到 [0, dims) 桶 → 桶内 TF 累加 → L2 归一。
+/// 每 token FNV-1a 哈希到 [0, dim) 桶 → 桶内 TF 累加 → L2 归一。
 /// 确定性、离线，三后端行为一致。
 pub struct HashingEmbedder {
-  dims : Int
+  dim : Int
 }
 
 ///|
@@ -32,46 +32,46 @@ pub fn HashingEmbedder::new(dim : Int) -> Result[HashingEmbedder, MoomemError] {
       ),
     )
   }
-  Ok(HashingEmbedder::{ dims: dim, })
+  Ok(HashingEmbedder::{ dim, })
 }
 
 ///|
 pub impl Embedder for HashingEmbedder with fn embed(self, texts) {
   let result : Array[Array[Double]] = []
   for text in texts {
-    result.push(hashing_embed_one(text, self.dims))
+    result.push(hashing_embed_one(text, self.dim))
   }
   Ok(result)
 }
 
 ///|
 pub impl Embedder for HashingEmbedder with fn dim(self) {
-  self.dims
+  self.dim
 }
 
 ///|
 pub extend HashingEmbedder with Embedder::{embed, dim}
 
 ///|
-fn hashing_embed_one(text : String, dims : Int) -> Array[Double] {
-  let vec = Array::make(dims, 0.0)
+fn hashing_embed_one(text : String, dim : Int) -> Array[Double] {
+  let vector = Array::make(dim, 0.0)
   let tokens = tokenize(text)
-  for t in tokens {
-    let bucket = (fnv1a(t) & 0x7FFFFFFF) % dims
-    vec[bucket] = vec[bucket] + 1.0
+  for token in tokens {
+    let bucket = (fnv1a(token) & 0x7FFFFFFF) % dim
+    vector[bucket] = vector[bucket] + 1.0
   }
   // L2 归一
   let mut norm_sq = 0.0
-  for v in vec {
-    norm_sq = norm_sq + v * v
+  for value in vector {
+    norm_sq = norm_sq + value * value
   }
   let norm = norm_sq.sqrt()
   if norm > 0.0 {
-    for i = 0; i < dims; i = i + 1 {
-      vec[i] = vec[i] / norm
+    for i = 0; i < dim; i = i + 1 {
+      vector[i] = vector[i] / norm
     }
   }
-  vec
+  vector
 }
 
 ///|

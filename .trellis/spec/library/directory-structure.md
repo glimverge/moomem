@@ -41,13 +41,13 @@ Black-box tests sit beside sources as `*_test.mbt`; white-box as `*_wbtest.mbt` 
 
 - `types_test.mbt` — codec, `validate_user_id`
 - `extractor_test.mbt` — injection / raw mode (black-box)
-- `diag_wbtest.mbt` — tokenize / cosine / jaccard / SimilarityJudge
+- `similarity_wbtest.mbt` — tokenize / cosine / jaccard / SimilarityJudge
 - `json_codec_wbtest.mbt` — snapshot codec
 - crash-injection tests live in `persist.mbt` (the injectors are package-private)
 - `index_wbtest.mbt` — VectorIndex / KeywordIndex / DedupIndex / rrf (package-private)
 - `persist_test.mbt` — dual-slot, head corruption, `MemoryBackend` crash inject
-- `store_e2e_test.mbt` — AC-01..05 end-to-end
-- `qa_adversarial_test.mbt`, `w3_config_test.mbt` — edge / config validation
+- `store_test.mbt` — AC-01..05 end-to-end
+- `adversarial_test.mbt`, `config_test.mbt` — edge / config validation
 
 Eval / tools are **not** package-side tests — see decision table below.
 

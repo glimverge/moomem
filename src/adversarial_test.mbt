@@ -3,15 +3,15 @@
 // 不改断言迁就实现:预期与实现冲突时按"源码 bug"路由。
 
 // ---------------------------------------------------------------------------
-// 测试辅助(前缀 qa_ 避免与既有测试文件的符号冲突)
+// 测试辅助(前缀 adversarial_，与同包其它测试符号分开)
 // ---------------------------------------------------------------------------
 
 ///|
-/// 恒 Replace 裁决(独立于 store_e2e_test 的 AlwaysReplaceJudge 定义)
-struct QaAlwaysReplaceJudge {}
+/// 恒 Replace 裁决(独立于 store_test 的 AlwaysReplaceJudge 定义)
+struct AdversarialAlwaysReplaceJudge {}
 
 ///|
-impl ConflictJudge for QaAlwaysReplaceJudge with fn judge(_, _, candidates) {
+impl ConflictJudge for AdversarialAlwaysReplaceJudge with fn judge(_, _, candidates) {
   Ok(
     candidates.map(c => @src.ConflictVerdict::{
       existing: c,
@@ -22,22 +22,22 @@ impl ConflictJudge for QaAlwaysReplaceJudge with fn judge(_, _, candidates) {
 
 ///|
 /// 单热点嵌入器:一切文本映射到同一单位向量(构造确定性 supersede 链)
-struct QaOneHotEmbedder {}
+struct AdversarialOneHotEmbedder {}
 
 ///|
-fn qa_onehot_vec() -> Array[Double] {
+fn adversarial_onehot_vector() -> Array[Double] {
   let v = Array::make(@src.DEFAULT_DIM, 0.0)
   v[0] = 1.0
   v
 }
 
 ///|
-impl Embedder for QaOneHotEmbedder with fn embed(_self, texts) {
-  Ok(texts.map(_ => qa_onehot_vec()))
+impl Embedder for AdversarialOneHotEmbedder with fn embed(_self, texts) {
+  Ok(texts.map(_ => adversarial_onehot_vector()))
 }
 
 ///|
-impl Embedder for QaOneHotEmbedder with fn dim(_self) {
+impl Embedder for AdversarialOneHotEmbedder with fn dim(_self) {
   @src.DEFAULT_DIM
 }
 
@@ -45,10 +45,10 @@ impl Embedder for QaOneHotEmbedder with fn dim(_self) {
 /// 唯一维度嵌入器:按文本末尾数字 N 映射到第 (N mod 256) 维 one-hot。
 /// 规模测试注入用:规避 HashingEmbedder 256 桶生日碰撞(约 6 对/55 token,
 /// 碰撞对 cos=1.0 会触发缺省 judge 的合法 supersede,干扰"全部 active"前提)。
-struct QaUniqueEmbedder {}
+struct AdversarialUniqueEmbedder {}
 
 ///|
-fn qa_trailing_number(text : String) -> Int {
+fn adversarial_trailing_number(text : String) -> Int {
   let mut acc = 0
   for c in text.iter() {
     if c >= '0' && c <= '9' {
@@ -61,24 +61,24 @@ fn qa_trailing_number(text : String) -> Int {
 }
 
 ///|
-fn qa_unique_vec(text : String) -> Array[Double] {
+fn adversarial_unique_vector(text : String) -> Array[Double] {
   let v = Array::make(@src.DEFAULT_DIM, 0.0)
-  v[qa_trailing_number(text) % @src.DEFAULT_DIM] = 1.0
+  v[adversarial_trailing_number(text) % @src.DEFAULT_DIM] = 1.0
   v
 }
 
 ///|
-impl Embedder for QaUniqueEmbedder with fn embed(_self, texts) {
-  Ok(texts.map(t => qa_unique_vec(t)))
+impl Embedder for AdversarialUniqueEmbedder with fn embed(_self, texts) {
+  Ok(texts.map(t => adversarial_unique_vector(t)))
 }
 
 ///|
-impl Embedder for QaUniqueEmbedder with fn dim(_self) {
+impl Embedder for AdversarialUniqueEmbedder with fn dim(_self) {
   @src.DEFAULT_DIM
 }
 
 ///|
-fn qa_open(
+fn adversarial_open(
   backend : &@src.PersistenceBackend,
   judge : &@src.ConflictJudge?,
   extractor : &@src.Extractor?,
@@ -97,15 +97,15 @@ fn qa_open(
 }
 
 ///|
-fn qa_open_default(
+fn adversarial_open_default(
   backend : &@src.PersistenceBackend,
 ) -> Result[@src.MemoryStore, @src.MoomemError] {
-  qa_open(backend, None, None, None, None)
+  adversarial_open(backend, None, None, None, None)
 }
 
 ///|
 /// 两位零填充序号(01..99)
-fn qa_nn(n : Int) -> String {
+fn adversarial_padded_number(n : Int) -> String {
   if n < 10 {
     "0\{n}"
   } else {
@@ -115,7 +115,7 @@ fn qa_nn(n : Int) -> String {
 
 ///|
 /// 一行快照条目 JSON。字段与 README 快照节一致，不调用包内编解码。
-fn qa_entry_line(
+fn adversarial_entry_line(
   id : String,
   user_id : String,
   content : String,
@@ -146,7 +146,7 @@ fn qa_entry_line(
 ///|
 test "QA: empty store recall returns empty; unknown user returns empty" {
   let backend = @src.MemoryBackend::new()
-  let store = match qa_open_default(backend) {
+  let store = match adversarial_open_default(backend) {
     Ok(s) => s
     Err(e) => {
       inspect(e.message(), content="SHOULD NOT REACH")
@@ -196,7 +196,7 @@ test "QA: empty store recall returns empty; unknown user returns empty" {
 ///|
 test "QA: top_k boundaries (0 / negative / 3 / default / 51)" {
   let backend = @src.MemoryBackend::new()
-  let store = match qa_open_default(backend) {
+  let store = match adversarial_open_default(backend) {
     Ok(s) => s
     Err(e) => {
       inspect(e.message(), content="SHOULD NOT REACH")
@@ -206,7 +206,7 @@ test "QA: top_k boundaries (0 / negative / 3 / default / 51)" {
   for i = 1; i <= 7; i = i + 1 {
     // "册NN" 方案:条目两两仅共享 1/2 token(cos=0.5 < 阈值-0.15),
     // 避免误触发缺省 SimilarityJudge 的合法 supersede/Coexist 级联
-    let ok = match store.add("qa-topk", "册\{qa_nn(i)}") {
+    let ok = match store.add("qa-topk", "册\{adversarial_padded_number(i)}") {
       Ok(s) => s.inserted == 1
       Err(_) => false
     }
@@ -267,8 +267,8 @@ test "QA: top_k boundaries (0 / negative / 3 / default / 51)" {
 test "QA: 55+ entries BM25/vector correctness, top_k cap 50, isolation at scale" {
   let backend = @src.MemoryBackend::new()
   // 注入唯一维度嵌入器,保证 55 条互不相似(全部保持 active)
-  let embedder : &@src.Embedder = QaUniqueEmbedder::{ }
-  let store = match qa_open(backend, None, None, None, Some(embedder)) {
+  let embedder : &@src.Embedder = AdversarialUniqueEmbedder::{ }
+  let store = match adversarial_open(backend, None, None, None, Some(embedder)) {
     Ok(s) => s
     Err(e) => {
       inspect(e.message(), content="SHOULD NOT REACH")
@@ -277,12 +277,12 @@ test "QA: 55+ entries BM25/vector correctness, top_k cap 50, isolation at scale"
   }
   // 两个用户各 55 条,内容字符串相同(靠 id 分片区分)
   for i = 1; i <= 55; i = i + 1 {
-    let ok1 = match store.add("qa-many", "册\{qa_nn(i)}") {
+    let ok1 = match store.add("qa-many", "册\{adversarial_padded_number(i)}") {
       Ok(s) => s.inserted == 1
       Err(_) => false
     }
     inspect(ok1, content="true")
-    let ok2 = match store.add("qa-many2", "册\{qa_nn(i)}") {
+    let ok2 = match store.add("qa-many2", "册\{adversarial_padded_number(i)}") {
       Ok(s) => s.inserted == 1
       Err(_) => false
     }
@@ -299,7 +299,7 @@ test "QA: 55+ entries BM25/vector correctness, top_k cap 50, isolation at scale"
   inspect(st.active, content="110")
   // 精确命中:唯一 token "17" 应让 17 号条目排第一(top_k=1 无补齐干扰)
   for probe in [17, 42, 55] {
-    let hit = match store.recall("qa-many", "\{qa_nn(probe)}", top_k=1) {
+    let hit = match store.recall("qa-many", "\{adversarial_padded_number(probe)}", top_k=1) {
       Ok(r) => r
       Err(_) => {
         inspect("recall failed", content="SHOULD NOT REACH")
@@ -307,7 +307,7 @@ test "QA: 55+ entries BM25/vector correctness, top_k cap 50, isolation at scale"
       }
     }
     inspect(hit.length(), content="1")
-    inspect(hit[0].content, content="册\{qa_nn(probe)}")
+    inspect(hit[0].content, content="册\{adversarial_padded_number(probe)}")
     inspect(hit[0].user_id, content="qa-many")
   }
   // 上限夹取:55 条可检索,但一次最多返回 50
@@ -360,9 +360,9 @@ test "QA: 55+ entries BM25/vector correctness, top_k cap 50, isolation at scale"
 ///|
 test "QA: supersede chain A->B->C; restore keeps superseded invisible" {
   let backend = @src.MemoryBackend::new()
-  let embedder : &@src.Embedder = QaOneHotEmbedder::{ }
-  let judge : &@src.ConflictJudge = QaAlwaysReplaceJudge::{ }
-  let store = match qa_open(backend, Some(judge), None, None, Some(embedder)) {
+  let embedder : &@src.Embedder = AdversarialOneHotEmbedder::{ }
+  let judge : &@src.ConflictJudge = AdversarialAlwaysReplaceJudge::{ }
+  let store = match adversarial_open(backend, Some(judge), None, None, Some(embedder)) {
     Ok(s) => s
     Err(e) => {
       inspect(e.message(), content="SHOULD NOT REACH")
@@ -408,7 +408,7 @@ test "QA: supersede chain A->B->C; restore keeps superseded invisible" {
   inspect(b_by, content="\{entries[2].id}")
   inspect(entries[2].superseded_by == None, content="true")
   // 被覆盖者在检索中不可见(双索引已摘除)。
-  // 注意:本测试注入的 QaOneHotEmbedder 使任意查询与任意文档余弦恒为 1.0,
+  // 注意:本测试注入的 AdversarialOneHotEmbedder 使任意查询与任意文档余弦恒为 1.0,
   // 向量路必然命中当前唯一 active 的链尾 C —— 因此正确判据是
   // "结果中不得出现 A / B",而非"零命中"(后者在该嵌入器下不可能成立)
   let old_hit = match store.recall("qa-chain", "东城") {
@@ -448,7 +448,7 @@ test "QA: supersede chain A->B->C; restore keeps superseded invisible" {
   inspect(st.active, content="1")
   ignore(store.close())
   // "进程重启":superseded 不得复活
-  let store2 = match qa_open(backend, None, None, None, Some(embedder)) {
+  let store2 = match adversarial_open(backend, None, None, None, Some(embedder)) {
     Ok(s) => s
     Err(e) => {
       inspect(e.message(), content="SHOULD NOT REACH")
@@ -520,7 +520,7 @@ test "QA: supersede chain A->B->C; restore keeps superseded invisible" {
 ///|
 test "QA: forget unregisters dedup fingerprint; re-add works" {
   let backend = @src.MemoryBackend::new()
-  let store = match qa_open_default(backend) {
+  let store = match adversarial_open_default(backend) {
     Ok(s) => s
     Err(e) => {
       inspect(e.message(), content="SHOULD NOT REACH")
@@ -589,7 +589,7 @@ test "QA: forget unregisters dedup fingerprint; re-add works" {
 ///|
 test "QA: very long entry stored intact, survives restart" {
   let backend = @src.MemoryBackend::new()
-  let store = match qa_open_default(backend) {
+  let store = match adversarial_open_default(backend) {
     Ok(s) => s
     Err(e) => {
       inspect(e.message(), content="SHOULD NOT REACH")
@@ -633,7 +633,7 @@ test "QA: very long entry stored intact, survives restart" {
   inspect(st.bytes_on_disk >= 20000L, content="true")
   ignore(store.close())
   // 重启后长内容仍完整
-  let store2 = match qa_open_default(backend) {
+  let store2 = match adversarial_open_default(backend) {
     Ok(s) => s
     Err(e) => {
       inspect(e.message(), content="SHOULD NOT REACH")
@@ -659,7 +659,7 @@ test "QA: very long entry stored intact, survives restart" {
 ///|
 test "QA: duplicate detection is normalization-based and per-user" {
   let backend = @src.MemoryBackend::new()
-  let store = match qa_open_default(backend) {
+  let store = match adversarial_open_default(backend) {
     Ok(s) => s
     Err(e) => {
       inspect(e.message(), content="SHOULD NOT REACH")
@@ -712,7 +712,7 @@ test "QA: duplicate detection is normalization-based and per-user" {
 ///|
 test "QA: zero-hit query returns empty even when user has entries" {
   let backend = @src.MemoryBackend::new()
-  let store = match qa_open_default(backend) {
+  let store = match adversarial_open_default(backend) {
     Ok(s) => s
     Err(e) => {
       inspect(e.message(), content="SHOULD NOT REACH")
@@ -720,7 +720,7 @@ test "QA: zero-hit query returns empty even when user has entries" {
     }
   }
   for i = 1; i <= 3; i = i + 1 {
-    let ok = match store.add("qa-zero", "册\{qa_nn(i)}") {
+    let ok = match store.add("qa-zero", "册\{adversarial_padded_number(i)}") {
       Ok(s) => s.inserted == 1
       Err(_) => false
     }
@@ -783,7 +783,7 @@ test "QA: config validation rejects illegal values" {
 ///|
 test "QA: LogicalClock strictly monotonic across reopen; FixedClock constant" {
   let backend = @src.MemoryBackend::new()
-  let store = match qa_open_default(backend) {
+  let store = match adversarial_open_default(backend) {
     Ok(s) => s
     Err(e) => {
       inspect(e.message(), content="SHOULD NOT REACH")
@@ -810,7 +810,7 @@ test "QA: LogicalClock strictly monotonic across reopen; FixedClock constant" {
   inspect(entries[2].created_at, content="3")
   ignore(store.close())
   // 重启后时钟从快照 header 续接,不回退、不重复
-  let store2 = match qa_open_default(backend) {
+  let store2 = match adversarial_open_default(backend) {
     Ok(s) => s
     Err(e) => {
       inspect(e.message(), content="SHOULD NOT REACH")
@@ -827,7 +827,7 @@ test "QA: LogicalClock strictly monotonic across reopen; FixedClock constant" {
   }
   inspect(entries2[3].created_at, content="4")
   ignore(store2.close())
-  let store3 = match qa_open_default(backend) {
+  let store3 = match adversarial_open_default(backend) {
     Ok(s) => s
     Err(e) => {
       inspect(e.message(), content="SHOULD NOT REACH")
@@ -847,7 +847,7 @@ test "QA: LogicalClock strictly monotonic across reopen; FixedClock constant" {
   // FixedClock:恒定值;条目仍按 seq/id 唯一
   let backend2 = @src.MemoryBackend::new()
   let clock : &@src.Clock = @src.FixedClock::new(999L)
-  let store4 = match qa_open(backend2, None, None, Some(clock), None) {
+  let store4 = match adversarial_open(backend2, None, None, Some(clock), None) {
     Ok(s) => s
     Err(e) => {
       inspect(e.message(), content="SHOULD NOT REACH")
@@ -876,7 +876,7 @@ test "QA: LogicalClock strictly monotonic across reopen; FixedClock constant" {
 ///|
 test "QA: user_id boundaries through store entrance" {
   let backend = @src.MemoryBackend::new()
-  let store = match qa_open_default(backend) {
+  let store = match adversarial_open_default(backend) {
     Ok(s) => s
     Err(e) => {
       inspect(e.message(), content="SHOULD NOT REACH")
@@ -948,14 +948,14 @@ test "QA: user_id boundaries through store entrance" {
 ///|
 test "QA: import tolerates corrupted lines; dim-mismatched entry keyword-recallable" {
   let backend = @src.MemoryBackend::new()
-  let store = match qa_open_default(backend) {
+  let store = match adversarial_open_default(backend) {
     Ok(s) => s
     Err(e) => {
       inspect(e.message(), content="SHOULD NOT REACH")
       return
     }
   }
-  let good1 = qa_entry_line(
+  let good1 = adversarial_entry_line(
     "000000000001-0001",
     "qa-io",
     "导入有效条目一",
@@ -964,7 +964,7 @@ test "QA: import tolerates corrupted lines; dim-mismatched entry keyword-recalla
     1,
     1,
   )
-  let good2 = qa_entry_line(
+  let good2 = adversarial_entry_line(
     "000000000002-0002",
     "qa-io",
     "导入有效条目二",
@@ -994,7 +994,7 @@ test "QA: import tolerates corrupted lines; dim-mismatched entry keyword-recalla
   inspect(st.total, content="2")
   // 嵌入维度与配置不符(如配置变更后导入):仅入关键词索引,仍可召回
   // 查询「维度锚点」的分词要能命中 keywords。字段名与 README 快照行一致。
-  let odd = qa_entry_line(
+  let odd = adversarial_entry_line(
     "000000000100-0064",
     "qa-io",
     "维度锚点记忆",
@@ -1004,7 +1004,7 @@ test "QA: import tolerates corrupted lines; dim-mismatched entry keyword-recalla
     100,
   )
   let backend2 = @src.MemoryBackend::new()
-  let store2 = match qa_open_default(backend2) {
+  let store2 = match adversarial_open_default(backend2) {
     Ok(s) => s
     Err(e) => {
       inspect(e.message(), content="SHOULD NOT REACH")
@@ -1039,7 +1039,7 @@ test "QA: import tolerates corrupted lines; dim-mismatched entry keyword-recalla
     }
   }
   let backend3 = @src.MemoryBackend::new()
-  let store3 = match qa_open_default(backend3) {
+  let store3 = match adversarial_open_default(backend3) {
     Ok(s) => s
     Err(e) => {
       inspect(e.message(), content="SHOULD NOT REACH")
@@ -1076,14 +1076,14 @@ test "QA: import tolerates corrupted lines; dim-mismatched entry keyword-recalla
 ///|
 test "QA: import must not silently accept entries with illegal user_id" {
   let backend = @src.MemoryBackend::new()
-  let store = match qa_open_default(backend) {
+  let store = match adversarial_open_default(backend) {
     Ok(s) => s
     Err(e) => {
       inspect(e.message(), content="SHOULD NOT REACH")
       return
     }
   }
-  let evil = qa_entry_line(
+  let evil = adversarial_entry_line(
     "000000000009-00ff",
     "../evil",
     "越权条目",
@@ -1116,7 +1116,7 @@ test "QA: import must not silently accept entries with illegal user_id" {
 ///|
 test "QA: export/import overlapping content skipped via dedup" {
   let backend_a = @src.MemoryBackend::new()
-  let store_a = match qa_open_default(backend_a) {
+  let store_a = match adversarial_open_default(backend_a) {
     Ok(s) => s
     Err(e) => {
       inspect(e.message(), content="SHOULD NOT REACH")
@@ -1134,7 +1134,7 @@ test "QA: export/import overlapping content skipped via dedup" {
   ignore(store_a.close())
   // 目标库已有同 user 同内容(不同 id):导入应跳过,不产生第二条
   let backend_b = @src.MemoryBackend::new()
-  let store_b = match qa_open_default(backend_b) {
+  let store_b = match adversarial_open_default(backend_b) {
     Ok(s) => s
     Err(e) => {
       inspect(e.message(), content="SHOULD NOT REACH")
@@ -1169,7 +1169,7 @@ test "QA: export/import overlapping content skipped via dedup" {
 ///|
 test "QA: empty export and empty import are no-ops" {
   let backend = @src.MemoryBackend::new()
-  let store = match qa_open_default(backend) {
+  let store = match adversarial_open_default(backend) {
     Ok(s) => s
     Err(e) => {
       inspect(e.message(), content="SHOULD NOT REACH")
@@ -1211,7 +1211,7 @@ test "QA: empty export and empty import are no-ops" {
 ///|
 test "QA: closed store rejects forget/stats/export/import/list too" {
   let backend = @src.MemoryBackend::new()
-  let store = match qa_open_default(backend) {
+  let store = match adversarial_open_default(backend) {
     Ok(s) => s
     Err(e) => {
       inspect(e.message(), content="SHOULD NOT REACH")

@@ -69,17 +69,17 @@ fn VectorIndex::size(self : VectorIndex, user_id : String) -> Int {
 fn VectorIndex::search(
   self : VectorIndex,
   user_id : String,
-  qvec : Array[Double],
+  query_vector : Array[Double],
   k : Int,
 ) -> Array[(String, Double)] {
-  if qvec.length() == 0 {
+  if query_vector.length() == 0 {
     return []
   }
   let scored : Array[(String, Double)] = []
   match self.shards.get(user_id) {
     Some(m) =>
       for kv in m.iter() {
-        let score = cosine_similarity(qvec, kv.1)
+        let score = cosine_similarity(query_vector, kv.1)
         if score > 0.0 {
           scored.push((kv.0, score))
         }

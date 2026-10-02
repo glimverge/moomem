@@ -33,7 +33,7 @@ Helpers:
 2. **Validate `user_id` at each entrance** — `match validate_user_id(user_id)` then return the same error.
 3. **Degrade instead of hard-fail when documented** — embedding failure on recall can fall back to BM25-only; extractor failures may degrade to unstructured / count toward the failure fuse (`store.mbt`, `AddSummary.degraded`).
 4. **Wrap foreign errors** — FS `@fs.IOError` → `MoomemError::IoFailure(...)` inside `persist.mbt`.
-5. **Tests assert with `inspect` / Result matching**, not panics — see `store_e2e_test.mbt`, `persist_test.mbt`.
+5. **Tests assert with `inspect` / Result matching**, not panics — see `store_test.mbt`, `persist_test.mbt`.
 
 ## What this project does *not* do
 

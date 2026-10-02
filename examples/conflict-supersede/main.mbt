@@ -3,7 +3,7 @@
 // 运行（零网络；AlwaysReplace + 主题 mock 嵌入器）：
 //   moon run examples/conflict-supersede --target native
 //
-// 断言仍在 L0 `store_e2e_test`（AC-04）；本包只做教学演示。
+// 断言仍在 L0 `store_test`（AC-04）；本包只做教学演示。
 
 ///|
 /// 恒 Replace 裁决：凡命中候选一律 supersede（教学用确定性 judge）。

@@ -41,8 +41,8 @@ pub struct MemoryStore {
   /// 每 user 的 entry id 插入序（含全部状态）
   by_user : Map[String, Array[String]]
   /// Package-private indexes (not host API)
-  priv vec_index : VectorIndex
-  priv kw_index : KeywordIndex
+  priv vector_index : VectorIndex
+  priv keyword_index : KeywordIndex
   priv dedup : DedupIndex
   /// 逻辑时钟上界（快照 header.clock 来源）
   mut clock_high : Int64
@@ -214,8 +214,8 @@ pub fn MemoryStore::open(
     vec_weight_when_semantic: cfg.vec_weight_when_semantic,
     entries: Map([]),
     by_user: Map([]),
-    vec_index: VectorIndex::new(),
-    kw_index: KeywordIndex::new(),
+    vector_index: VectorIndex::new(),
+    keyword_index: KeywordIndex::new(),
     dedup: DedupIndex::new(),
     clock_high: restored_clock,
     next_seq: 1,
@@ -274,17 +274,17 @@ fn MemoryStore::restore_entries(
 fn MemoryStore::index_entry(self : MemoryStore, e : MemoryEntry) -> Unit {
   // 嵌入维度与当前配置不符（配置变更后恢复）时仅入关键词索引
   if e.embedding.length() == self.dim {
-    self.vec_index.upsert(e.user_id, e.id, e.embedding)
+    self.vector_index.upsert(e.user_id, e.id, e.embedding)
   }
-  self.kw_index.upsert(e.user_id, e.id, e.keywords)
+  self.keyword_index.upsert(e.user_id, e.id, e.keywords)
   self.dedup.register(e.user_id, e.content, e.id)
 }
 
 ///|
 /// 将条目从双索引与去重表摘除（supersede / forget 共用）。
 fn MemoryStore::deindex_entry(self : MemoryStore, e : MemoryEntry) -> Unit {
-  self.vec_index.remove(e.user_id, e.id)
-  self.kw_index.remove(e.user_id, e.id)
+  self.vector_index.remove(e.user_id, e.id)
+  self.keyword_index.remove(e.user_id, e.id)
   self.dedup.unregister(e.user_id, e.content)
 }
 
@@ -440,13 +440,13 @@ fn MemoryStore::collect_conflict_candidates(
 ) -> Array[MemoryEntry] {
   let candidate_ids : Array[String] = []
   if vec.length() == self.dim {
-    for pair in self.vec_index.search(user_id, vec, self.conflict_candidates) {
+    for pair in self.vector_index.search(user_id, vec, self.conflict_candidates) {
       if !candidate_ids.contains(pair.0) {
         candidate_ids.push(pair.0)
       }
     }
   }
-  for pair in self.kw_index.search(
+  for pair in self.keyword_index.search(
     user_id,
     content,
     self.conflict_candidates,
@@ -719,18 +719,18 @@ pub fn MemoryStore::recall(
   }
   let candidates_n = if candidates_n < k { k } else { candidates_n }
   // 嵌入查询（失败 → 单路 BM25）
-  let qvec : Array[Double] = match self.embedder.embed([query]) {
+  let query_vector : Array[Double] = match self.embedder.embed([query]) {
     Ok(vs) => if vs.length() > 0 { vs[0] } else { [] }
     Err(_) => []
   }
-  let vec_hits = self.vec_index.search(user_id, qvec, candidates_n)
-  let kw_hits = self.kw_index.search(user_id, query, candidates_n)
-  let vec_ids : Array[String] = vec_hits.map(p => p.0)
-  let kw_ids : Array[String] = kw_hits.map(p => p.0)
+  let vector_hits = self.vector_index.search(user_id, query_vector, candidates_n)
+  let keyword_hits = self.keyword_index.search(user_id, query, candidates_n)
+  let vector_ids : Array[String] = vector_hits.map(p => p.0)
+  let keyword_ids : Array[String] = keyword_hits.map(p => p.0)
   let fused = match self.fusion_policy {
-    EqualRrf => rrf([vec_ids, kw_ids], self.rrf_k, k)
+    EqualRrf => rrf([vector_ids, keyword_ids], self.rrf_k, k)
     AdaptiveLexical => {
-      let bm25_scores : Array[Double] = kw_hits.map(p => p.1)
+      let bm25_scores : Array[Double] = keyword_hits.map(p => p.1)
       let strong = lexical_strong(
         bm25_scores,
         self.lexical_floor,
@@ -738,20 +738,27 @@ pub fn MemoryStore::recall(
       )
       let soft = if strong && self.vec_weight_when_lexical <= 0.05 {
         let out : Array[String] = []
-        let limit = if k < kw_ids.length() { k } else { kw_ids.length() }
+        let limit = if k < keyword_ids.length() { k } else { keyword_ids.length() }
         for i = 0; i < limit; i = i + 1 {
-          out.push(kw_ids[i])
+          out.push(keyword_ids[i])
         }
         out
       } else {
-        let w_v = if strong {
+        let vector_weight = if strong {
           self.vec_weight_when_lexical
         } else {
           self.vec_weight_when_semantic
         }
-        rrf_weighted(vec_ids, kw_ids, self.rrf_k, k, w_v, 1.0 - w_v)
+        rrf_weighted(
+          vector_ids,
+          keyword_ids,
+          self.rrf_k,
+          k,
+          vector_weight,
+          1.0 - vector_weight,
+        )
       }
-      protect_bm25_topk(soft, kw_ids, k)
+      protect_bm25_topk(soft, keyword_ids, k)
     }
   }
   let results : Array[MemoryEntry] = []

@@ -54,6 +54,49 @@ moon run cmd/main
 
 它会写入几条记忆、召回，再打开同一目录确认还在。闲聊不会入库。
 
+## 磁盘布局
+
+`open("./memory")` 之后，native 上磁盘上是这样的（`<path>` 是你传给 `open` 的目录）：
+
+```
+<path>/moomem/head          # 一个字符，"0" 或 "1"，指向当前有效槽
+<path>/moomem/slot0.jsonl   # 快照槽 A
+<path>/moomem/slot1.jsonl   # 快照槽 B
+```
+
+`head` 指到哪个槽，哪个就是当前真相。写入时的顺序是**先整份覆盖写进非当前槽，成功后再拨 `head`**：
+
+- 写槽写到一半崩溃 → `head` 还指着旧槽，数据一点不丢；
+- 拨 `head` 写到一半崩溃 → `head` 损坏，此时回退到"两个槽里都能解析 header、且 `gen` 更大的那个"。
+
+每个 `slot*.jsonl` 是 JSON Lines：第 1 行是 header，之后每行一条记忆，**按 `seq` 升序**。header 三个字段：
+
+```json
+{"v":1,"gen":4,"clock":2}
+```
+
+`v` 是快照格式版本（当前 `1`，存在 `SNAPSHOT_VERSION`），`gen` 是快照代数（每次落盘 +1），`clock` 是落盘时的逻辑时钟上界。
+
+恢复时的容错边界很窄，这是有意的：只有**最后一行**是半行（写崩了）才会被丢弃，并计入 `stats().truncated_recovered`；任何**中部**行损坏或出现空行，`open` 直接返回 `StoreCorrupted` 报错，不静默丢数据。`v` 对不上也报 `StoreCorrupted`。
+
+一条记忆行长这样（256 维哈希嵌入，节选）：
+
+```json
+{"id":"000000000001-6091","user_id":"user-42","content":"我对花生过敏",
+ "kind":"unstructured","embedding":[0,0,...],"keywords":["我","对","我对","花","对花","..."],
+ "status":"active","created_at":1,"superseded_by":null,"seq":1,
+ "metadata":{"extractor":"raw"}}
+```
+
+`status` 有 `active` / `superseded` / `deleted` / `unstructured` 四种。`recall` 只返回 `active` 与 `unstructured` 这两类，被覆盖和被删除的条目**仍留在快照里**供审计。注意 `kind` 和 `status` 是两个独立字段：上面那条记忆是 `kind=unstructured`（缺省 `RawExtractor` 原样入库）配 `status=active`（还生效着）。
+
+`metadata` 里 `extractor` 记提取器模式；若这次写入降级过，还会多出 `extraction_degraded` 或 `embedding_degraded`。
+
+向量索引、BM25 索引和去重表都不落盘——它们是派生结构，`open` 时从快照重建。所以**快照是唯一真相**，拷走 `moomem/` 目录就等于拷走全部记忆。
+
+> [!NOTE]
+> 这是全量快照，不是追加日志：每次落盘都重写整份条目。写入量越大、单次越慢，这个库没有做过规模压测，所以不承诺具体条数上限——请按自己的数据量实测。真正需要追加写时，自己实现 `PersistenceBackend`（例如 native 侧用 extern C 做 append）。wasm / js 缺省用内存后端，根本不落盘。
+
 ## 示例
 
 三条演示都不读密钥、不访问网络：

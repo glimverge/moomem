@@ -1,6 +1,6 @@
 # moomem 架构蓝图
 
-生成日期：2026-10-02。范围是核心库 `src/`（包 `heyq02/moomem`，版本 0.6.0）。宿主契约的短说明在 `README.md`；本文件描述 `src/` 里实际落地的结构，供以后改代码时保持同一条边界。
+生成日期：2026-10-02。范围是核心库 `src/`（包 `heyq02/moomem`，版本 0.7.0）。宿主契约的短说明在 `README.md`；本文件描述 `src/` 里实际落地的结构，供以后改代码时保持同一条边界。
 
 技术栈是 MoonBit，不是 Web 服务。依赖只有 `moonbitlang/core/json`、`moonbitlang/core/math`、`moonbitlang/x/fs`（`src/moon.pkg`）。没有 LLM SDK，没有网络客户端，没有第二个有状态门面。
 

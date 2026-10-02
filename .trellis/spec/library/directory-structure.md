@@ -10,10 +10,8 @@
 |------|------|----------|
 | `src/` | Core library (`MemoryStore` aggregate); L0 包旁测试 | `moonbitlang/x/fs`, `moonbitlang/core/json` |
 | `ci/eval/locomo/` | L3 offline LoCoMo eval harness + `data/` | separate package |
-| `benchmarks/locomo/` | Release-archived LoCoMo scores (site `/benchmark`) | metrics JSON only |
 | `ci/tools/retrieval-tuning/` | Offline retrieval tuning tool (U1; **not in CI**) | separate package |
 | `examples/<scene>/` | E2 scene demos: `basic-store`, `conflict-supersede`, `cli-smoke` | — |
-| `site/` | Public docs site; restates the host contract | — |
 | `.trellis/spec/` | AI coding guidelines + CI iron rules (this tree) | — |
 | `.github/workflows/` | CI / release **implementation** (living SoT for pipelines) | — |
 
@@ -83,7 +81,7 @@ Align with [Quality Guidelines](./quality-guidelines.md).
 | Need | Put it in |
 |------|----------|
 | Asserted offline regression (core) | Package-side `src/*_test.mbt` / `*_wbtest.mbt` (L0) |
-| Benchmark / corpus eval | `ci/eval/locomo/` (L3, offline hashing); release archives → `benchmarks/locomo/` |
+| Benchmark / corpus eval | `ci/eval/locomo/` (L3, offline hashing) |
 | Sweep / calibrate Config, not a gate | `ci/tools/retrieval-tuning/` (tool) |
 | Teachable runnable demo (no AC suite) | `examples/<scene>/` (E2) |
 

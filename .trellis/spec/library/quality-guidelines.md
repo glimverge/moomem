@@ -63,7 +63,6 @@ moon test --enable-coverage && moon coverage report --ignore-missing-files -f su
 moon test --target wasm
 moon run ci/tools/retrieval-tuning --target native   # tool（无 CI 调用）
 moon run ci/eval/locomo --target native              # L3 offline eval
-# NEW_VERSION=… bash scripts/ci/run-locomo-benchmark-archive.sh  # local offline archive
 moon run examples/basic-store --target native
 moon run examples/conflict-supersede --target native
 moon run examples/cli-smoke --target native

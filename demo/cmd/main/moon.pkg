@@ -1,5 +1,9 @@
-// import {
-//   "heyq02/demo" @lib,
-// }
+import {
+  "heyq02/moomem/src" @moomem,
+  "moonbitlang/async",
+  "moonbitlang/async/http",
+  "moonbitlang/core/json",
+  "moonbitlang/x/fs",
+}
 
 pkgtype(kind: "executable")

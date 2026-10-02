@@ -21,6 +21,12 @@ license = "Apache-2.0"
 
 keywords = []
 
-preferred_target = "wasm"
+preferred_target = "native"
 
 description = ""
+
+import {
+  "heyq02/moomem@0.7.0",
+  "moonbitlang/async@0.22.4",
+  "moonbitlang/x@0.5.5",
+}

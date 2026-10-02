@@ -23,4 +23,11 @@ test "MoomemError: message and kind cover every variant" {
   let operation = @src.MoomemError::InvalidOperation("closed")
   inspect(operation.message(), content="invalid operation: closed")
   inspect(operation.kind(), content="invalid_operation")
+  inspect(invalid.to_string(), content="InvalidUserId(empty)")
+  inspect(corrupted.to_string(), content="StoreCorrupted(bad header)")
+  inspect(io.to_string(), content="IoFailure(disk)")
+  inspect(extraction.to_string(), content="ExtractionFailure(down)")
+  inspect(embedding.to_string(), content="EmbeddingFailure(down)")
+  inspect(backend.to_string(), content="BackendUnsupported(wasm)")
+  inspect(operation.to_string(), content="InvalidOperation(closed)")
 }

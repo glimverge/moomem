@@ -15,6 +15,7 @@ test "DedupIndex: register / lookup / unregister per user" {
   // 摘除后不命中
   dedup.unregister("user-a", "我对花生过敏")
   inspect(dedup.lookup("user-a", "我对花生过敏") == None, content="true")
+  dedup.unregister("missing-user", "我对花生过敏")
 }
 
 ///|

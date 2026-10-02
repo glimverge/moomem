@@ -27,4 +27,24 @@ test "RawExtractor: raw passthrough with kind=unstructured" {
     }
   }
   inspect(blank.length(), content="0")
+  let spanned = @src.ExtractedFact::{
+    content: "花生",
+    kind: Preference,
+    source_span: Some("0:2"),
+    degraded: false,
+    degrade_reason: None,
+  }
+  inspect(
+    spanned.to_string(),
+    content="{content: 花生, kind: Preference, source_span: Some(0:2)}",
+  )
+  let bare = @src.ExtractedFact::{
+    ..spanned,
+    kind: Event,
+    source_span: None,
+  }
+  inspect(
+    bare.to_string(),
+    content="{content: 花生, kind: Event, source_span: None}",
+  )
 }

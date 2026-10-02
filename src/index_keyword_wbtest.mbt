@@ -19,6 +19,8 @@ test "tokenize: CJK single chars + bigrams, latin words lowercased" {
   inspect(mixed[1], content="moonbit")
   inspect(mixed[6], content="记忆")
   inspect(tokenize("   ").length(), content="0")
+  inspect(tokenize("㐀").length() > 0, content="true")
+  inspect(tokenize("豈").length() > 0, content="true")
 }
 
 ///|
@@ -44,6 +46,20 @@ test "KeywordIndex: CJK query hits, per-user isolation, remove" {
   inspect(after.length(), content="1")
   inspect(after[0].0, content="a-2")
   inspect(index.size("user-a"), content="1")
+  inspect(index.search("user-a", "!!!", 5).length(), content="0")
+  index.remove("nobody", "nope")
+  inspect(index.size("nobody"), content="0")
+  index.upsert("user-a", "a-2", tokenize("别的主题"))
+  let replaced = index.search("user-a", "花生过敏", 5)
+  inspect(replaced.length(), content="0")
+  index.upsert("tie", "m", tokenize("同"))
+  index.upsert("tie", "a", tokenize("同"))
+  let ties = index.search("tie", "同", 2)
+  inspect(ties.length(), content="2")
+  inspect(ties[0].0, content="a")
+  index.remove("tie", "m")
+  index.remove("tie", "a")
+  inspect(index.search("tie", "同", 2).length(), content="0")
 }
 
 ///|

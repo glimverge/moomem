@@ -197,3 +197,218 @@ test "codec: middle corruption rejected, tail truncation counted" {
   inspect(result.entries.length(), content="1")
   inspect(result.truncated_recovered, content="1")
 }
+
+///|
+fn codec_base_object() -> Map[String, Json] {
+  let obj : Map[String, Json] = Map([])
+  obj.set("id", Json::string("000000000001-abcd"))
+  obj.set("user_id", Json::string("user-42"))
+  obj.set("content", Json::string("hello"))
+  obj.set("kind", Json::string("fact"))
+  obj.set("embedding", Json::array([Json::number(0.5)]))
+  obj.set("keywords", Json::array([Json::string("hello")]))
+  obj.set("status", Json::string("active"))
+  obj.set("created_at", Json::number(1.0))
+  obj.set("superseded_by", Json::null())
+  obj.set("seq", Json::number(1.0))
+  obj.set("metadata", Json::null())
+  obj
+}
+
+///|
+fn codec_rejects(j : Json, needle : String) -> Bool {
+  match entry_from_json(j) {
+    Err(StoreCorrupted(msg)) => msg.contains(needle)
+    _ => false
+  }
+}
+
+///|
+test "codec: malformed fields and empty snapshot are rejected" {
+  inspect(
+    codec_rejects(Json::array([]), "not a JSON object"),
+    content="true",
+  )
+  let missing_kind = codec_base_object()
+  missing_kind.remove("kind")
+  inspect(
+    codec_rejects(Json::object(missing_kind), "missing field 'kind'"),
+    content="true",
+  )
+  let missing_status = codec_base_object()
+  missing_status.remove("status")
+  inspect(
+    codec_rejects(Json::object(missing_status), "missing field 'status'"),
+    content="true",
+  )
+  let bad_span = codec_base_object()
+  bad_span.set("superseded_by", Json::number(1.0))
+  inspect(
+    codec_rejects(Json::object(bad_span), "superseded_by"),
+    content="true",
+  )
+  let bad_meta = codec_base_object()
+  bad_meta.set("metadata", Json::array([]))
+  inspect(
+    codec_rejects(Json::object(bad_meta), "metadata"),
+    content="true",
+  )
+  let bad_status = codec_base_object()
+  bad_status.set("status", Json::string("nope"))
+  inspect(
+    codec_rejects(Json::object(bad_status), "unknown status"),
+    content="true",
+  )
+  let status_num = codec_base_object()
+  status_num.set("status", Json::number(1.0))
+  inspect(
+    codec_rejects(Json::object(status_num), "status is not a string"),
+    content="true",
+  )
+  let bad_kind = codec_base_object()
+  bad_kind.set("kind", Json::string("nope"))
+  inspect(
+    codec_rejects(Json::object(bad_kind), "unknown kind"),
+    content="true",
+  )
+  let kind_num = codec_base_object()
+  kind_num.set("kind", Json::number(1.0))
+  inspect(
+    codec_rejects(Json::object(kind_num), "kind is not a string"),
+    content="true",
+  )
+  let id_num = codec_base_object()
+  id_num.set("id", Json::number(1.0))
+  inspect(
+    codec_rejects(Json::object(id_num), "field 'id' is not a string"),
+    content="true",
+  )
+  let missing_id = codec_base_object()
+  missing_id.remove("id")
+  inspect(
+    codec_rejects(Json::object(missing_id), "field 'id' is missing"),
+    content="true",
+  )
+  let seq_text = codec_base_object()
+  seq_text.set("seq", Json::string("1"))
+  inspect(
+    codec_rejects(Json::object(seq_text), "field 'seq' is not a number"),
+    content="true",
+  )
+  let missing_seq = codec_base_object()
+  missing_seq.remove("seq")
+  inspect(
+    codec_rejects(Json::object(missing_seq), "field 'seq' is missing"),
+    content="true",
+  )
+  let clock_text = codec_base_object()
+  clock_text.set("created_at", Json::string("1"))
+  inspect(
+    codec_rejects(Json::object(clock_text), "field 'created_at' is not a number"),
+    content="true",
+  )
+  let missing_clock = codec_base_object()
+  missing_clock.remove("created_at")
+  inspect(
+    codec_rejects(Json::object(missing_clock), "field 'created_at' is missing"),
+    content="true",
+  )
+  let emb_text = codec_base_object()
+  emb_text.set("embedding", Json::string("nope"))
+  inspect(
+    codec_rejects(Json::object(emb_text), "field 'embedding' is not an array"),
+    content="true",
+  )
+  let missing_emb = codec_base_object()
+  missing_emb.remove("embedding")
+  inspect(
+    codec_rejects(Json::object(missing_emb), "field 'embedding' is missing"),
+    content="true",
+  )
+  let emb_item = codec_base_object()
+  emb_item.set("embedding", Json::array([Json::string("x")]))
+  inspect(
+    codec_rejects(Json::object(emb_item), "non-number"),
+    content="true",
+  )
+  let kw_text = codec_base_object()
+  kw_text.set("keywords", Json::string("nope"))
+  inspect(
+    codec_rejects(Json::object(kw_text), "field 'keywords' is not an array"),
+    content="true",
+  )
+  let missing_kw = codec_base_object()
+  missing_kw.remove("keywords")
+  inspect(
+    codec_rejects(Json::object(missing_kw), "field 'keywords' is missing"),
+    content="true",
+  )
+  let kw_item = codec_base_object()
+  kw_item.set("keywords", Json::array([Json::number(1.0)]))
+  inspect(
+    codec_rejects(Json::object(kw_item), "non-string"),
+    content="true",
+  )
+  let null_ok = codec_base_object()
+  let restored = match entry_from_json(Json::object(null_ok)) {
+    Ok(e) => e.superseded_by == None && e.metadata.length() == 0
+    Err(_) => false
+  }
+  inspect(restored, content="true")
+  for kind in [Preference, Event] {
+    let entry : MemoryEntry = MemoryEntry::{
+      id: "000000000009-0001",
+      user_id: "u",
+      content: "kind roundtrip",
+      kind,
+      embedding: [],
+      keywords: [],
+      status: Unstructured,
+      created_at: 1L,
+      superseded_by: None,
+      seq: 9,
+      metadata: Map([]),
+    }
+    let back = match entry_from_json(entry_to_json(entry)) {
+      Ok(e) => e.kind == kind && e.status == Unstructured
+      Err(_) => false
+    }
+    inspect(back, content="true")
+  }
+  let empty = match parse_snapshot_text("") {
+    Err(StoreCorrupted(msg)) => msg.contains("empty snapshot")
+    _ => false
+  }
+  inspect(empty, content="true")
+  let header = match parse_snapshot_text("[]\n") {
+    Err(StoreCorrupted(msg)) => msg.contains("not a JSON object")
+    _ => false
+  }
+  inspect(header, content="true")
+  let blank_mid = match parse_snapshot_text(
+    "{\"v\":1,\"gen\":1,\"clock\":1}\n\n{}\n",
+  ) {
+    Err(StoreCorrupted(msg)) => msg.contains("blank entry line")
+    _ => false
+  }
+  inspect(blank_mid, content="true")
+  let blank_line = match parse_json_line("   ") {
+    Err(StoreCorrupted(msg)) => msg.contains("blank line")
+    _ => false
+  }
+  inspect(blank_line, content="true")
+  let bad_header = match parse_snapshot_header(Json::array([])) {
+    Err(StoreCorrupted(msg)) => msg.contains("not a JSON object")
+    _ => false
+  }
+  inspect(bad_header, content="true")
+  let mismatch_obj : Map[String, Json] = Map([])
+  mismatch_obj.set("v", Json::number(99.0))
+  mismatch_obj.set("gen", Json::number(1.0))
+  mismatch_obj.set("clock", Json::number(0.0))
+  let mismatch = match parse_snapshot_header(Json::object(mismatch_obj)) {
+    Err(StoreCorrupted(msg)) => msg.contains("version mismatch")
+    _ => false
+  }
+  inspect(mismatch, content="true")
+}

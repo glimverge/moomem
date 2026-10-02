@@ -26,6 +26,10 @@ test "rrf: single list passes through, top_k truncates" {
   inspect(rrf([], 60, 5).length(), content="0")
   // k 非法 → 空
   inspect(rrf([["a"]], 0, 5).length(), content="0")
+  let tied = rrf([["a"], ["b"]], 60, 2)
+  inspect(tied[0], content="a")
+  inspect(tied[1], content="b")
+  inspect(rrf_weighted(["a"], ["b"], 0, 3, 1.0, 1.0).length(), content="0")
 }
 
 ///|
@@ -76,4 +80,7 @@ test "protect_bm25_topk: reinjects missing BM25 tops" {
   inspect(out.contains("a"), content="true")
   inspect(out.contains("b"), content="true")
   inspect(out.contains("c"), content="true")
+  let appended = protect_bm25_topk(["a"], ["a", "b"], 3)
+  inspect(appended.length(), content="2")
+  inspect(appended[1], content="b")
 }

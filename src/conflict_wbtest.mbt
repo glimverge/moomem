@@ -83,4 +83,73 @@ test "SimilarityJudge: keyword jaccard" {
   inspect(close, content="true")
   inspect(keyword_jaccard("我爱你", ["无关词"]), content="0")
   inspect(keyword_jaccard("", []), content="0")
+  inspect(Replace.to_string(), content="Replace")
+  inspect(Coexist.to_string(), content="Coexist")
+  inspect(Ignore.to_string(), content="Ignore")
+}
+
+///|
+struct ConflictFailingEmbedder {}
+
+///|
+impl Embedder for ConflictFailingEmbedder with fn embed(_, _) {
+  Err(MoomemError::EmbeddingFailure("down"))
+}
+
+///|
+impl Embedder for ConflictFailingEmbedder with fn dim(_) {
+  4
+}
+
+///|
+struct ConflictEmptyEmbedder {}
+
+///|
+impl Embedder for ConflictEmptyEmbedder with fn embed(_, _) {
+  Ok([])
+}
+
+///|
+impl Embedder for ConflictEmptyEmbedder with fn dim(_) {
+  4
+}
+
+///|
+test "SimilarityJudge: embedder failure falls back to keyword overlap" {
+  let failing = SimilarityJudge::new(0.5, ConflictFailingEmbedder::{  })
+  let fact : ExtractedFact = ExtractedFact::{
+    content: "我爱北京",
+    kind: Fact,
+    source_span: None,
+    degraded: false,
+    degrade_reason: None,
+  }
+  let cand = MemoryEntry::{
+    id: "c1",
+    user_id: "user-42",
+    content: "旧事实",
+    kind: Fact,
+    embedding: [1.0, 0.0],
+    keywords: tokenize("我爱北京"),
+    status: Active,
+    created_at: 1L,
+    superseded_by: None,
+    seq: 1,
+    metadata: Map([]),
+  }
+  let verdicts = match failing.judge(fact, [cand]) {
+    Ok(vs) => vs
+    Err(_) => {
+      inspect("judge failed", content="SHOULD NOT REACH")
+      return
+    }
+  }
+  inspect(verdicts.length(), content="1")
+  inspect(verdicts[0].decision == Replace, content="true")
+  let empty = SimilarityJudge::new(0.5, ConflictEmptyEmbedder::{  })
+  let none = match empty.judge(fact, [cand]) {
+    Ok(vs) => vs.length()
+    Err(_) => -1
+  }
+  inspect(none, content="1")
 }

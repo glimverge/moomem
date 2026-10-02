@@ -239,6 +239,24 @@ test "conflict_candidates=0 and coexist_band=1.0 rejected" {
     _ => false
   }
   inspect(rejected_wv, content="true")
+  let bad_floor = @src.Config::{
+    ..config_base(backend),
+    lexical_floor: -0.1,
+  }
+  let rejected_floor = match config_open(bad_floor) {
+    Err(InvalidOperation(msg)) => msg.contains("lexical_floor")
+    _ => false
+  }
+  inspect(rejected_floor, content="true")
+  let bad_sem = @src.Config::{
+    ..config_base(backend),
+    vector_weight_when_semantic: 1.1,
+  }
+  let rejected_sem = match config_open(bad_sem) {
+    Err(InvalidOperation(msg)) => msg.contains("vector_weight_when_semantic")
+    _ => false
+  }
+  inspect(rejected_sem, content="true")
 }
 
 // ---------------------------------------------------------------------------

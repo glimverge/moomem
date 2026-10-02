@@ -416,6 +416,20 @@ test "MemoryBackend: partial write stores only the prefix" {
   }
   inspect(saved, content="true")
   inspect(backend.peek() == Some("abcd"), content="true")
+  backend.set_simulate_partial_write(Some(-1))
+  let negative = match backend.save("abcdefgh") {
+    Ok(_) => true
+    Err(_) => false
+  }
+  inspect(negative, content="true")
+  inspect(backend.peek() == Some(""), content="true")
+  backend.set_simulate_partial_write(Some(100))
+  let oversized = match backend.save("abcdefgh") {
+    Ok(_) => true
+    Err(_) => false
+  }
+  inspect(oversized, content="true")
+  inspect(backend.peek() == Some("abcdefgh"), content="true")
 }
 
 ///|

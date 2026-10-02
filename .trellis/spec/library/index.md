@@ -27,7 +27,7 @@ Before changing library code:
 - [ ] Failures return `Result[T, MoomemError]` — never panic/abort in library paths
 - [ ] Filesystem `@fs` call sites in non-test core stay in `src/persist.mbt` only (`moon.pkg` may import `moonbitlang/x/fs`; `persist_test.mbt` is allowlisted)
 - [ ] JSON encode/decode stays in `src/json_codec.mbt` only
-- [ ] Core package does not import `mizchi/llm` (optional adapters live in `src/llm_extractor/`)
+- [ ] Core package does not import an LLM SDK (hosts implement `Extractor` / `ConflictJudge` / `Embedder`)
 - [ ] Any index/search/dedup path takes an explicit `user_id` (no cross-user API)
 - [ ] Host surface stays centered on `MemoryStore::open/add/recall/forget/stats/close` (+ list/export/import); indexes/dedup/`rrf` are package-private; do not treat `tokenize`/similarity helpers as host API
 - [ ] Defaults remain offline/deterministic when injection points are `None`
@@ -54,7 +54,7 @@ After implementing:
 4. `user_id` physical sharding; cross-user recall structurally impossible.
 5. Dual-slot snapshot + head pointer (not append-only JSONL).
 6. Host API: `MemoryStore` open/add/recall/forget/stats/close (+ export/import/list helpers). Indexes / dedup / `rrf` are package-private (Option B); `tokenize` / `cosine_similarity` / `keyword_jaccard` remain `pub` CI diagnostics only.
-7. `llm_extractor` is optional; core must not depend on `mizchi/llm`.
+7. No bundled model client; core must not depend on an LLM SDK.
 
 ---
 

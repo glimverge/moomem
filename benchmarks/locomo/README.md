@@ -15,25 +15,15 @@ the machine-readable archive consumed by the docs site.
 ## How results are written
 
 Release pipeline stops after Publish / tag / GitHub Release. Operators archive
-benchmarks on a machine with `.env` (QWEN→embed + DeepSeek):
+the offline hashing run locally (no model keys):
 
 ```bash
-set -a && source .env && set +a
 # NEW_VERSION must match the published moon.mod / tag (e.g. 0.4.0)
 NEW_VERSION=0.4.0 bash scripts/ci/run-locomo-benchmark-archive.sh
-# runs offline + api + live (full 100 extract cases by default), then commit + push
+# runs offline hashing, records api/live as skipped, then commit + push
 #
 # SKIP_COMMIT=1          write JSON only
 # SKIP_PUSH=1            commit, no push
-# SKIP_API=1 / SKIP_LIVE=1
-# LIVE_EXTRACT_LIMIT=20  smoke subset for live extraction
-```
-
-If offline+api already exist and only live is missing:
-
-```bash
-set -a && source .env && set +a
-bash scripts/ci/run-locomo-live-local.sh   # defaults to latest.json version
 ```
 
 Push to `main` triggers Pages deploy; the site copies this tree at build time.

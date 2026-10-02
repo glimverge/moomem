@@ -57,7 +57,7 @@
 
 围绕上面那条 `add` / `recall` 链，另外长出了：
 
-- `src/llm_extractor/`：可选适配，核心包不依赖 LLM。`src/cli/` 已于 2026-10-02 删除（命令行不是契约）
+- `src/cli/` 与 `src/llm_extractor/` 已于 2026-10-02 删除。模型由宿主实现 `Embedder` / `Extractor` / `ConflictJudge`。
 - `examples/`：四个零网络演示
 - `ci/eval/locomo`、`ci/tools/retrieval-tuning`、`ci/gates/`：评测与调参
 - `site/`：对外文档站
@@ -89,7 +89,7 @@
 | `MemoryStore` 的 open/add/recall/forget/stats/close/export/import/list | 服务脊柱 | 宿主契约 |
 | 五个 trait 与缺省适配器（Hashing / Raw / Similarity / Fs / LogicalClock） | 服务脊柱 | 注入缝，对应 SQLite 的 VFS：宿主要实现就得看见 |
 | `src/index_*.mbt`、`ranker.mbt`、`dedup.mbt`、`tokenize`、`cosine_similarity`、`json_codec.mbt` | 服务脊柱的实现；公开导出已漂移 | 派生索引与编解码。SQLite 不把 B-tree 放进公开头文件。评测包直接调用其中一部分 |
-| `src/llm_extractor/`、`examples/` | 扩展 | 核心包不依赖 LLM。`src/cli/` 已删除 |
+| `examples/` | 扩展 | `src/cli/` 与 `src/llm_extractor/` 已删除 |
 | `ci/eval/locomo`、`ci/tools/retrieval-tuning`、`ci/gates/` | 扩展 | 测量或调参，不是契约 |
 | `.github/workflows/test-pipeline.yml` | 服务脊柱 | 守住多后端测试与离线评测门槛 |
 | `README.md` | 服务脊柱；已漂移，改 | 唯一还在维护的宿主契约页。Q4 的落点 |

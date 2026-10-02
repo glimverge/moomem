@@ -16,7 +16,7 @@ on:
           - alpha
           - beta
       dry_run:
-        description: "Skip mooncakes publish, git commit/tag, and GitHub Release (quality + live LLM gate still run)"
+        description: "Skip mooncakes publish, git commit/tag, and GitHub Release (quality gate still runs)"
         type: boolean
         default: false
 
@@ -34,36 +34,9 @@ jobs:
     name: Quality Gate
     uses: ./.github/workflows/test-pipeline.yml
 
-  llm-live:
-    name: Live LLM Gate (DeepSeek)
-    needs: quality
-    runs-on: ubuntu-latest
-    timeout-minutes: 25
-    permissions:
-      contents: read
-    env:
-      DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
-      DEEPSEEK_BASE_URL: ${{ vars.DEEPSEEK_BASE_URL }}
-      DEEPSEEK_MODEL: ${{ vars.DEEPSEEK_MODEL }}
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup MoonBit
-        uses: ./.github/actions/setup-moonbit
-        with:
-          version: ${{ env.MOON_VERSION }}
-          cache: "false"
-
-      - name: Require DeepSeek configuration
-        run: bash scripts/ci/require-deepseek-config.sh
-
-      - name: Run live LLM gate
-        run: bash scripts/ci/run-llm-live-gate.sh
-
   release:
     name: Publish mooncakes
-    needs: [quality, llm-live]
+    needs: quality
     runs-on: ubuntu-latest
     timeout-minutes: 10
     permissions:

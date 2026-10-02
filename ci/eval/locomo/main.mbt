@@ -1,14 +1,9 @@
 // LoCoMo L3 evaluation entrypoint (W4).
 //
-// Offline (default):
+// Offline:
 //   moon run ci/eval/locomo --target native
-// API embedder:
-//   moon run ci/eval/locomo --target native -- --embedder api
-// Live extraction:
-//   moon run ci/eval/locomo --target native -- --live
 // Machine-readable report (archive):
 //   moon run ci/eval/locomo --target native -- --report /tmp/offline.json
-//   moon run ci/eval/locomo --target native -- --embedder api --report /tmp/api.json --report-only-exit
 
 ///|
 fn main {
@@ -32,27 +27,14 @@ fn main {
   )
   println("")
 
-  // ---- optional API embedder (only when requested) ----
-  let mut api_emb : &@src.Embedder? = None
-  let mut api_dim = @src.DEFAULT_DIM
-  let mut api_model = ""
-  if opts.embedder == "api" {
-    let emb = ApiEmbedder::from_env()
-    let d = emb.probe_dim()
-    println("api embedder dim=\{d} model=\{emb.model}")
-    api_dim = d
-    api_model = emb.model
-    api_emb = Some(emb as &@src.Embedder)
-  }
-
-  // ---- retrieval ----
+  // ---- retrieval (hashing embedder only; host supplies a real Embedder) ----
   println("## Retrieval")
   println("")
   let (hybrid, bm25) = run_retrieval_eval(
     data,
     opts.embedder,
-    api_emb,
-    api_dim,
+    None,
+    @src.DEFAULT_DIM,
     opts.limit,
   )
 
@@ -72,12 +54,7 @@ fn main {
   // ---- extraction ----
   println("## Extraction")
   println("")
-  let extraction = if opts.live {
-    let gold = load_extraction_gold("ci/eval/locomo/data/extraction_gold.json")
-    run_extraction_live(gold, opts.extract_limit)
-  } else {
-    run_extraction_offline_skip()
-  }
+  let extraction = run_extraction_offline_skip()
 
   // ---- gates ----
   let h_r = recall_of(hybrid)
@@ -140,8 +117,8 @@ fn main {
     let report = ModeReport::{
       mode: mode_name(opts),
       embedder: opts.embedder,
-      model: api_model,
-      dim: if opts.embedder == "api" { api_dim } else { 0 },
+      model: "",
+      dim: 0,
       extractor_model: extraction.model,
       hybrid_recall: h_r,
       hybrid_mrr: mrr_of(hybrid),

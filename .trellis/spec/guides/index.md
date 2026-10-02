@@ -42,7 +42,7 @@ These guides help you **ask the right questions before coding**.
 - [ ] Feature touches 3+ layers (host, `MemoryStore`, traits, indexes, persist/codec)
 - [ ] Snapshot / entry JSON shape changes
 - [ ] Multiple consumers need the same data (`AddSummary`, metadata, stats)
-- [ ] You're not sure whether logic belongs in core vs `llm_extractor`
+- [ ] You're not sure whether logic belongs in core vs a host adapter
 - [ ] You are adding an `EntryKind`/`EntryStatus`, snapshot header field, or `Config` knob
 - [ ] Host code starts parsing snapshot JSON instead of using store APIs
 

@@ -19,7 +19,7 @@ LLM Agent 每次推理只依赖本轮上下文，进程结束即失忆。**moome
 - **混合检索** — 向量 + BM25；缺省查询自适应融合（`AdaptiveLexical`，可回退等权 RRF）；索引按 `user_id` 物理分片
 - **崩溃安全持久化** — 双槽 JSONL 快照 + `head` 指针
 - **结构级用户隔离** — 检索强制带 `user_id`，无全库召回接口
-- **可选 LLM 路径** — `src/llm_extractor` 对接 OpenAI 兼容端点（核心包零 LLM 依赖）
+- **模型由宿主接入** — `Embedder` / `Extractor` / `ConflictJudge` 可替换；缺省不访问网络
 
 ## 相对竞品 / 生态
 
@@ -90,10 +90,10 @@ fn main {
 | 入口 | 说明 |
 |------|------|
 | [文档站 Guide](https://glimverge.github.io/moomem/guide/start/introduction) | 介绍 / 上手 / 持久化 / 安全 |
-| [API](https://glimverge.github.io/moomem/api/) | MemoryStore、注入点、LLM |
+| [API](https://glimverge.github.io/moomem/api/) | MemoryStore、注入点 |
 | [Benchmark](https://glimverge.github.io/moomem/benchmark/) | LoCoMo 归档分数与本地复跑 |
 
-仓库速览：`src/` 核心库 · `src/llm_extractor/` 可选 LLM · `examples/` 零网络演示 · `ci/` 门禁与评测 · `site/` 文档站。
+仓库速览：`src/` 核心库 · `examples/` 零网络演示 · `ci/` 门禁与评测 · `site/` 文档站。
 
 ## 测试
 
@@ -102,8 +102,8 @@ fn main {
 | 步骤 | 测什么 | 为什么 | 怎样算过 |
 |------|--------|--------|----------|
 | 静态检查 | `moon check --target native` | 类型和编译错误要在跑用例之前拦住 | 退出码 0 |
-| 单元 / 集成 | `moon test` 在 native、wasm、wasm-gc、js 上各跑一遍。覆盖嵌入与相似度、抽取、冲突判定、编解码、崩溃恢复、存储端到端（隔离、supersede、forget、导入导出）、配置，以及可选 LLM 抽取器的降级与对抗输入 | 库宣称四个后端都能用，核心契约不能只在 native 上成立。磁盘双槽依赖本地文件系统，相关用例只在 native 编译 | 每个后端失败数为 0，且通过数等于总数。native 用例数不得低于 112，防止静默删用例 |
-| 示例冒烟 | native、零网络跑四个示例：`basic-store`（写入再召回）、`llm-extractor`（mock 的 LLM，不发真实请求）、`conflict-supersede`（住址变更后旧事实被覆盖）、`cli-smoke`（库侧走一遍 add / recall / list） | 文档里的主路径要从入口跑通，且不依赖密钥或外网 | 四个 `moon run` 退出码都是 0 |
+| 单元 / 集成 | `moon test` 在 native、wasm、wasm-gc、js 上各跑一遍。覆盖嵌入与相似度、抽取、冲突判定、编解码、崩溃恢复、存储端到端（隔离、supersede、forget、导入导出）、配置 | 库宣称四个后端都能用，核心契约不能只在 native 上成立。磁盘双槽依赖本地文件系统，相关用例只在 native 编译 | 每个后端失败数为 0，且通过数等于总数。native 用例数不得低于 72，防止静默删用例 |
+| 示例冒烟 | native、零网络跑三个示例：`basic-store`（写入再召回）、`conflict-supersede`（住址变更后旧事实被覆盖）、`cli-smoke`（库侧走一遍 add / recall / list） | 文档里的主路径要从入口跑通，且不依赖密钥或外网 | 三个 `moon run` 退出码都是 0 |
 | L3 离线评测 | `moon run ci/eval/locomo --target native`。在 LoCoMo 子集上检查：近重复事实是否 supersede、重启后条目 id 是否一致、跨用户检索是否泄漏。混合检索相对 BM25 的分数会打印出来。提取精度在这一档跳过 | 前三步保证实现正确；这一步保证记忆质量没有悄悄变差。离线没有真实嵌入，整段原文入库，提取 Precision 没有意义 | 打印 `LOCOMO_PASS`。硬门槛：跨用户泄漏 0、重启一致、近重复 supersede ≥ 80% |
 
-分数归档在 [Benchmark 页](https://glimverge.github.io/moomem/benchmark/)。2026-10-01、查询自适应融合之后：离线 hashing 混合 Recall@5 为 100/230（0.435），与纯 BM25 持平。真实嵌入（`--embedder api`）和 live 提取不进这条 CI，需要本地带密钥复跑；混合不低于 BM25 的硬门槛只在 api 档生效。
+分数归档在 [Benchmark 页](https://glimverge.github.io/moomem/benchmark/)。2026-10-01、查询自适应融合之后：离线 hashing 混合 Recall@5 为 100/230（0.435），与纯 BM25 持平。真实嵌入和提取由宿主注入，不进这条 CI。

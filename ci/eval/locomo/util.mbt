@@ -7,35 +7,6 @@ fn[T] fail(msg : String) -> T {
 }
 
 ///|
-fn require_env(key : String) -> String {
-  match @env.get_env_var(key) {
-    Some(raw) => {
-      let v = raw.trim().to_owned()
-      if v.is_empty() {
-        fail("env \{key} is set but empty")
-      }
-      v
-    }
-    None => fail("missing required env \{key}")
-  }
-}
-
-///|
-fn normalize_base_url(raw : String) -> String {
-  let mut u = raw.trim().to_owned()
-  while u.has_suffix("/") {
-    match u.strip_suffix("/") {
-      Some(v) => u = v.to_owned()
-      None => break
-    }
-  }
-  match u.strip_suffix("/v1") {
-    Some(v) => v.to_owned()
-    None => u
-  }
-}
-
-///|
 fn format_mrr(v : Double) -> String {
   let scaled = (v * 1000.0 + (if v >= 0.0 { 0.5 } else { -0.5 })).to_int()
   let sign = if scaled < 0 { "-" } else { "" }
@@ -96,7 +67,7 @@ fn parse_args() -> CliOpts {
   let args = @env.args()
   let mut fixture = ""
   let mut embedder = "hashing"
-  let mut live = false
+  let live = false
   let mut limit = 0
   let mut extract_limit = 0
   let mut report = ""
@@ -108,7 +79,9 @@ fn parse_args() -> CliOpts {
     if a == "--help" || a == "-h" {
       help = true
     } else if a == "--live" {
-      live = true
+      fail(
+        "--live is not in this harness; the host supplies Extractor and ConflictJudge",
+      )
     } else if a == "--report-only-exit" {
       report_only_exit = true
     } else if a == "--fixture" {
@@ -120,11 +93,16 @@ fn parse_args() -> CliOpts {
     } else if a == "--embedder" {
       i = i + 1
       if i >= args.length() {
-        fail("--embedder requires hashing|api")
+        fail("--embedder requires hashing")
       }
       embedder = args[i]
-      if embedder != "hashing" && embedder != "api" {
-        fail("--embedder must be hashing|api, got \{embedder}")
+      if embedder == "api" {
+        fail(
+          "--embedder api is not in this harness; the host supplies Embedder",
+        )
+      }
+      if embedder != "hashing" {
+        fail("--embedder must be hashing, got \{embedder}")
       }
     } else if a == "--limit" {
       i = i + 1
@@ -183,8 +161,7 @@ fn parse_args() -> CliOpts {
 fn print_help() -> Unit {
   println("Usage: moon run ci/eval/locomo --target native -- [options]")
   println("  --fixture <path>     locomo_subset.json path")
-  println("  --embedder hashing|api   default hashing (offline)")
-  println("  --live               run extraction precision with DeepSeek")
+  println("  --embedder hashing   offline hashing embedder (default)")
   println("  --limit <n>          score at most n retrieval QA items")
   println(
     "  --extract-limit <n>  score at most n extraction gold cases (0=all 100)",

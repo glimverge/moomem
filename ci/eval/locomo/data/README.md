@@ -104,8 +104,8 @@ python3 scripts/locomo/make_subset.py --input /path/to/locomo10.json
   离线可判，**进离线门禁**。
 - `semantic`（10 组）—— 语义型更新（住址/职业/关系变更），字面几乎无重叠。
   实测住址式对相似度仅 0.263–0.471，
-  缺省离线配置下期望 `ignore`；只有注入 `LlmConflictJudge`（L2 真实 LLM）才期望
-  `supersede`。**离线只记录不计分**，避免用不成立的期望值伪造达标。
+  缺省离线配置下期望 `ignore`；语义覆盖要由宿主自己的 `ConflictJudge` 完成。
+  **离线只记录不计分**，避免用不成立的期望值伪造达标。
 
 ## 5. `extraction_gold.json` 结构
 

@@ -9,12 +9,10 @@
 | Path | Role | Key deps |
 |------|------|----------|
 | `src/` | Core library (`MemoryStore` aggregate); L0 包旁测试 | `moonbitlang/x/fs`, `moonbitlang/core/json` |
-| `src/llm_extractor/` | Optional LLM extract/judge adapters; L1 包旁测试 | `heyq02/moomem/src`, `mizchi/llm` |
-| `ci/gates/live-llm/` | L2 Live LLM release gate | separate package |
-| `ci/eval/locomo/` | L3 LoCoMo eval harness + `data/` | separate package |
+| `ci/eval/locomo/` | L3 offline LoCoMo eval harness + `data/` | separate package |
 | `benchmarks/locomo/` | Release-archived LoCoMo scores (site `/benchmark`) | metrics JSON only |
 | `ci/tools/retrieval-tuning/` | Offline retrieval tuning tool (U1; **not in CI**) | separate package |
-| `examples/<scene>/` | E2 scene demos: `basic-store`, `llm-extractor`, `conflict-supersede`, `cli-smoke` | — |
+| `examples/<scene>/` | E2 scene demos: `basic-store`, `conflict-supersede`, `cli-smoke` | — |
 | `site/` | Public docs site; restates the host contract | — |
 | `.trellis/spec/` | AI coding guidelines + CI iron rules (this tree) | — |
 | `.github/workflows/` | CI / release **implementation** (living SoT for pipelines) | — |
@@ -51,13 +49,13 @@ Black-box tests sit beside sources as `*_test.mbt`; white-box as `*_wbtest.mbt` 
 - `store_e2e_test.mbt` — AC-01..05 end-to-end
 - `qa_adversarial_test.mbt`, `w3_config_test.mbt` — edge / config validation
 
-L1 mock-LLM tests live beside adapters: `src/llm_extractor/*_test.mbt`. Gates / eval / tools are **not** package-side tests — see decision table below.
+Eval / tools are **not** package-side tests — see decision table below.
 
 ## Package config reality
 
 - Core `src/moon.pkg` imports `moonbitlang/x/fs` even though **call sites** must stay in `persist.mbt` (architectural isolation, not package-graph isolation). Do not invent a single-adapter persist subpackage to paper over that; see [Persistence](./persistence.md).
 - Allowlisted `@fs` outside that rule: `persist_test.mbt`.
-- `src/llm_extractor/moon.pkg` imports core + `mizchi/llm` only.
+- The module does not depend on an LLM SDK. Hosts implement `Extractor` / `ConflictJudge` / `Embedder` outside this repo.
 
 ## Where new code goes
 
@@ -68,7 +66,7 @@ L1 mock-LLM tests live beside adapters: `src/llm_extractor/*_test.mbt`. Gates / 
 | New injectable AI / infra capability | New trait file next to `embedder` / `extractor` / `conflict` / `clock`; wire through `Config` + `MemoryStore::open` |
 | Disk / crash-safety | `persist.mbt` only |
 | Orchestration of add/recall flows | `store.mbt` only — keep indexes/traits stateless or rebuildable |
-| LLM prompts / OpenAI client | `src/llm_extractor/` — never core |
+| Host model client | Host package — never core |
 
 ## Where new tests / examples / gates go
 
@@ -77,9 +75,7 @@ Align with [Quality Guidelines](./quality-guidelines.md).
 | Need | Put it in |
 |------|----------|
 | Asserted offline regression (core) | Package-side `src/*_test.mbt` / `*_wbtest.mbt` (L0) |
-| Asserted mock-LLM contract | `src/llm_extractor/*_test.mbt` (L1) |
-| Real LLM blocking release | `ci/gates/live-llm/` (L2) |
-| Benchmark / corpus eval | `ci/eval/locomo/` (L3); release archives → `benchmarks/locomo/` |
+| Benchmark / corpus eval | `ci/eval/locomo/` (L3, offline hashing); release archives → `benchmarks/locomo/` |
 | Sweep / calibrate Config, not a gate | `ci/tools/retrieval-tuning/` (tool) |
 | Teachable runnable demo (no AC suite) | `examples/<scene>/` (E2) |
 

@@ -1,6 +1,6 @@
 // 注入点三：ConflictJudge（PRD 13.2 冲突判定契约）。
 // 缺省实现 SimilarityJudge：嵌入余弦 + 关键词 Jaccard 的确定性规则判定。
-// 生产环境注入 LLM 版 judge（replace/merge/ignore + 判定依据写入 metadata）。
+// 宿主可注入自己的 judge（Replace / Coexist / Ignore，判定依据写入 metadata）。
 
 ///|
 /// 冲突裁决：Replace 触发 supersede；Coexist 并存并标记；Ignore 无裁决。

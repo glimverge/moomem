@@ -11,8 +11,8 @@ The core library must stay testable with **zero network / zero API key**. `READM
 | Trait | Defined in | Default | Production replacement |
 |-------|------------|---------|------------------------|
 | `Embedder` | `embedder.mbt` | `HashingEmbedder` (256-d bag-of-words hash, TF + L2) | Host embedding / vcdb adapter |
-| `Extractor` | `extractor.mbt` | `RawExtractor` (passthrough `Unstructured`) | `src/llm_extractor` `LlmExtractor` |
-| `ConflictJudge` | `conflict.mbt` | `SimilarityJudge` (cosine + keyword Jaccard) | `LlmConflictJudge` |
+| `Extractor` | `extractor.mbt` | `RawExtractor` (passthrough `Unstructured`) | Host implementation |
+| `ConflictJudge` | `conflict.mbt` | `SimilarityJudge` (cosine + keyword Jaccard) | Host implementation |
 | `PersistenceBackend` | `persist.mbt` | native `FsBackend` / else `MemoryBackend` | Host IndexedDB glue, etc. |
 | `Clock` | `clock.mbt` | `LogicalClock` (monotonic, snapshot-resumed) | System clock; tests use `FixedClock` |
 
@@ -41,16 +41,9 @@ The core library must stay testable with **zero network / zero API key**. `READM
 
 **PersistenceBackend** / **Clock** — see persistence and types specs.
 
-## Optional LLM package boundary
+## Host adapters
 
-`src/llm_extractor/` is a **separate package**:
-
-- Imports `heyq02/moomem/src` + `mizchi/llm`
-- Implements `Extractor` / `ConflictJudge` against injected `Provider`
-- Core `src/moon.pkg` must **not** import `mizchi/llm`
-- Header comment in `llm_extractor.mbt` states this iron rule
-
-Host wiring example: inject `LlmExtractor` / `LlmConflictJudge` into `Config` (see `site/docs/api/llm.md`).
+The repository does not ship a model client. A host that wants structured extraction or semantic supersede implements `Extractor` and `ConflictJudge` and passes them in `Config`. Core `src/moon.pkg` must **not** import an LLM SDK.
 
 ## Injection in tests
 
@@ -59,12 +52,11 @@ Prefer injecting fakes over frameworks:
 - Failing extractor / always-replace judge in `store_e2e_test.mbt` (AC-04, AC-05)
 - `FixedClock` for exact `created_at`
 - `MemoryBackend` for restart and crash simulation
-- Scripted `Provider` mocks inside `llm_extractor/*_test.mbt` (zero network)
 
 ## Anti-patterns
 
 - Hard-coding network LLM calls inside `store.mbt` or core extractors.
-- Adding `mizchi/llm` to the core package imports.
+- Adding an LLM SDK to the core package imports.
 - Changing defaults to require API keys for `moon test`.
 - Implementing a second conflict/extract path that bypasses the traits.
 - Silent degradation without `AddSummary.degraded`, notes, or entry metadata when LLM/extractor fails.

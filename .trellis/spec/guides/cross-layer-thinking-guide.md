@@ -54,7 +54,7 @@ For each arrow, ask:
 | `MemoryStore` ↔ traits | Default vs injected behavior, degrade paths |
 | Store ↔ indexes | Forgetting to pass `user_id`; stale Active filters |
 | Persist ↔ `json_codec` | Header/gen/clock drift; half-line truncation |
-| Core ↔ `llm_extractor` | Accidentally importing `mizchi/llm` into core |
+| Core ↔ host adapter | Accidentally importing an LLM SDK into core |
 
 ### Step 3: Define Contracts
 

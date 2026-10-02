@@ -31,13 +31,12 @@ fn main {
 }
 ```
 
-次日再 `open` 同一目录：记忆完整，recall 行为一致。可选 LLM 提取见 [LLM 注入](/api/llm)。
+次日再 `open` 同一目录：记忆完整，recall 行为一致。模型由宿主实现 trait 后注入，见 [宿主注入模型](/api/llm)。
 
 ## 零网络示例
 
 ```bash
 moon run examples/basic-store --target native
-moon run examples/llm-extractor --target native
 moon run examples/conflict-supersede --target native
 moon run examples/cli-smoke --target native
 ```
@@ -47,5 +46,5 @@ moon run examples/cli-smoke --target native
 - [持久化](/guide/start/persistence) — 目录布局与条目状态
 - [安全与限制](/guide/start/security)
 - [公开 API](/api/) — MemoryStore 六方法与注入点
-- [LLM 注入](/api/llm)
+- [宿主注入模型](/api/llm)
 - [Benchmark](/benchmark/) — 评测分数与本地复跑

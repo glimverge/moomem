@@ -1,34 +1,21 @@
-# LLM 注入
+# 宿主注入模型
 
-核心库默认不走 LLM；可选能力在 **`src/llm_extractor`**（基于 mizchi/llm，对接 OpenAI 兼容端点）。
+库不带模型客户端。缺省 `HashingEmbedder`、`RawExtractor`、`SimilarityJudge` 全程离线。
 
-## 库内注入
+结构化提取、语义冲突、真实向量由宿主实现对应 trait，再放进 `Config`：
 
 ```moonbit
-let provider = @openai.OpenAIProvider::new(
-  "sk-...",
-  endpoint=OpenAIEndpoint::OpenAI,   // 或 Custom(base_url="https://...")
-  model="gpt-4o-mini",
-)
-let extractor = @llm_extractor.LlmExtractor::new(provider)
-let judge = @llm_extractor.LlmConflictJudge::new(provider)
-
 let cfg : Config = Config::{
   ..Config::default(),
-  extractor : Some(extractor as &Extractor),
-  judge : Some(judge as &ConflictJudge),
+  embedder : Some(my_embedder as &Embedder),
+  extractor : Some(my_extractor as &Extractor),
+  judge : Some(my_judge as &ConflictJudge),
 }
 let store = MemoryStore::open("./memory", config=cfg).unwrap()
 ```
 
-## 行为契约
-
-- 提取保留可复用事实（`fact` / `preference` / `event` + 原文 `span`），丢弃寒暄
-- 失败时降级可见：`AddSummary.degraded` / `notes` / 条目 `metadata.extraction_degraded`，不会静默吞掉
-- `DegradePolicy`：`ReturnRaw`（原文 unstructured 入库）或 `PropagateError`
-
-:::tip
-请在宿主包内自行 mock `Provider`。零网络范例见仓库 `examples/llm-extractor` 与 `src/llm_extractor/*_test.mbt`。
-:::
+- `Extractor::extract` 返回空数组表示纯闲聊，不入库
+- 提取失败可返回 `Err`，连续失败会熔断；也可以返回 `degraded: true` 的原文事实
+- `ConflictJudge` 的 `Replace` 会把旧条目标成 `Superseded`
 
 注入点总表见 [公开 API](/api/)。

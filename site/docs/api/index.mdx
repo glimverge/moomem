@@ -25,8 +25,8 @@ overview: true
 | trait | 缺省（离线） | 生产替换 |
 |-------|--------------|----------|
 | `Embedder` | `HashingEmbedder`（256 维词袋哈希） | 宿主 / vcdb 嵌入 |
-| `Extractor` | `RawExtractor`（原文 unstructured 入库） | `src/llm_extractor` 的 `LlmExtractor` |
-| `ConflictJudge` | `SimilarityJudge`（余弦 + Jaccard，阈值 0.82） | `LlmConflictJudge` |
+| `Extractor` | `RawExtractor`（原文 unstructured 入库） | 宿主实现 |
+| `ConflictJudge` | `SimilarityJudge`（余弦 + Jaccard，阈值 0.82） | 宿主实现 |
 | `PersistenceBackend` | native `FsBackend`；wasm/js `MemoryBackend` | IndexedDB 胶水等 |
 | `Clock` | `LogicalClock` | 系统时钟 / 测试用 `FixedClock` |
 

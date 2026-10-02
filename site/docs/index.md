@@ -25,7 +25,7 @@ features:
   - title: 崩溃安全持久化
     details: 双槽 JSONL 快照 + head 指针；进程被杀后 open 同一目录即可恢复。
     link: /guide/start/persistence
-  - title: 可选 LLM 路径
-    details: 核心包零 LLM 依赖；注入 LlmExtractor / LlmConflictJudge 即可结构化提取与冲突判定。
+  - title: 模型由宿主接入
+    details: 库不带模型客户端。需要结构化提取或语义覆盖时，宿主实现 Extractor 与 ConflictJudge。
     link: /api/llm
 ---

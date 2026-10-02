@@ -20,8 +20,8 @@ env:
   CI: "true"
   # Dated CDN pins (e.g. 0.1.20260920) return 403; always install latest.
   MOON_VERSION: "latest"
-  # Documented native baseline (core + llm_extractor); suite only grows
-  NATIVE_TEST_BASELINE: "112"
+  # Documented native baseline (core); suite only grows
+  NATIVE_TEST_BASELINE: "72"
 
 jobs:
   check:
@@ -92,11 +92,10 @@ jobs:
         with:
           version: ${{ env.MOON_VERSION }}
 
-      - name: moon run examples (four scenes, mock, zero network)
+      - name: moon run examples (three scenes, zero network)
         run: |
           set -euo pipefail
           moon run examples/basic-store --target native
-          moon run examples/llm-extractor --target native
           moon run examples/conflict-supersede --target native
           moon run examples/cli-smoke --target native
 

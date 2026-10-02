@@ -39,14 +39,6 @@ struct ConflictFixture {
 }
 
 ///|
-struct ExtractionCase {
-  id : String
-  text : String
-  must_extract : Array[String]
-  must_not_extract : Array[String]
-}
-
-///|
 fn json_str(j : Json) -> String? {
   if j is String(s) {
     Some(s)
@@ -211,47 +203,4 @@ fn load_conflict_fixture(path : String) -> ConflictFixture {
     near_duplicate: load_conflict_group(obj, "near_duplicate"),
     semantic: load_conflict_group(obj, "semantic"),
   }
-}
-
-///|
-fn load_extraction_gold(path : String) -> Array[ExtractionCase] {
-  let text = read_text_file(path)
-  let root = @json.parse(text) catch {
-    _ => fail("extraction gold invalid JSON: \{path}")
-  }
-  let obj = match json_obj(root) {
-    Some(o) => o
-    None => fail("extraction gold root not object")
-  }
-  let arr = match json_arr_field(obj, "cases") {
-    Some(a) => a
-    None => fail("extraction gold missing cases[]")
-  }
-  let out : Array[ExtractionCase] = []
-  for item in arr {
-    let o = match json_obj(item) {
-      Some(x) => x
-      None => fail("extraction case not object")
-    }
-    let id = match json_str_field(o, "id") {
-      Some(s) => s
-      None => fail("extraction case missing id")
-    }
-    let t = match json_str_field(o, "text") {
-      Some(s) => s
-      None => fail("extraction case \{id} missing text")
-    }
-    let must_extract = match json_arr_field(o, "must_extract") {
-      Some(a) => parse_string_array(a)
-      None => []
-    }
-    let must_not_extract = match json_arr_field(o, "must_not_extract") {
-      Some(a) => parse_string_array(a)
-      None => []
-    }
-    out.push(
-      ExtractionCase::{ id, text: t, must_extract, must_not_extract, },
-    )
-  }
-  out
 }

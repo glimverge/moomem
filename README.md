@@ -92,7 +92,7 @@ fn main {
 | [文档站 Guide](https://glimverge.github.io/moomem/guide/start/introduction) | 介绍 / 上手 / 持久化 / 安全 |
 | [API](https://glimverge.github.io/moomem/api/) | MemoryStore、注入点 |
 
-仓库速览：`src/` 核心库 · `examples/` 零网络演示 · `tests/` 语料评测 · `tools/` 调参。
+仓库速览：`src/` 核心库 · `examples/` 零网络演示 · `tests/` 语料评测。
 
 ## 测试
 

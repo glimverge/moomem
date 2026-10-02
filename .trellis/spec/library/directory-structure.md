@@ -10,7 +10,6 @@
 |------|------|----------|
 | `src/` | Core library (`MemoryStore` aggregate); L0 包旁测试 | `moonbitlang/x/fs`, `moonbitlang/core/json` |
 | `tests/locomo/` | L3 offline LoCoMo corpus eval on `MemoryStore` + `data/` | separate package |
-| `tools/retrieval-tuning/` | Offline `Config` sweep (not a push gate) | separate package |
 | `examples/<scene>/` | E2 scene demos: `default-reopen`, `host-inject-supersede`, `isolation-forget-import` | — |
 | `.trellis/spec/` | AI coding guidelines + CI iron rules (this tree) | — |
 | `.github/workflows/` | CI / release **implementation** (living SoT for pipelines) | — |
@@ -55,7 +54,7 @@ Black-box tests sit beside sources as `*_test.mbt`; white-box as `*_wbtest.mbt` 
 - `store_test.mbt` — restart, isolation, supersede, degrade, import/export
 - `adversarial_test.mbt`, `config_test.mbt` — edge / config validation
 
-Eval / tools are **not** package-side tests — see decision table below.
+Corpus eval is **not** a package-side test — see the decision table below.
 
 ## Package config reality
 
@@ -82,10 +81,9 @@ Align with [Quality Guidelines](./quality-guidelines.md).
 |------|----------|
 | Asserted offline regression (core) | Package-side `src/*_test.mbt` / `*_wbtest.mbt` (L0) |
 | Benchmark / corpus eval | `tests/locomo/` (L3, offline hashing) |
-| Sweep / calibrate Config, not a gate | `tools/retrieval-tuning/` |
 | Teachable runnable demo (no AC suite) | `examples/<scene>/` (E2) |
 
-**Forbidden**: live key paths inside examples; treating tools as default L0; stuffing eval corpora into package-side unit tests.
+**Forbidden**: live key paths inside examples; stuffing eval corpora into package-side unit tests.
 
 ## Anti-patterns
 
@@ -94,4 +92,3 @@ Align with [Quality Guidelines](./quality-guidelines.md).
 - Do **not** put `@json.parse` / entry serializers outside `json_codec.mbt`.
 - Do **not** grow a second aggregate alongside `MemoryStore`; it is the sole stateful orchestrator.
 - Do **not** move package-side `*_test.mbt` out of `src/` (T1).
-- Do **not** wire `tools/retrieval-tuning` into the push pipeline.

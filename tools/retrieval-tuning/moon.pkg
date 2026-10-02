@@ -1,8 +1,0 @@
-// Offline retrieval/conflict tuning harness. Zero network, zero secrets.
-import {
-  "heyq02/moomem/src",
-}
-
-options(
-  "is-main": true,
-)

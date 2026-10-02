@@ -26,13 +26,12 @@ Align with MoonBit core style (`read_file_to_string`, etc.).
 
 Where gates, eval, tools, and examples land is the table below plus the workflow YAML. Do not add a second architecture essay.
 
-### Examples vs gates vs tools
+### Examples vs gates
 
 | Kind | Role | Assertions? | CI |
 |------|------|-------------|-----|
 | Package-side `*_test.mbt` | L0 regression | Yes | push 阻塞 |
 | `tests/locomo` | L3 corpus eval on `MemoryStore` | Metrics | 离线 push |
-| `tools/retrieval-tuning` | `Config` sweep | Sweep / report | **不进流水线** |
 | `examples/<scene>` | Teachable demos (E2) | No (smoke only) | smoke 矩阵，非 L0 |
 
 Iron rules: package tests and examples never read API keys.
@@ -61,7 +60,6 @@ When changing CI behavior: edit the YAML first (or same PR), then keep this tabl
 moon test
 moon test --enable-coverage && moon coverage report --ignore-missing-files -f summary -p heyq02/moomem/src  # src points >= 90%
 moon test --target wasm
-moon run tools/retrieval-tuning --target native   # Config sweep（不进流水线）
 moon run tests/locomo --target native              # L3 offline corpus eval
 moon run examples/default-reopen --target native
 moon run examples/host-inject-supersede --target native
@@ -98,11 +96,10 @@ Do not invent a parallel log subsystem unless product requirements change.
 | Core depending on an LLM SDK | Host package |
 | Append-only JSONL persistence | dual-slot + head |
 | Second stateful orchestrator | `MemoryStore` only; long `add` stages stay as package-private helpers on the same aggregate |
-| “Fix” retrieval fusion by exploding / splitting the store API | Keep `MemoryStore` facade; fusion is `Config` + `ranker.mbt` (AdaptiveLexical default); tune via `tools/retrieval-tuning` only |
+| “Fix” retrieval fusion by exploding / splitting the store API | Keep `MemoryStore` facade; fusion is `Config` + `ranker.mbt` (AdaptiveLexical default) |
 | Frontend/ORM templates | N/A — this is a MoonBit library |
 | API keys in package tests or examples | Host-side only; this repo stays offline |
 | Mooncakes secrets on push `test-pipeline` | publish job only |
-| Default pipeline job for retrieval-tuning | keep as `tools/retrieval-tuning` (not in the push pipeline) |
 | A second long-form CI spec beside the YAML | YAML + this file’s CI iron rules |
 
 ## When changing public behavior

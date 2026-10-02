@@ -45,6 +45,15 @@ native 上，同一目录再次 `open`，记忆还在，`recall` 结果一致。
 > [!NOTE]
 > 缺省实现不访问网络。要做语义提取或真实向量，在 `open` 时注入 `Embedder`、`Extractor`、`ConflictJudge`。
 
+[`demo/`](demo/) 就是这样接的：Qwen 做嵌入，DeepSeek 做提取。复制 `demo/.env.example` 为 `demo/.env`，填上密钥后：
+
+```bash
+cd demo
+moon run cmd/main
+```
+
+它会写入几条记忆、召回，再打开同一目录确认还在。闲聊不会入库。
+
 ## 示例
 
 三条演示都不读密钥、不访问网络：

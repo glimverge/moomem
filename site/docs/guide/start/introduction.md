@@ -30,8 +30,6 @@ moomem 的定位是：**嵌入式零部署库**，不是服务端记忆平台。
 | 持久化 | 磁盘双槽 | 服务侧 | 不持久 |
 | 隔离 | `user_id` 结构分片 | 服务多租户 | 进程内 |
 
-更深调研见仓库 [`docs/resources/`](https://github.com/glimverge/moomem/tree/main/docs/resources)。
-
 ## 下一步
 
 - [快速上手](/guide/start/getting-started) — 安装与最短代码

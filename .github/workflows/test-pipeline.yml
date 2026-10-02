@@ -1,5 +1,4 @@
 # Living rules: .trellis/spec/library/quality-guidelines.md (CI iron rules)
-# Archived long-form: docs/archive/process-specs/spec-process-cicd-test-pipeline.md
 name: Test Pipeline
 
 on:

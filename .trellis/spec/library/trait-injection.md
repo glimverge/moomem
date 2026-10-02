@@ -4,7 +4,7 @@
 
 ## Design intent
 
-W1 must be testable with **zero network / zero API key**. Architecture (`docs/project/architecture.md` §1.2) and `README.md` make every AI capability an injectable trait; defaults are deterministic.
+The core library must stay testable with **zero network / zero API key**. `README.md` and `MemoryStore::open` make every AI capability an injectable trait; defaults are deterministic.
 
 ## Traits and defaults
 

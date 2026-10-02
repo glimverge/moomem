@@ -1,5 +1,5 @@
 // 发版专用真实 LLM 门禁（DeepSeek / OpenAI 兼容端点）。
-// 场景矩阵见 docs/project/05-test-suite.md §4（L2-01~L2-12）。
+// 场景在本文件内。门禁只在发版流水线运行。
 //
 // 环境变量：DEEPSEEK_API_KEY / DEEPSEEK_BASE_URL / DEEPSEEK_MODEL
 // 运行：moon run ci/gates/live-llm --target native

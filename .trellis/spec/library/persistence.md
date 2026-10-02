@@ -4,7 +4,7 @@
 
 ## Why not append-only JSONL
 
-`moonbitlang/x/fs` provides whole-file read/write (`write_string_to_file`, `read_file_to_string`, …) with **no append / rename**. Architecture intentionally uses **dual-slot snapshot + head pointer** (`docs/project/architecture.md` §1.4, implemented in `src/persist.mbt`).
+`moonbitlang/x/fs` provides whole-file read/write (`write_string_to_file`, `read_file_to_string`, …) with **no append / rename**. `src/persist.mbt` uses a dual-slot snapshot plus a head pointer.
 
 ## Disk layout (`FsBackend`)
 

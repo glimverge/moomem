@@ -103,7 +103,7 @@ python3 scripts/locomo/make_subset.py --input /path/to/locomo10.json
   缺省 `SimilarityJudge` + `HashingEmbedder` 下相似度可过 0.82 阈值，期望 `supersede`。
   离线可判，**进离线门禁**。
 - `semantic`（10 组）—— 语义型更新（住址/职业/关系变更），字面几乎无重叠。
-  实测住址式对相似度仅 0.263–0.471（见 `docs/project/06-w3-qa-verification.md` §4），
+  实测住址式对相似度仅 0.263–0.471，
   缺省离线配置下期望 `ignore`；只有注入 `LlmConflictJudge`（L2 真实 LLM）才期望
   `supersede`。**离线只记录不计分**，避免用不成立的期望值伪造达标。
 
@@ -128,8 +128,6 @@ python3 scripts/locomo/make_subset.py --input /path/to/locomo10.json
 - `must_extract` 为空的用例表示「不应产生任何入库事实」，用于压低 Precision
   分母之外的假阳性。
 
-## 6. 与前序文档的关系
+## 6. 这条语料在流水线里的位置
 
-- 指标定义与目标值：`docs/project/03-prd.md` §16.1
-- 四层测试体系中的定位（**L3**）：`docs/project/05-test-suite.md`
-- 相似度实测数据（驱动 `semantic` 分组期望值）：`docs/project/06-w3-qa-verification.md` §4
+L3 离线评测由 `moon run ci/eval/locomo --target native` 执行。push 流水线是否跑它、以及 L0–L2 的边界，以 `.github/workflows/test-pipeline.yml` 和 `.trellis/spec/library/quality-guidelines.md` 为准。`semantic` 组的相似度数字写在本文件第 4 节。

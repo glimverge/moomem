@@ -4,7 +4,7 @@
 
 ## Repository packages
 
-权威布局见 [`docs/project/10-testing-examples-architecture.md`](../../../docs/project/10-testing-examples-architecture.md)。下列路径为**现行**。
+下列路径为现行布局。测试、门禁、评测、示例的落点规则在 [Quality Guidelines](./quality-guidelines.md)。
 
 | Path | Role | Key deps |
 |------|------|----------|
@@ -16,16 +16,15 @@
 | `benchmarks/locomo/` | Release-archived LoCoMo scores (site `/benchmark`) | metrics JSON only |
 | `ci/tools/retrieval-tuning/` | Offline retrieval tuning tool (U1; **not in CI**) | separate package |
 | `examples/<scene>/` | E2 scene demos: `basic-store`, `llm-extractor`, `conflict-supersede`, `cli-smoke` | — |
-| `docs/project/` | Architecture, PRD reports; testing/examples architecture = doc **10** | — |
-| `docs/archive/` | Archived feature + process long-form specs (史料) | — |
+| `site/` | Public docs site; restates the host contract | — |
 | `.trellis/spec/` | AI coding guidelines + CI iron rules (this tree) | — |
 | `.github/workflows/` | CI / release **implementation** (living SoT for pipelines) | — |
 
-Module identity: `heyq02/moomem` at version `0.2.2` (`moon.mod`, `MOOMEM_VERSION` in `src/lib.mbt`).
+Module identity: `heyq02/moomem`. Package version is `moon.mod` (`0.6.0`). `MOOMEM_VERSION` in `src/lib.mbt` is still `"0.2.2"` and is known drift.
 
 ## Core library file map (`src/`)
 
-Layering matches `docs/project/architecture.md` §1.3:
+Core library layers:
 
 | Layer | Files | Responsibility |
 |-------|-------|----------------|
@@ -73,7 +72,7 @@ L1 mock-LLM tests live beside adapters: `src/llm_extractor/*_test.mbt`. Gates / 
 
 ## Where new tests / examples / gates go
 
-Align with [doc 10 decision tree](../../../docs/project/10-testing-examples-architecture.md).
+Align with [Quality Guidelines](./quality-guidelines.md).
 
 | Need | Put it in |
 |------|----------|

@@ -2,7 +2,7 @@
  "meta": {
   "purpose": "Supersede 正确率评测语料（PRD §16.1「冲突处理」，30 组）",
   "scoring": "每组：先 add(old) 再 add(new)，随后读 list_entries 断言 old.status==Superseded 且 new 可召回；满足记 1 分。",
-  "grouping_rationale": "分组来自实测事实而非设计偏好——缺省 SimilarityJudge（cosine 与 Jaccard 取 max，阈值 0.82）只覆盖字面高度重合的近重复式更新；语义型更新在缺省离线配置下判定为 Ignore。实测数据见 docs/project/06-w3-qa-verification.md §4。",
+  "grouping_rationale": "分组来自实测事实而非设计偏好——缺省 SimilarityJudge（cosine 与 Jaccard 取 max，阈值 0.82）只覆盖字面高度重合的近重复式更新；语义型更新在缺省离线配置下判定为 Ignore。semantic 组字面重叠低，缺省离线判定为 Ignore。",
   "near_duplicate": "单槽位替换（改一个词/数字/星期），共享上下文占比高。离线期望 supersede，进离线门禁。",
   "semantic": "语义型更新（住址/职业/关系/物品更替），字面几乎无重叠。离线期望 ignore（记录不计分）；仅注入 LlmConflictJudge 的 L2 真实 LLM 档位期望 supersede。",
   "do_not_tune": "若某组实测相似度落在阈值附近（0.82 ± 0.03），保持语料不动、在报告中标注余量，禁止为凑通过率改写语料。"

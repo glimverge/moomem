@@ -2,16 +2,14 @@
 
 > **Purpose**: Expand your thinking to catch things you might not have considered.
 
-## Doc routing (do not merge trees)
+## Doc routing
 
-| Intent | Tree |
-|--------|------|
-| Product narrative / architecture / handover | `docs/project/` |
-| Archived feature / process long-form specs | `docs/archive/` |
+| Intent | Where |
+|--------|-------|
+| Host contract (how add / recall / snapshot work) | `README.md` |
+| Public docs site | `site/docs/` |
 | CI / release implementation | `.github/workflows/` |
-| AI coding conventions + CI iron rules (this tree, esp. `library/`) | `.trellis/spec/` |
-
-Full index: [`docs/README.md`](../../../docs/README.md) →「Where to look」.
+| AI coding conventions + CI iron rules | `.trellis/spec/` (especially `library/`) |
 
 ---
 

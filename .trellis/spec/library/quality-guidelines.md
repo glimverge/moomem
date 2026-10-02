@@ -23,7 +23,7 @@ Align with MoonBit core style (`read_file_to_string`, etc.).
 | Isolation / adversarial QA suites | `qa_adversarial_test.mbt` |
 | Multi-backend | `moon test --target wasm` (native-only FS/CLI excluded) |
 
-Architecture authority for layers, CI iron rules, and where gates/eval/tools/examples land: [`docs/project/10-testing-examples-architecture.md`](../../../docs/project/10-testing-examples-architecture.md).
+Where gates, eval, tools, and examples land is the table below plus the workflow YAML. Do not add a second architecture essay.
 
 ### Examples vs gates vs tools
 
@@ -39,7 +39,7 @@ Iron rules: L0/L1 never read `DEEPSEEK_*`; L2 never joins push CI; examples neve
 
 ### CI / release iron rules (durable)
 
-Executable workflow truth: [`.github/workflows/test-pipeline.yml`](../../../.github/workflows/test-pipeline.yml) and [`release-pipeline.yml`](../../../.github/workflows/release-pipeline.yml). Long-form process specs are **archived** under [`docs/archive/process-specs/`](../../../docs/archive/process-specs/) (not living contracts).
+Executable workflow truth: [`.github/workflows/test-pipeline.yml`](../../../.github/workflows/test-pipeline.yml) and [`release-pipeline.yml`](../../../.github/workflows/release-pipeline.yml). This table is the durable rule list. Do not add a long-form process spec beside the YAML.
 
 | Rule | Meaning |
 |------|---------|
@@ -52,7 +52,7 @@ Executable workflow truth: [`.github/workflows/test-pipeline.yml`](../../../.git
 | Secret scope | `DEEPSEEK_*` only on release `llm-live`; `MOONCAKES_TOKEN` only on publish job; never cache credentials under `~/.moon` |
 | Permissions | Offline quality: `contents: read`; write tokens only on the release job that needs them |
 
-When changing CI behavior: edit the YAML first (or same PR), then keep this table + [doc 10](../../../docs/project/10-testing-examples-architecture.md) aligned. Do not revive root `spec/` process docs as a second source of truth.
+When changing CI behavior: edit the YAML first (or same PR), then keep this table aligned. Do not revive a second process-spec tree.
 
 ### Verification commands
 
@@ -105,7 +105,7 @@ Do not invent a parallel log subsystem unless product requirements change.
 | Live keys / `DEEPSEEK_*` in L0/L1 or examples | gates only (`ci/gates/live-llm`) |
 | `DEEPSEEK_*` / mooncakes secrets on push `test-pipeline` | release `llm-live` / publish jobs only |
 | Default CI for retrieval-tuning | keep as `ci/tools/retrieval-tuning` (U1; not in push CI) |
-| Treating archived `docs/archive/process-specs/` as living SoT | YAML + this file’s CI iron rules |
+| A second long-form CI spec beside the YAML | YAML + this file’s CI iron rules |
 
 ## When changing public behavior
 
@@ -113,4 +113,4 @@ Do not invent a parallel log subsystem unless product requirements change.
 - Keep `MOOMEM_VERSION` / `SNAPSHOT_VERSION` coherent with format bumps (`lib.mbt`).
 - Add or extend black-box tests for AC-style guarantees (isolation, restart, degrade).
 - If a new invariant is discovered, add it to `.trellis/spec/library/` — do not leave it only in chat.
-- If changing test/gate/example **placement**, update doc 10 and this file’s command tables together — do not invent a second architecture narrative in 05.
+- If changing test/gate/example **placement**, update this file’s command tables together with the YAML.

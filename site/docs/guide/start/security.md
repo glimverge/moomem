@@ -18,9 +18,3 @@
 - 单写者模型；不支持并发写
 - wasm/js 缺省为进程内 `MemoryBackend`，磁盘持久化需宿主注入
 - 超长条目当前不截断入库
-
-细节与边界场景见仓库：
-
-- [W3.1 验证报告](https://github.com/glimverge/moomem/blob/main/docs/project/07-w3.1-verification.md)
-- [架构设计](https://github.com/glimverge/moomem/blob/main/docs/project/architecture.md)
-- [交接总结 §6](https://github.com/glimverge/moomem/blob/main/docs/project/09-handover.md)

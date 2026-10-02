@@ -19,7 +19,7 @@ This specification serves as a specification for the workflow's behavior, requir
 
 ## Specification Template
 
-Save as: `docs/archive/process-specs/spec-process-cicd-[workflow-name].md` (historical long-form only). Prefer updating `.github/workflows/*.yml` plus durable rules in `.trellis/spec/library/quality-guidelines.md` — do not recreate a root `spec/` tree.
+Do not write a second long-form spec. Update `.github/workflows/*.yml` and the durable rules in `.trellis/spec/library/quality-guidelines.md`.
 
 ```md
 ---

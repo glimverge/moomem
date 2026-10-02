@@ -32,4 +32,3 @@
 ## 相关
 
 - [安全与限制](/guide/start/security) — 双槽快照的产品边界
-- 仓库长文：[架构设计](https://github.com/glimverge/moomem/blob/main/docs/project/architecture.md)

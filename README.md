@@ -30,12 +30,11 @@ LLM Agent 每次推理只依赖本轮上下文，进程结束即失忆。**moome
 | 隔离 | `user_id` 结构级分片 | 服务侧多租户 | 进程内混用风险 | 视实现而定 |
 | 后端 | native / wasm / js | 服务端 | 宿主进程 | 视实现而定 |
 
-差异钉在：**嵌入式零部署 + 多后端 + 结构级用户隔离**。更深竞品调研见 [`docs/resources/`](docs/resources/)。
+差异钉在：**嵌入式零部署 + 多后端 + 结构级用户隔离**。
 
 ## 证据
 
 - [Benchmark 站内页](https://glimverge.github.io/moomem/benchmark/) — 本地归档的 LoCoMo L3 分数
-- [LoCoMo 评测报告](docs/project/08-w4-eval-report.md) — 提取 / 冲突 / 持久化 / 隔离 / 检索归因
 
 ## 最短上手
 
@@ -71,7 +70,6 @@ fn main {
 | [文档站 Guide](https://glimverge.github.io/moomem/guide/start/introduction) | 介绍 / 上手 / 持久化 / 安全 |
 | [API](https://glimverge.github.io/moomem/api/) | MemoryStore、注入点、CLI、LLM |
 | [Benchmark](https://glimverge.github.io/moomem/benchmark/) | LoCoMo 归档分数与本地复跑 |
-| [`docs/`](docs/README.md) | PRD / 架构 / 评测长文 |
 
 仓库速览：`src/` 核心库 · `src/llm_extractor/` 可选 LLM · `src/cli/` 命令行 · `examples/` 零网络演示 · `ci/` 门禁与评测 · `site/` 文档站。
 
@@ -86,4 +84,4 @@ fn main {
 | 示例冒烟 | native、零网络跑四个示例：`basic-store`（写入再召回）、`llm-extractor`（mock 的 LLM，不发真实请求）、`conflict-supersede`（住址变更后旧事实被覆盖）、`cli-smoke`（库侧走一遍 add / recall / list） | 文档里的主路径要从入口跑通，且不依赖密钥或外网 | 四个 `moon run` 退出码都是 0 |
 | L3 离线评测 | `moon run ci/eval/locomo --target native`。在 LoCoMo 子集上检查：近重复事实是否 supersede、重启后条目 id 是否一致、跨用户检索是否泄漏。混合检索相对 BM25 的分数会打印出来。提取精度在这一档跳过 | 前三步保证实现正确；这一步保证记忆质量没有悄悄变差。离线没有真实嵌入，整段原文入库，提取 Precision 没有意义 | 打印 `LOCOMO_PASS`。硬门槛：跨用户泄漏 0、重启一致、近重复 supersede ≥ 80% |
 
-分数归档在 [评测报告](docs/project/08-w4-eval-report.md) 和 [Benchmark 页](https://glimverge.github.io/moomem/benchmark/)。2026-10-01、查询自适应融合之后：离线 hashing 混合 Recall@5 为 100/230（0.435），与纯 BM25 持平。真实嵌入（`--embedder api`）和 live 提取不进这条 CI，需要本地带密钥复跑；混合不低于 BM25 的硬门槛只在 api 档生效。
+分数归档在 [Benchmark 页](https://glimverge.github.io/moomem/benchmark/)。2026-10-01、查询自适应融合之后：离线 hashing 混合 Recall@5 为 100/230（0.435），与纯 BM25 持平。真实嵌入（`--embedder api`）和 live 提取不进这条 CI，需要本地带密钥复跑；混合不低于 BM25 的硬门槛只在 api 档生效。

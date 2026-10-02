@@ -31,18 +31,8 @@
 Apache-2.0 仅覆盖代码。请勿将本数据用于任何商业目的。
 
 **再分发范围**：本仓库不重新分发 LoCoMo 完整数据集（原始 2.8 MB / 10 段对话），
-仅包含用于可复现评测的最小派生切片；图片相关字段（`img_url` / `blip_caption` /
-`query`）已移除。
-
-**重新生成**（需要网络）：
-
-```bash
-python3 scripts/locomo/make_subset.py
-# 或使用本地已下载的原始文件：
-python3 scripts/locomo/make_subset.py --input /path/to/locomo10.json
-```
-
-生成器固定了上游 commit SHA，输出对该版本确定性可复现。
+仅包含已提交的最小派生切片 `locomo_subset.json`；图片相关字段（`img_url` /
+`blip_caption` / `query`）已移除。评测直接读这份文件。
 
 ## 3. `locomo_subset.json` 结构
 

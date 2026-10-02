@@ -192,3 +192,38 @@ Archived remaining in-progress tasks after AC verification; pushing main.
 ### Next Steps
 
 - None - task complete
+
+
+## Session 6: 收紧内部 pub 并归档
+
+**Date**: 2026-10-02
+**Task**: 收紧内部 pub 并归档
+**Branch**: `main`
+
+### Summary
+
+删掉已偏移且不再维护的 docs/。README 快照节与 MOOMEM_VERSION 0.6.0、文档站九个公开方法对齐。契约外符号收回包内，评测诊断改在评测包内计算，黑盒测试改为契约或同包白盒；native 122 passed。
+
+### Main Changes
+
+- Detailed change bullets were not supplied; see the summary above.
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `215af22` | (see git log) |
+| `e7b6233` | (see git log) |
+| `1c6d289` | (see git log) |
+
+### Testing
+
+- Validation was not recorded for this session.
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- None - task complete

@@ -13,7 +13,7 @@
 ///|
 /// 库版本号（与 moon.mod 保持同步）
 /// 注意：moon.mod 版本由 release-pipeline 管理；本常量需在每次发版后手工同步
-pub const MOOMEM_VERSION : String = "0.7.0"
+pub const MOOMEM_VERSION : String = "0.7.1"
 
 ///|
 /// 快照格式版本（header 中的 "v" 字段）

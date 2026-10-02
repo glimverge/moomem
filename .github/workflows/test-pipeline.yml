@@ -40,6 +40,63 @@ jobs:
       - name: moon check (native)
         run: moon check --target native
 
+  test-native:
+    name: Test (native)
+    needs: check
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup MoonBit
+        uses: ./.github/actions/setup-moonbit
+        with:
+          version: ${{ env.MOON_VERSION }}
+
+      - name: moon test (native)
+        run: |
+          set -euo pipefail
+          # Release quality (workflow_call) stays a plain test. Push/PR collects
+          # coverage in this same run so Coveralls does not test native again.
+          if [[ "${{ github.event_name }}" == "workflow_call" ]]; then
+            moon test --target native | tee /tmp/moon-test.log
+          else
+            moon test --enable-coverage --target native | tee /tmp/moon-test.log
+          fi
+          summary="$(grep -E '^Total tests: [0-9]+, passed: [0-9]+, failed: [0-9]+\.?$' /tmp/moon-test.log | tail -n1)"
+          test -n "${summary}"
+          failed="$(echo "${summary}" | sed -E 's/.*failed: ([0-9]+).*/\1/')"
+          passed="$(echo "${summary}" | sed -E 's/.*passed: ([0-9]+).*/\1/')"
+          total="$(echo "${summary}" | sed -E 's/.*Total tests: ([0-9]+).*/\1/')"
+          echo "target=native total=${total} passed=${passed} failed=${failed}"
+          test "${failed}" = "0"
+          test "${passed}" = "${total}"
+          if [[ "${total}" -lt "${NATIVE_TEST_BASELINE}" ]]; then
+            echo "Native suite regressed: expected ≥ ${NATIVE_TEST_BASELINE} tests, got ${total}"
+            exit 1
+          fi
+          if [[ "${{ github.event_name }}" != "workflow_call" ]]; then
+            points="$(moon coverage report --ignore-missing-files -f summary -p heyq02/moomem/src | tee /dev/stderr | awk '/^Total: /{print $2}')"
+            num="${points%/*}"
+            den="${points#*/}"
+            echo "src coverage ${num}/${den}"
+            if (( num * 100 < den * 90 )); then
+              echo "src coverage ${num}/${den} is below 90%"
+              exit 1
+            fi
+            moon coverage report --ignore-missing-files -f coveralls -o coveralls.json -p heyq02/moomem/src
+          fi
+
+      - name: Upload coverage report
+        if: github.event_name != 'workflow_call'
+        uses: actions/upload-artifact@v4
+        with:
+          name: coveralls
+          path: coveralls.json
+          retention-days: 1
+          if-no-files-found: error
+
   test:
     name: Test (${{ matrix.target }})
     needs: check
@@ -48,7 +105,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        target: [native, wasm, wasm-gc, js]
+        target: [wasm, wasm-gc, js]
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -62,7 +119,6 @@ jobs:
         run: |
           set -euo pipefail
           moon test --target "${{ matrix.target }}" | tee /tmp/moon-test.log
-          # Require a clean summary line
           summary="$(grep -E '^Total tests: [0-9]+, passed: [0-9]+, failed: [0-9]+\.?$' /tmp/moon-test.log | tail -n1)"
           test -n "${summary}"
           failed="$(echo "${summary}" | sed -E 's/.*failed: ([0-9]+).*/\1/')"
@@ -71,16 +127,10 @@ jobs:
           echo "target=${{ matrix.target }} total=${total} passed=${passed} failed=${failed}"
           test "${failed}" = "0"
           test "${passed}" = "${total}"
-          if [[ "${{ matrix.target }}" == "native" ]]; then
-            if [[ "${total}" -lt "${NATIVE_TEST_BASELINE}" ]]; then
-              echo "Native suite regressed: expected ≥ ${NATIVE_TEST_BASELINE} tests, got ${total}"
-              exit 1
-            fi
-          fi
 
   smoke-example:
     name: Example Smoke (native)
-    needs: test
+    needs: test-native
     runs-on: ubuntu-latest
     timeout-minutes: 8
     steps:
@@ -101,7 +151,7 @@ jobs:
 
   eval-locomo:
     name: L3 Eval (offline, native)
-    needs: test
+    needs: test-native
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -118,32 +168,19 @@ jobs:
 
   coveralls:
     name: Coveralls
-    needs: test
+    needs: test-native
     if: github.event_name != 'workflow_call'
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 5
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup MoonBit
-        uses: ./.github/actions/setup-moonbit
+      - name: Download coverage report
+        uses: actions/download-artifact@v4
         with:
-          version: ${{ env.MOON_VERSION }}
-
-      - name: Collect src coverage
-        run: |
-          set -euo pipefail
-          moon test --enable-coverage --target native
-          summary="$(moon coverage report --ignore-missing-files -f summary -p heyq02/moomem/src | tee /dev/stderr | awk '/^Total: /{print $2}')"
-          num="${summary%/*}"
-          den="${summary#*/}"
-          echo "src coverage ${num}/${den}"
-          if (( num * 100 < den * 90 )); then
-            echo "src coverage ${num}/${den} is below 90%"
-            exit 1
-          fi
-          moon coverage report --ignore-missing-files -f coveralls -o coveralls.json -p heyq02/moomem/src
+          name: coveralls
+          path: .
 
       - name: Upload to Coveralls
         uses: coverallsapp/github-action@v2

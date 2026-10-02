@@ -44,8 +44,8 @@ Executable workflow truth: [`.github/workflows/test-pipeline.yml`](../../../.git
 |------|---------|
 | Push/PR test matrix is offline | `check` / `test` / smoke / eval never inject `MOONCAKES_TOKEN` or `COVERALLS_REPO_TOKEN`; no model endpoints |
 | Fail closed | Any failed check / matrix target / example smoke fails the aggregate gate |
-| Coveralls is push/PR only | `coveralls` job runs after `test`, skips `workflow_call` so release quality stays offline. `src/` points must stay ≥ 90% before upload. `COVERALLS_REPO_TOKEN` is read only there |
-| Four targets + smoke | native + wasm + wasm-gc + js after `moon check`; native-only FS stays cfg-gated; examples smoke on native |
+| Coveralls is push/PR only | Native test on push/PR enables coverage and checks `src/` points ≥ 90%. The `coveralls` job only uploads that report and skips `workflow_call`, so release quality does not collect or upload coverage. `COVERALLS_REPO_TOKEN` is read only on upload |
+| Four targets + smoke | native + wasm + wasm-gc + js after `moon check`; native-only FS stays cfg-gated. Example smoke and `benchmark` start after native, not after the other backends |
 | Release order | `quality` (`workflow_call` → test-pipeline) → publish / tag side effects |
 | Dry-run still gates | `dry_run=true` skips registry / GitHub Release only; quality still runs |
 | Version alignment | Publish/tag path requires git semver ↔ `moon.mod` `version` match before credentials write |

@@ -1,0 +1,53 @@
+# moomem
+
+> Embedded agent-memory library for MoonBit (`heyq02/moomem`). It lives inside the host process: `open` / `add` / `recall` / `forget`, hybrid vector + BM25 search sharded by `user_id`, and a native dual-slot JSONL snapshot. Defaults are offline and deterministic.
+
+The host surface is `MemoryStore` only: `open`, `add`, `recall`, `forget`, `stats`, `close`, plus `list_entries`, `export_jsonl`, and `import_jsonl`. Indexes, dedup, `rrf`, and tokenizers are not a second public API. Fallible paths return `Result[T, MoomemError]`; library code does not panic.
+
+On native, `open(path)` writes `<path>/moomem/head` plus `slot0.jsonl` and `slot1.jsonl`. The snapshot is the only source of truth (full rewrite, not an append-only log). wasm and js default to an in-memory backend and do not persist unless the host injects `PersistenceBackend`. Hosts inject `Embedder`, `Extractor`, and `ConflictJudge` when they want real models; `None` stays offline (`HashingEmbedder`, `RawExtractor`, `SimilarityJudge`). The core package must not import an LLM SDK.
+
+Toolchain is `moon` (documented baseline ≥ `0.1.20260920`), not Node. Package version is `moon.mod` (currently `0.7.1`); `src/lib.mbt` `MOOMEM_VERSION` must match. Snapshot header `v` is `SNAPSHOT_VERSION` (`1`) and is independent of the package version. `demo/` is a separate module (`heyq02/demo`) that depends on the published package, not this working tree. Published docs: [heyq02/moomem on mooncakes](https://mooncakes.io/docs/heyq02/moomem/).
+
+## Documentation
+
+- [README](README.md): Host behavior, quick start, and on-disk snapshot layout
+- [Architecture](ARCHITECTURE.md): `src/` boundaries, components, and dependency direction
+- [Agent guide](AGENTS.md): Setup, layout, testing, and coding contracts for this repository
+
+## Specifications
+
+- [Library spec index](.trellis/spec/library/index.md): Coding invariants for the core package
+- [Directory structure](.trellis/spec/library/directory-structure.md): Package layout and where files, tests, and examples go
+- [Public API and types](.trellis/spec/library/public-api-and-types.md): `MemoryStore` surface, types, and the `user_id` contract
+- [Error handling](.trellis/spec/library/error-handling.md): `MoomemError` variants and the `Result` rule
+- [Persistence](.trellis/spec/library/persistence.md): Dual-slot snapshot, backends, and filesystem isolation
+- [Trait injection](.trellis/spec/library/trait-injection.md): `Embedder`, `Extractor`, `ConflictJudge`, `PersistenceBackend`, and `Clock`
+- [Quality guidelines](.trellis/spec/library/quality-guidelines.md): Tests, naming, coverage gate, and CI rules
+
+## Examples
+
+- [Examples overview](examples/README.md): Three offline native demos and what each one shows
+- [Default reopen](examples/default-reopen/main.mbt): Write, recall, close, and open the same directory
+- [Host inject and supersede](examples/host-inject-supersede/main.mbt): Injected embedder and extractor; an old fact is superseded
+- [Isolation, forget, import](examples/isolation-forget-import/main.mbt): Per-user isolation, soft delete, export, and import
+- [Offline benchmark](benchmark/README.md): LoCoMo-style retrieval, near-duplicate, isolation, and restart checks
+- [Live host demo](demo/cmd/main/main.mbt): Qwen embed and DeepSeek extract; needs local secrets, not used by CI
+
+## Configuration
+
+- [Module manifest](moon.mod): Module name, version, and the `moonbitlang/x` dependency
+- [Core package](src/moon.pkg): Core package imports
+- [Coverage scripts](package.json): `pnpm` wrappers around `moon test` and the 90% `src/` coverage gate
+- [Test workflow](.github/workflows/test-pipeline.yml): Check, multi-target tests, example smokes, and benchmark
+- [Release workflow](.github/workflows/release-pipeline.yml): Manual release: quality gate, version bump, publish
+- [Demo environment template](demo/.env.example): Local key names for the live host demo; do not commit a filled `.env`
+
+## Optional
+
+- [Development workflow](.trellis/workflow.md): Trellis plan, execute, and finish phases
+- [Thinking guides](.trellis/spec/guides/index.md): Cross-layer and reuse questions before changing code
+- [Cross-layer guide](.trellis/spec/guides/cross-layer-thinking-guide.md): Boundary questions for store, index, codec, and disk
+- [Code reuse guide](.trellis/spec/guides/code-reuse-thinking-guide.md): Where to look before adding a helper
+- [Demo agent guide](demo/AGENTS.md): MoonBit conventions for the separate `demo/` module
+- [Code of conduct](CODE_OF_CONDUCT.md): Community expectations
+- [License](LICENSE): MIT

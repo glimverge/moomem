@@ -40,6 +40,7 @@ Core library layers:
 Black-box tests sit beside sources as `*_test.mbt`; white-box as `*_wbtest.mbt` (**T1**：包旁测试不外迁):
 
 - `types_test.mbt` — `validate_user_id`
+- `types_wbtest.mbt` — Show / `is_recallable`
 - `errors_test.mbt` — `MoomemError` message / kind
 - `extractor_test.mbt` — RawExtractor
 - `embedder_test.mbt` — HashingEmbedder public behavior

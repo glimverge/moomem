@@ -6,10 +6,10 @@
   "scripts": {
     "test": "moon test",
     "test:cov": "moon test --enable-coverage",
-    "cov:bisect": "pnpm run test:cov && moon coverage report -f bisect",
-    "cov:json": "moon coverage report -f coveralls",
-    "cov:xml": "moon coverage report -f cobertura",
-    "cov:html": "moon coverage report -f html"
+    "cov:bisect": "pnpm run test:cov && moon coverage report --ignore-missing-files -f summary -p heyq02/moomem/src | python3 -c 'import sys; t=sys.stdin.read(); print(t, end=\"\"); rows=[ln for ln in t.splitlines() if ln.startswith(\"Total: \")]; num, den = rows[-1].split()[1].split(\"/\"); ratio = int(num) / int(den); print(\"src coverage {:.2%}\".format(ratio)); sys.exit(0 if ratio >= 0.9 else 1)' && moon coverage report --ignore-missing-files -f bisect",
+    "cov:json": "moon coverage report --ignore-missing-files -f coveralls",
+    "cov:xml": "moon coverage report --ignore-missing-files -f cobertura",
+    "cov:html": "moon coverage report --ignore-missing-files -f html"
   },
   "keywords": [],
   "author": "",

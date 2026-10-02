@@ -22,6 +22,7 @@ Align with MoonBit core style (`read_file_to_string`, etc.).
 | Crash/truncate via `MemoryBackend` | `persist_test.mbt`, store restart e2e |
 | Isolation / adversarial QA suites | `adversarial_test.mbt` |
 | Multi-backend | `moon test --target wasm` (native-only FS excluded) |
+| `src/` coverage points stay at or above 90% | `moon coverage report -f summary -p heyq02/moomem/src` |
 
 Where gates, eval, tools, and examples land is the table below plus the workflow YAML. Do not add a second architecture essay.
 
@@ -57,6 +58,7 @@ When changing CI behavior: edit the YAML first (or same PR), then keep this tabl
 
 ```bash
 moon test
+moon test --enable-coverage && moon coverage report --ignore-missing-files -f summary -p heyq02/moomem/src  # src points >= 90%
 moon test --target wasm
 moon run ci/tools/retrieval-tuning --target native   # tool（无 CI 调用）
 moon run ci/eval/locomo --target native              # L3 offline eval

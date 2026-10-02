@@ -95,9 +95,9 @@ jobs:
       - name: moon run examples (three scenes, zero network)
         run: |
           set -euo pipefail
-          moon run examples/basic-store --target native
-          moon run examples/conflict-supersede --target native
-          moon run examples/cli-smoke --target native
+          moon run examples/default-reopen --target native
+          moon run examples/host-inject-supersede --target native
+          moon run examples/isolation-forget-import --target native
 
   eval-locomo:
     name: L3 Eval (offline, native)

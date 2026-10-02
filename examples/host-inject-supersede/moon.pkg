@@ -1,5 +1,6 @@
 import {
   "heyq02/moomem/src",
+  "moonbitlang/x/fs",
 }
 
 options(

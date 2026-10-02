@@ -11,7 +11,7 @@
 | `src/` | Core library (`MemoryStore` aggregate); L0 包旁测试 | `moonbitlang/x/fs`, `moonbitlang/core/json` |
 | `ci/eval/locomo/` | L3 offline LoCoMo eval harness + `data/` | separate package |
 | `ci/tools/retrieval-tuning/` | Offline retrieval tuning tool (U1; **not in CI**) | separate package |
-| `examples/<scene>/` | E2 scene demos: `basic-store`, `conflict-supersede`, `cli-smoke` | — |
+| `examples/<scene>/` | E2 scene demos: `default-reopen`, `host-inject-supersede`, `isolation-forget-import` | — |
 | `.trellis/spec/` | AI coding guidelines + CI iron rules (this tree) | — |
 | `.github/workflows/` | CI / release **implementation** (living SoT for pipelines) | — |
 

@@ -2,7 +2,7 @@
 
 [![Version](https://img.shields.io/badge/dynamic/regex?url=https%3A%2F%2Fraw.githubusercontent.com%2Fglimverge%2Fmoomem%2Frefs%2Fheads%2Fmain%2Fmoon.mod&search=%5Eversion%5Cs%2A%3D%5Cs%2A%22%28%3FP%3Cversion%3E%5B%5E%22%5D%2B%29%22&replace=%24%3Cversion%3E&flags=m&label=version&logo=github)](https://github.com/glimverge/moomem/blob/main/moon.mod)
 [![Coverage Status](https://coveralls.io/repos/github/glimverge/moomem/badge.svg?branch=main)](https://coveralls.io/github/glimverge/moomem?branch=main)
-[![Docs](https://img.shields.io/badge/docs-mooncakes.io-green)](https://glimverge.github.io/moomem/)
+[![Docs](https://img.shields.io/badge/docs-mooncakes.io-green)](https://mooncakes.io/docs/heyq02/moomem/)
 [![License](https://img.shields.io/github/license/glimverge/moomem)](https://github.com/glimverge/moomem/blob/main/LICENSE)
 
 > MoonBit 嵌入式 Agent 记忆层：零部署、崩溃可恢复、按用户隔离。

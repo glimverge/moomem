@@ -71,7 +71,7 @@ test "RawExtractor: raw passthrough with kind=unstructured" {
   inspect(facts[0].content, content="我对花生过敏")
   inspect(facts[0].kind == Unstructured, content="true")
   inspect(facts[0].source_span == None, content="true")
-  // W3.1-A TC-A4：raw 直通不是降级
+  // raw 直通不是降级
   inspect(facts[0].degraded, content="false")
   inspect(facts[0].degrade_reason == None, content="true")
   // 空白文本 → 0 条（闲聊过滤入口）

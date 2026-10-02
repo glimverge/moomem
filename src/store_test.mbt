@@ -395,7 +395,7 @@ test "AC-05: degraded mode with failing extractor" {
     _ => "MISSING"
   }
   inspect(degraded_tag, content="true")
-  // W3.1-A TC-A5：store Err 路径构造的降级事实携带 degrade_reason，并写入 metadata
+  // 提取返回 Err 时，降级事实携带 degrade_reason，并写入 metadata
   let listed = match store.list_entries("user-42") {
     Ok(es) => es
     Err(_) => {

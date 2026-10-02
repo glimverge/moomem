@@ -26,7 +26,7 @@ Do not invent a parallel public facade; extend `MemoryStore` only when the featu
 
 MoonBit: unmarked top-level defs are **package-private**; `pub` crosses packages. Black-box `*_test.mbt` sees only `pub`; white-box `*_wbtest.mbt` (and same-package code) sees everything.
 
-These types/fns are **not** `pub`. They live inside `MemoryStore` (`priv vec_index` / `kw_index` / `dedup`). Unit coverage is in `src/index_wbtest.mbt`.
+These types/fns are **not** `pub`. They live inside `MemoryStore` (`priv vector_index` / `keyword_index` / `dedup`). Unit coverage is in the matching `*_wbtest.mbt` files.
 
 | Symbol | Location | Role |
 |--------|----------|------|
@@ -48,9 +48,9 @@ Not host API. Same-package code and `*_wbtest.mbt` may call them. Other packages
 
 | Symbol | Location | Covered by |
 |--------|----------|------------|
-| `tokenize` | `index_keyword.mbt` | `src/similarity_wbtest.mbt`, `src/index_wbtest.mbt` |
-| `cosine_similarity` | `embedder.mbt` | `src/similarity_wbtest.mbt` |
-| `keyword_jaccard` | `conflict.mbt` | `src/similarity_wbtest.mbt` |
+| `tokenize` | `index_keyword.mbt` | `src/index_keyword_wbtest.mbt` |
+| `cosine_similarity` | `embedder.mbt` | `src/embedder_wbtest.mbt` |
+| `keyword_jaccard` | `conflict.mbt` | `src/conflict_wbtest.mbt` |
 | snapshot codec (`entry_to_json`, `parse_snapshot_text`, …) | `json_codec.mbt` | `src/json_codec_wbtest.mbt` |
 | `MemoryBackend::peek` / `set_fail_next_save` / `set_simulate_partial_write` | `persist.mbt` | tests in `src/persist.mbt` |
 
@@ -78,12 +78,12 @@ Not host API. Same-package code and `*_wbtest.mbt` may call them. Other packages
 | `fusion_policy` | `AdaptiveLexical` | `EqualRrf` rollback |
 | `lexical_floor` | `DEFAULT_LEXICAL_FLOOR` (0.8) | `>= 0` |
 | `lexical_gap` | `DEFAULT_LEXICAL_GAP` (1.1) | `>= 1` |
-| `vec_weight_when_lexical` | `DEFAULT_VEC_WEIGHT_LEXICAL` (0.05) | `(0, 1]`; `≤0.05` → BM25-only when lexical-strong |
-| `vec_weight_when_semantic` | `DEFAULT_VEC_WEIGHT_SEMANTIC` (0.45) | `(0, 1]` |
+| `vector_weight_when_lexical` | `DEFAULT_VECTOR_WEIGHT_LEXICAL` (0.05) | `(0, 1]`; `≤0.05` → BM25-only when lexical-strong |
+| `vector_weight_when_semantic` | `DEFAULT_VECTOR_WEIGHT_SEMANTIC` (0.45) | `(0, 1]` |
 
 Adaptive recall path: score-aware `kw_hits`/`vec_hits` → `lexical_strong` → weighted/`BM25-only` → `protect_bm25_topk`. Do **not** split `MemoryStore` for fusion; tune on `ci/tools/retrieval-tuning` only (never LoCoMo scored QA).
 
-Constants with real defaults: `DEFAULT_DIM = 256`, `DEFAULT_RRF_K = 60`, `DEFAULT_SUPERSEDE_THRESHOLD = 0.82`, `CONFLICT_CANDIDATES = 8`, `COEXIST_BAND = 0.15`, `MAX_EXTRACTION_FAILURES = 3`, `MAX_USER_ID_LEN = 64`, `DEFAULT_LEXICAL_FLOOR = 0.8`, `DEFAULT_LEXICAL_GAP = 1.1`, `DEFAULT_VEC_WEIGHT_LEXICAL = 0.05`, `DEFAULT_VEC_WEIGHT_SEMANTIC = 0.45`.
+Constants with real defaults: `DEFAULT_DIM = 256`, `DEFAULT_RRF_K = 60`, `DEFAULT_SUPERSEDE_THRESHOLD = 0.82`, `CONFLICT_CANDIDATES = 8`, `COEXIST_BAND = 0.15`, `MAX_EXTRACTION_FAILURES = 3`, `MAX_USER_ID_LEN = 64`, `DEFAULT_LEXICAL_FLOOR = 0.8`, `DEFAULT_LEXICAL_GAP = 1.1`, `DEFAULT_VECTOR_WEIGHT_LEXICAL = 0.05`, `DEFAULT_VECTOR_WEIGHT_SEMANTIC = 0.45`.
 
 ## `user_id` contract
 

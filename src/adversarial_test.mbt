@@ -93,7 +93,7 @@ fn adversarial_open(
     persistence: Some(backend),
     clock,
   }
-  @src.MemoryStore::open("memory://qa", config=cfg)
+  @src.MemoryStore::open("memory://adversarial", config=cfg)
 }
 
 ///|
@@ -757,7 +757,7 @@ test "QA: config validation rejects illegal values" {
     cfg
   }
   let rejected = (cfg : @src.Config) => {
-    match @src.MemoryStore::open("memory://qa", config=cfg) {
+    match @src.MemoryStore::open("memory://adversarial", config=cfg) {
       Err(InvalidOperation(_)) => true
       _ => false
     }
@@ -769,7 +769,7 @@ test "QA: config validation rejects illegal values" {
   inspect(rejected(mk_cfg(256, 60, 0, 1.01)), content="true")
   // 边界值 1.0 合法
   let ok_at_one = match
-    @src.MemoryStore::open("memory://qa", config=mk_cfg(256, 60, 0, 1.0)) {
+    @src.MemoryStore::open("memory://adversarial", config=mk_cfg(256, 60, 0, 1.0)) {
     Ok(_) => true
     Err(_) => false
   }

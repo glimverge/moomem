@@ -90,7 +90,7 @@ fn config_unit_vector(i : Int, scale : Double) -> Array[Double] {
 fn config_open(
   config : @src.Config,
 ) -> Result[@src.MemoryStore, @src.MoomemError] {
-  @src.MemoryStore::open("memory://w3-cfg", config=config)
+  @src.MemoryStore::open("memory://config", config=config)
 }
 
 ///|
@@ -232,10 +232,10 @@ test "conflict_candidates=0 and coexist_band=1.0 rejected" {
   inspect(rejected_gap, content="true")
   let bad_wv = @src.Config::{
     ..config_base(backend),
-    vec_weight_when_lexical: 0.0,
+    vector_weight_when_lexical: 0.0,
   }
   let rejected_wv = match config_open(bad_wv) {
-    Err(InvalidOperation(msg)) => msg.contains("vec_weight_when_lexical")
+    Err(InvalidOperation(msg)) => msg.contains("vector_weight_when_lexical")
     _ => false
   }
   inspect(rejected_wv, content="true")
@@ -468,8 +468,8 @@ test "adaptive fusion favors BM25 on strong lexical query" {
     fusion_policy: @src.FusionPolicy::AdaptiveLexical,
     lexical_floor: 0.5,
     lexical_gap: 1.05,
-    vec_weight_when_lexical: 0.10,
-    vec_weight_when_semantic: 0.55,
+    vector_weight_when_lexical: 0.10,
+    vector_weight_when_semantic: 0.55,
     backfill: @src.RecallBackfill::NoBackfill,
   }
   let store = match config_open(cfg) {

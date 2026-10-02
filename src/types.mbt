@@ -259,9 +259,9 @@ pub(all) struct Config {
   /// adaptive：top1/top2 倍差（>=1）
   lexical_gap : Double
   /// adaptive：词法强时向量权重，∈(0,1]
-  vec_weight_when_lexical : Double
+  vector_weight_when_lexical : Double
   /// adaptive：词法弱时向量权重，∈(0,1]
-  vec_weight_when_semantic : Double
+  vector_weight_when_semantic : Double
 }
 
 ///|
@@ -283,8 +283,8 @@ pub fn Config::default() -> Config {
     fusion_policy: FusionPolicy::AdaptiveLexical,
     lexical_floor: DEFAULT_LEXICAL_FLOOR,
     lexical_gap: DEFAULT_LEXICAL_GAP,
-    vec_weight_when_lexical: DEFAULT_VEC_WEIGHT_LEXICAL,
-    vec_weight_when_semantic: DEFAULT_VEC_WEIGHT_SEMANTIC,
+    vector_weight_when_lexical: DEFAULT_VECTOR_WEIGHT_LEXICAL,
+    vector_weight_when_semantic: DEFAULT_VECTOR_WEIGHT_SEMANTIC,
   }
 }
 
@@ -332,11 +332,11 @@ pub const DEFAULT_LEXICAL_GAP : Double = 1.1
 
 ///|
 /// adaptive：词法强时向量通道权重（≤0.05 时 recall 走 BM25 单路）
-pub const DEFAULT_VEC_WEIGHT_LEXICAL : Double = 0.05
+pub const DEFAULT_VECTOR_WEIGHT_LEXICAL : Double = 0.05
 
 ///|
 /// adaptive：词法弱时向量通道权重（近均衡；BM25 top 由 protect_bm25_topk 兜底）
-pub const DEFAULT_VEC_WEIGHT_SEMANTIC : Double = 0.45
+pub const DEFAULT_VECTOR_WEIGHT_SEMANTIC : Double = 0.45
 
 // ---------------------------------------------------------------------------
 // user_id 契约（架构文档 7.4：唯一实现，所有入口调用）

@@ -231,8 +231,8 @@ fn open_store(
   fusion_policy : @src.FusionPolicy,
   lexical_floor : Double,
   lexical_gap : Double,
-  vec_weight_when_lexical : Double,
-  vec_weight_when_semantic : Double,
+  vector_weight_when_lexical : Double,
+  vector_weight_when_semantic : Double,
 ) -> @src.MemoryStore {
   let backend : &@src.PersistenceBackend = @src.MemoryBackend::new()
   let cfg = @src.Config::{
@@ -245,8 +245,8 @@ fn open_store(
     fusion_policy,
     lexical_floor,
     lexical_gap,
-    vec_weight_when_lexical,
-    vec_weight_when_semantic,
+    vector_weight_when_lexical,
+    vector_weight_when_semantic,
   }
   match @src.MemoryStore::open("memory://tuning", config=cfg) {
     Ok(s) => s
@@ -387,8 +387,8 @@ fn run_once(
     @src.FusionPolicy::AdaptiveLexical,
     @src.DEFAULT_LEXICAL_FLOOR,
     @src.DEFAULT_LEXICAL_GAP,
-    @src.DEFAULT_VEC_WEIGHT_LEXICAL,
-    @src.DEFAULT_VEC_WEIGHT_SEMANTIC,
+    @src.DEFAULT_VECTOR_WEIGHT_LEXICAL,
+    @src.DEFAULT_VECTOR_WEIGHT_SEMANTIC,
   )
   add_all(store, "alice", alice_facts())
   add_all(store, "bob", bob_facts())
@@ -567,8 +567,8 @@ fn main {
   println("=== adaptive fusion compare (independent set) ===")
   let floor0 = @src.DEFAULT_LEXICAL_FLOOR
   let gap0 = @src.DEFAULT_LEXICAL_GAP
-  let wlex0 = @src.DEFAULT_VEC_WEIGHT_LEXICAL
-  let wsem0 = @src.DEFAULT_VEC_WEIGHT_SEMANTIC
+  let wlex0 = @src.DEFAULT_VECTOR_WEIGHT_LEXICAL
+  let wsem0 = @src.DEFAULT_VECTOR_WEIGHT_SEMANTIC
   let lex_cases = lexical_query_cases()
   let para_cases = paraphrase_query_cases()
   let all_fusion = query_cases()
@@ -655,7 +655,7 @@ fn main {
   }
   println("")
   println(
-    "suggested adaptive defaults: floor=\{format_mrr(sug_floor)} gap=\{format_mrr(sug_gap)} w_lex=\{format_mrr(sug_wlex)} w_sem=\{format_mrr(sug_wsem)} (compare to constants DEFAULT_LEXICAL_FLOOR=\{format_mrr(floor0)} DEFAULT_LEXICAL_GAP=\{format_mrr(gap0)} DEFAULT_VEC_WEIGHT_LEXICAL=\{format_mrr(wlex0)} DEFAULT_VEC_WEIGHT_SEMANTIC=\{format_mrr(wsem0)})",
+    "suggested adaptive defaults: floor=\{format_mrr(sug_floor)} gap=\{format_mrr(sug_gap)} w_lex=\{format_mrr(sug_wlex)} w_sem=\{format_mrr(sug_wsem)} (compare to constants DEFAULT_LEXICAL_FLOOR=\{format_mrr(floor0)} DEFAULT_LEXICAL_GAP=\{format_mrr(gap0)} DEFAULT_VECTOR_WEIGHT_LEXICAL=\{format_mrr(wlex0)} DEFAULT_VECTOR_WEIGHT_SEMANTIC=\{format_mrr(wsem0)})",
   )
   println(
     "fusion note: \{fusion_label(@src.FusionPolicy::AdaptiveLexical)} is Config default; EqualRrf remains rollback.",

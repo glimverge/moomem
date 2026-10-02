@@ -33,7 +33,7 @@ Core library layers:
 | Dedup | `dedup.mbt` | Per-user content fingerprints |
 | Indexes | `index_vector.mbt`, `index_keyword.mbt`, `ranker.mbt` | Per-user shards + BM25 + RRF |
 | Persistence | `persist.mbt` | `PersistenceBackend`, `FsBackend`, `MemoryBackend` — **only non-test core `@fs` call site** (`moon.pkg` may still import `x/fs`) |
-| Orchestration | `store.mbt` | `MemoryStore` aggregate root (host API); indexes/dedup/`rrf`/`tokenize`/similarity/snapshot codec are package-private — see [Public API and Types](./public-api-and-types.md). `add` is a thin orchestrator over package-private stage helpers (extract/degrade, dedup, conflict/supersede, embed+index insert, flush) — not a second aggregate. |
+| Orchestration | `store.mbt`, `store_add.mbt`, `store_recall.mbt`, `store_records.mbt` | One `MemoryStore` aggregate. `store.mbt` holds the type, `open`, index maintenance, `stats`, `close`, `flush`. `add` / `recall` / forget+import+export+list live in the other three files. |
 
 ## Tests
 
@@ -41,10 +41,14 @@ Black-box tests sit beside sources as `*_test.mbt`; white-box as `*_wbtest.mbt` 
 
 - `types_test.mbt` — codec, `validate_user_id`
 - `extractor_test.mbt` — injection / raw mode (black-box)
-- `similarity_wbtest.mbt` — tokenize / cosine / jaccard / SimilarityJudge
+- `embedder_wbtest.mbt` — HashingEmbedder / cosine
+- `conflict_wbtest.mbt` — SimilarityJudge / Jaccard
+- `index_vector_wbtest.mbt` — VectorIndex
+- `index_keyword_wbtest.mbt` — tokenize / KeywordIndex
+- `dedup_wbtest.mbt` — DedupIndex
+- `ranker_wbtest.mbt` — RRF / lexical gate
 - `json_codec_wbtest.mbt` — snapshot codec
 - crash-injection tests live in `persist.mbt` (the injectors are package-private)
-- `index_wbtest.mbt` — VectorIndex / KeywordIndex / DedupIndex / rrf (package-private)
 - `persist_test.mbt` — dual-slot, head corruption, `MemoryBackend` crash inject
 - `store_test.mbt` — AC-01..05 end-to-end
 - `adversarial_test.mbt`, `config_test.mbt` — edge / config validation
@@ -65,7 +69,7 @@ Eval / tools are **not** package-side tests — see decision table below.
 | New `MoomemError` variant | `errors.mbt` (update `Show`, `message`, `kind`) |
 | New injectable AI / infra capability | New trait file next to `embedder` / `extractor` / `conflict` / `clock`; wire through `Config` + `MemoryStore::open` |
 | Disk / crash-safety | `persist.mbt` only |
-| Orchestration of add/recall flows | `store.mbt` only — keep indexes/traits stateless or rebuildable |
+| Orchestration of add/recall flows | `store*.mbt` on `MemoryStore` only — do not add a second aggregate |
 | Host model client | Host package — never core |
 
 ## Where new tests / examples / gates go

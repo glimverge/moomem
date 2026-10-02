@@ -6,7 +6,7 @@
 // 3) Adaptive fusion: lexical vs paraphrase cases; equal_rrf vs adaptive compare
 // 4) Small grid over adaptive hyperparams (independent set only — never LoCoMo)
 //
-// Run: moon run ci/tools/retrieval-tuning --target native
+// Run: moon run tools/retrieval-tuning --target native
 
 ///|
 fn fail(msg : String) -> Unit {

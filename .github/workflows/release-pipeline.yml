@@ -65,7 +65,7 @@ jobs:
 
       - name: Bump version
         id: ver
-        run: bash scripts/ci/bump-version.sh
+        run: bash scripts/release/bump-version.sh
 
       - name: Package module
         run: moon package -v
@@ -74,7 +74,7 @@ jobs:
         if: env.DRY_RUN != 'true'
         env:
           MOONCAKES_TOKEN: ${{ secrets.MOONCAKES_TOKEN }}
-        run: bash scripts/ci/configure-mooncakes-credentials.sh
+        run: bash scripts/release/configure-mooncakes-credentials.sh
 
       - name: Verify mooncakes identity
         if: env.DRY_RUN != 'true'
@@ -89,14 +89,14 @@ jobs:
         env:
           NEW_VERSION: ${{ steps.ver.outputs.mod_version }}
           BASE_VERSION: ${{ steps.ver.outputs.base_version }}
-        run: bash scripts/ci/commit-release-tag.sh
+        run: bash scripts/release/commit-release-tag.sh
 
       - name: Dry-run summary
         if: env.DRY_RUN == 'true'
         env:
           BASE_VERSION: ${{ steps.ver.outputs.base_version }}
           MOD_VERSION: ${{ steps.ver.outputs.mod_version }}
-        run: bash scripts/ci/dry-run-summary.sh
+        run: bash scripts/release/dry-run-summary.sh
 
       - name: Cleanup mooncakes credentials
         if: always()

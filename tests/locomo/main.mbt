@@ -1,9 +1,9 @@
 // LoCoMo L3 evaluation entrypoint (W4).
 //
 // Offline:
-//   moon run ci/eval/locomo --target native
-// Machine-readable report (archive):
-//   moon run ci/eval/locomo --target native -- --report /tmp/offline.json
+//   moon run tests/locomo --target native
+// Machine-readable report:
+//   moon run tests/locomo --target native -- --report /tmp/offline.json
 
 ///|
 fn main {
@@ -41,7 +41,7 @@ fn main {
   // ---- conflict ----
   println("## Conflict")
   println("")
-  let conflict_path = "ci/eval/locomo/data/conflict_pairs.json"
+  let conflict_path = "tests/locomo/data/conflict_pairs.json"
   let conflicts = load_conflict_fixture(conflict_path)
   let conflict = run_conflict_eval(conflicts)
 

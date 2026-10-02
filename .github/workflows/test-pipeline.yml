@@ -113,8 +113,8 @@ jobs:
         with:
           version: ${{ env.MOON_VERSION }}
 
-      - name: moon run ci/eval/locomo (offline)
-        run: moon run ci/eval/locomo --target native
+      - name: moon run tests/locomo (offline)
+        run: moon run tests/locomo --target native
 
   coveralls:
     name: Coveralls

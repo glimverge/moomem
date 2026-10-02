@@ -1,6 +1,6 @@
-# ci/eval/locomo/data — 评测数据说明
+# tests/locomo/data — 评测数据说明
 
-本目录存放 W4 评测所需的**数据文件**。代码（harness）在 `ci/eval/locomo/`，两者分开：
+本目录存放 LoCoMo 语料评测的数据文件。入口在 `tests/locomo/`，两者分开：
 数据是内容资产，harness 是工程实现。
 
 ## 1. 文件清单
@@ -130,4 +130,4 @@ python3 scripts/locomo/make_subset.py --input /path/to/locomo10.json
 
 ## 6. 这条语料在流水线里的位置
 
-L3 离线评测由 `moon run ci/eval/locomo --target native` 执行。push 流水线是否跑它、以及 L0–L2 的边界，以 `.github/workflows/test-pipeline.yml` 和 `.trellis/spec/library/quality-guidelines.md` 为准。`semantic` 组的相似度数字写在本文件第 4 节。
+L3 离线评测由 `moon run tests/locomo --target native` 执行。push 流水线是否跑它、以及 L0–L2 的边界，以 `.github/workflows/test-pipeline.yml` 和 `.trellis/spec/library/quality-guidelines.md` 为准。`semantic` 组的相似度数字写在本文件第 4 节。

@@ -54,7 +54,7 @@ Not host API. Same-package code and `*_wbtest.mbt` may call them. Other packages
 | snapshot codec (`entry_to_json`, `parse_snapshot_text`, …) | `json_codec.mbt` | `src/json_codec_wbtest.mbt` |
 | `MemoryBackend::peek` / `set_fail_next_save` / `set_simulate_partial_write` | `persist.mbt` | tests in `src/persist.mbt` |
 
-`ci/eval/locomo/conflict_eval.mbt` prints cos/jac from functions inside the eval package. The scored supersede check uses `MemoryStore` only.
+`tests/locomo/conflict_eval.mbt` prints cos/jac from functions inside the eval package. The scored supersede check uses `MemoryStore` only.
 
 ## Core types (`src/types.mbt`)
 
@@ -81,7 +81,7 @@ Not host API. Same-package code and `*_wbtest.mbt` may call them. Other packages
 | `vector_weight_when_lexical` | `DEFAULT_VECTOR_WEIGHT_LEXICAL` (0.05) | `(0, 1]`; `≤0.05` → BM25-only when lexical-strong |
 | `vector_weight_when_semantic` | `DEFAULT_VECTOR_WEIGHT_SEMANTIC` (0.45) | `(0, 1]` |
 
-Adaptive recall path: score-aware `kw_hits`/`vec_hits` → `lexical_strong` → weighted/`BM25-only` → `protect_bm25_topk`. Do **not** split `MemoryStore` for fusion; tune on `ci/tools/retrieval-tuning` only (never LoCoMo scored QA).
+Adaptive recall path: score-aware `kw_hits`/`vec_hits` → `lexical_strong` → weighted/`BM25-only` → `protect_bm25_topk`. Do **not** split `MemoryStore` for fusion; tune on `tools/retrieval-tuning` only (never LoCoMo scored QA).
 
 Constants with real defaults: `DEFAULT_DIM = 256`, `DEFAULT_RRF_K = 60`, `DEFAULT_SUPERSEDE_THRESHOLD = 0.82`, `CONFLICT_CANDIDATES = 8`, `COEXIST_BAND = 0.15`, `MAX_EXTRACTION_FAILURES = 3`, `MAX_USER_ID_LEN = 64`, `DEFAULT_LEXICAL_FLOOR = 0.8`, `DEFAULT_LEXICAL_GAP = 1.1`, `DEFAULT_VECTOR_WEIGHT_LEXICAL = 0.05`, `DEFAULT_VECTOR_WEIGHT_SEMANTIC = 0.45`.
 
@@ -132,4 +132,4 @@ Invariant: `recall` only returns recallable statuses; superseded/deleted remain 
 - Treating package-private indexes / `rrf` / `tokenize` / similarity / snapshot codec as the host API, or re-exporting them for CI.
 - Re-`pub`ing `VectorIndex` / `KeywordIndex` / `DedupIndex` without a Trellis decision (Option B already narrowed them).
 - Splitting `MemoryStore` or adding a second recall API to “fix” fusion — fusion is `Config` + `ranker.mbt` only.
-- Tuning adaptive thresholds on LoCoMo scored QA (use `ci/tools/retrieval-tuning` independent set).
+- Tuning adaptive thresholds on LoCoMo scored QA (use `tools/retrieval-tuning` independent set).

@@ -9,8 +9,8 @@
 | Path | Role | Key deps |
 |------|------|----------|
 | `src/` | Core library (`MemoryStore` aggregate); L0 包旁测试 | `moonbitlang/x/fs`, `moonbitlang/core/json` |
-| `ci/eval/locomo/` | L3 offline LoCoMo eval harness + `data/` | separate package |
-| `ci/tools/retrieval-tuning/` | Offline retrieval tuning tool (U1; **not in CI**) | separate package |
+| `tests/locomo/` | L3 offline LoCoMo corpus eval on `MemoryStore` + `data/` | separate package |
+| `tools/retrieval-tuning/` | Offline `Config` sweep (not a push gate) | separate package |
 | `examples/<scene>/` | E2 scene demos: `default-reopen`, `host-inject-supersede`, `isolation-forget-import` | — |
 | `.trellis/spec/` | AI coding guidelines + CI iron rules (this tree) | — |
 | `.github/workflows/` | CI / release **implementation** (living SoT for pipelines) | — |
@@ -81,8 +81,8 @@ Align with [Quality Guidelines](./quality-guidelines.md).
 | Need | Put it in |
 |------|----------|
 | Asserted offline regression (core) | Package-side `src/*_test.mbt` / `*_wbtest.mbt` (L0) |
-| Benchmark / corpus eval | `ci/eval/locomo/` (L3, offline hashing) |
-| Sweep / calibrate Config, not a gate | `ci/tools/retrieval-tuning/` (tool) |
+| Benchmark / corpus eval | `tests/locomo/` (L3, offline hashing) |
+| Sweep / calibrate Config, not a gate | `tools/retrieval-tuning/` |
 | Teachable runnable demo (no AC suite) | `examples/<scene>/` (E2) |
 
 **Forbidden**: live key paths inside examples; treating tools as default L0; stuffing eval corpora into package-side unit tests.
@@ -94,4 +94,4 @@ Align with [Quality Guidelines](./quality-guidelines.md).
 - Do **not** put `@json.parse` / entry serializers outside `json_codec.mbt`.
 - Do **not** grow a second aggregate alongside `MemoryStore`; it is the sole stateful orchestrator.
 - Do **not** move package-side `*_test.mbt` out of `src/` (T1).
-- Do **not** wire `retrieval-tuning` into CI by default (U1 tool).
+- Do **not** wire `tools/retrieval-tuning` into the push pipeline.

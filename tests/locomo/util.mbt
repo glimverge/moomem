@@ -159,7 +159,7 @@ fn parse_args() -> CliOpts {
 
 ///|
 fn print_help() -> Unit {
-  println("Usage: moon run ci/eval/locomo --target native -- [options]")
+  println("Usage: moon run tests/locomo --target native -- [options]")
   println("  --fixture <path>     locomo_subset.json path")
   println("  --embedder hashing   offline hashing embedder (default)")
   println("  --limit <n>          score at most n retrieval QA items")
@@ -188,7 +188,7 @@ fn resolve_fixture_path(opts : CliOpts) -> String {
     }
     None => ()
   }
-  "ci/eval/locomo/data/locomo_subset.json"
+  "tests/locomo/data/locomo_subset.json"
 }
 
 ///|

@@ -192,7 +192,7 @@ flowchart TD
 | 降级 | 提取失败在连续 3 次之前退回原文；嵌入失败变关键词检索；冲突判定失败则不覆盖、两条并存。第 3 次提取失败返回 `ExtractionFailure` |
 | 日志与监控 | 没有日志框架。可观察的是 `AddSummary.notes`、`metadata`、`StoreStats` |
 | 校验 | `validate_user_id` 加上 `open` 时对 `Config` 数值范围的检查 |
-| 配置 | `Config` 的注入点都是 `Option`。`None` 使用离线缺省。调参不进默认门禁，用 `ci/tools/retrieval-tuning` |
+| 配置 | `Config` 的注入点都是 `Option`。`None` 使用离线缺省。调参不进默认门禁，用 `tools/retrieval-tuning` |
 | 密钥 | 核心库不读环境变量，不保存 API key |
 | 时间 | `LogicalClock` 单调递增；`FixedClock` 用于测试。核心库不读系统时钟 |
 | 并发 | 单写者。没有内部锁；宿主不要并发调用同一个 `MemoryStore` |
@@ -241,7 +241,7 @@ flowchart TD
 
 断言用 `inspect`。替身是手写的 trait 实现，没有 mock 框架。native 用例数不得低于 76。`src/` 的覆盖率点不得低于 90%（`moon coverage report -f summary -p heyq02/moomem/src`）。磁盘用例只在 native 编译。
 
-`ci/eval/locomo` 是离线评测，不是包旁单元测试。`ci/tools/retrieval-tuning` 用来扫配置，不进默认门禁。
+`tests/locomo` 是离线语料评测，不是包旁单元测试。`tools/retrieval-tuning` 用来扫 `Config`，不进默认门禁。
 
 ## 12. 部署
 
@@ -258,7 +258,7 @@ flowchart TD
 
 **加一种模型能力。** 在 `embedder.mbt` / `extractor.mbt` / `conflict.mbt` / `clock.mbt` 旁边新增 trait 文件，给一个离线缺省实现，把 `Option` 放进 `Config`，在 `MemoryStore::open` 里解析。不要在核心包里接具体厂商 SDK。
 
-**改检索融合。** 改 `ranker.mbt` 和 `store_recall.mbt`，旋钮放在 `Config`。不要为此拆出第二个 `MemoryStore`。权重和阈值的扫描放在 `ci/tools/retrieval-tuning`。
+**改检索融合。** 改 `ranker.mbt` 和 `store_recall.mbt`，旋钮放在 `Config`。不要为此拆出第二个 `MemoryStore`。权重和阈值的扫描放在 `tools/retrieval-tuning`。
 
 **改磁盘格式。** 只改 `json_codec.mbt` 与 `SNAPSHOT_VERSION`。`persist.mbt` 继续只搬运整段文本。
 

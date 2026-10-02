@@ -42,4 +42,4 @@ D4 的契约是：`MemoryStore` 九个方法；`Config`、`MemoryEntry`、`AddSu
 
 ## Open questions
 
-- 无。实现前仍要补 `design.md`：黑盒用例是改成白盒，还是改成只经 `MemoryStore` 断言。这是实现选择，不改变上面的验收。
+- 无。黑盒用例已按 `design.md` 落地：内部断言进同包白盒测试，宿主路径仍走 `MemoryStore`。

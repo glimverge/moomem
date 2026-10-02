@@ -34,7 +34,7 @@ LLM Agent 每次推理只依赖本轮上下文，进程结束即失忆。**moome
 
 ## 证据
 
-2026-10-01、查询自适应融合之后：离线 hashing 混合 Recall@5 为 100/230（0.435），与纯 BM25 持平。真实嵌入和提取由宿主注入，不进这条 CI。复跑：`moon run tests/locomo --target native`。
+2026-10-01、查询自适应融合之后：离线 hashing 混合 Recall@5 为 100/230（0.435），与纯 BM25 持平。真实嵌入和提取由宿主注入，不进这条 CI。复跑：`moon run benchmark --target native`。
 
 ## 最短上手
 
@@ -92,7 +92,7 @@ fn main {
 | [文档站 Guide](https://glimverge.github.io/moomem/guide/start/introduction) | 介绍 / 上手 / 持久化 / 安全 |
 | [API](https://glimverge.github.io/moomem/api/) | MemoryStore、注入点 |
 
-仓库速览：`src/` 核心库 · `examples/` 零网络演示 · `tests/` 语料评测。
+仓库速览：`src/` 核心库 · `examples/` 零网络演示 · `benchmark/` 语料评测。
 
 ## 测试
 
@@ -103,4 +103,4 @@ fn main {
 | 静态检查 | `moon check --target native` | 类型和编译错误要在跑用例之前拦住 | 退出码 0 |
 | 单元 / 集成 | `moon test` 在 native、wasm、wasm-gc、js 上各跑一遍。覆盖嵌入与相似度、抽取、冲突判定、编解码、崩溃恢复、存储端到端（隔离、supersede、forget、导入导出）、配置 | 库宣称四个后端都能用，核心契约不能只在 native 上成立。磁盘双槽依赖本地文件系统，相关用例只在 native 编译 | 每个后端失败数为 0，且通过数等于总数。native 用例数不得低于 76，防止静默删用例 |
 | 示例冒烟 | native、零网络跑三个示例：`default-reopen`（缺省 open，写入、召回、关掉再打开）、`host-inject-supersede`（宿主嵌入后旧住址被覆盖）、`isolation-forget-import`（用户隔离、forget、导出再导入） | 文档里的主路径要从入口跑通，且不依赖密钥或外网 | 三个 `moon run` 退出码都是 0 |
-| L3 离线评测 | `moon run tests/locomo --target native`。在 LoCoMo 子集上检查：近重复事实是否 supersede、重启后条目 id 是否一致、跨用户检索是否泄漏。混合检索相对 BM25 的分数会打印出来。提取精度在这一档跳过 | 前三步保证实现正确；这一步保证记忆质量没有悄悄变差。离线没有真实嵌入，整段原文入库，提取 Precision 没有意义 | 打印 `LOCOMO_PASS`。硬门槛：跨用户泄漏 0、重启一致、近重复 supersede ≥ 80% |
+| L3 离线评测 | `moon run benchmark --target native`。在 LoCoMo 子集上检查：近重复事实是否 supersede、重启后条目 id 是否一致、跨用户检索是否泄漏。混合检索相对 BM25 的分数会打印出来。提取精度在这一档跳过 | 前三步保证实现正确；这一步保证记忆质量没有悄悄变差。离线没有真实嵌入，整段原文入库，提取 Precision 没有意义 | 打印 `LOCOMO_PASS`。硬门槛：跨用户泄漏 0、重启一致、近重复 supersede ≥ 80% |

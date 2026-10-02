@@ -9,7 +9,7 @@
 | Path | Role | Key deps |
 |------|------|----------|
 | `src/` | Core library (`MemoryStore` aggregate); L0 包旁测试 | `moonbitlang/x/fs`, `moonbitlang/core/json` |
-| `tests/locomo/` | L3 offline LoCoMo corpus eval on `MemoryStore` + `data/` | separate package |
+| `benchmark/` | L3 offline LoCoMo corpus eval on `MemoryStore` + `data/` | separate package |
 | `examples/<scene>/` | E2 scene demos: `default-reopen`, `host-inject-supersede`, `isolation-forget-import` | — |
 | `.trellis/spec/` | AI coding guidelines + CI iron rules (this tree) | — |
 | `.github/workflows/` | CI / release **implementation** (living SoT for pipelines) | — |
@@ -80,7 +80,7 @@ Align with [Quality Guidelines](./quality-guidelines.md).
 | Need | Put it in |
 |------|----------|
 | Asserted offline regression (core) | Package-side `src/*_test.mbt` / `*_wbtest.mbt` (L0) |
-| Benchmark / corpus eval | `tests/locomo/` (L3, offline hashing) |
+| Benchmark / corpus eval | `benchmark/` (L3, offline hashing) |
 | Teachable runnable demo (no AC suite) | `examples/<scene>/` (E2) |
 
 **Forbidden**: live key paths inside examples; stuffing eval corpora into package-side unit tests.

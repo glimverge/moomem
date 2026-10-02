@@ -54,7 +54,7 @@ Not host API. Same-package code and `*_wbtest.mbt` may call them. Other packages
 | snapshot codec (`entry_to_json`, `parse_snapshot_text`, …) | `json_codec.mbt` | `src/json_codec_wbtest.mbt` |
 | `MemoryBackend::peek` / `set_fail_next_save` / `set_simulate_partial_write` | `persist.mbt` | tests in `src/persist.mbt` |
 
-`tests/locomo/conflict_eval.mbt` prints cos/jac from functions inside the eval package. The scored supersede check uses `MemoryStore` only.
+`benchmark/conflict_eval.mbt` prints cos/jac from functions inside the eval package. The scored supersede check uses `MemoryStore` only.
 
 ## Core types (`src/types.mbt`)
 

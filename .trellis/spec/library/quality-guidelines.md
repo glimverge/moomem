@@ -31,7 +31,7 @@ Where gates, eval, tools, and examples land is the table below plus the workflow
 | Kind | Role | Assertions? | CI |
 |------|------|-------------|-----|
 | Package-side `*_test.mbt` | L0 regression | Yes | push 阻塞 |
-| `tests/locomo` | L3 corpus eval on `MemoryStore` | Metrics | 离线 push |
+| `benchmark` | L3 corpus eval on `MemoryStore` | Metrics | 离线 push |
 | `examples/<scene>` | Teachable demos (E2) | No (smoke only) | smoke 矩阵，非 L0 |
 
 Iron rules: package tests and examples never read API keys.
@@ -60,7 +60,7 @@ When changing CI behavior: edit the YAML first (or same PR), then keep this tabl
 moon test
 moon test --enable-coverage && moon coverage report --ignore-missing-files -f summary -p heyq02/moomem/src  # src points >= 90%
 moon test --target wasm
-moon run tests/locomo --target native              # L3 offline corpus eval
+moon run benchmark --target native                 # L3 offline corpus eval
 moon run examples/default-reopen --target native
 moon run examples/host-inject-supersede --target native
 moon run examples/isolation-forget-import --target native

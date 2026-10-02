@@ -241,7 +241,7 @@ flowchart TD
 
 断言用 `inspect`。替身是手写的 trait 实现，没有 mock 框架。native 用例数不得低于 76。`src/` 的覆盖率点不得低于 90%（`moon coverage report -f summary -p heyq02/moomem/src`）。磁盘用例只在 native 编译。
 
-`tests/locomo` 是离线语料评测，不是包旁单元测试。
+`benchmark` 是离线语料评测，不是包旁单元测试。
 
 ## 12. 部署
 

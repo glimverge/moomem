@@ -1,5 +1,6 @@
 # heyq02/moomem
 
+[![Version](https://img.shields.io/badge/dynamic/regex?url=https%3A%2F%2Fraw.githubusercontent.com%2Fglimverge%2Fmoomem%2Frefs%2Fheads%2Fmain%2Fmoon.mod&search=%5Eversion%5Cs%2A%3D%5Cs%2A%22%28%3FP%3Cversion%3E%5B%5E%22%5D%2B%29%22&replace=%24%3Cversion%3E&flags=m&style=flat-square&label=version)](https://github.com/glimverge/moomem/blob/main/moon.mod)
 [![Build Status](https://img.shields.io/github/actions/workflow/status/glimverge/moomem/test-pipeline.yml?style=flat-square&label=Build)](https://github.com/glimverge/moomem/actions)
 [![Docs](https://img.shields.io/badge/Docs-GitHub%20Pages-00a3ee?style=flat-square)](https://glimverge.github.io/moomem/)
 [![License](https://img.shields.io/badge/License-MIT-blue?style=flat-square)](LICENSE)

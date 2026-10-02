@@ -1,0 +1,5 @@
+// import {
+//   "heyq02/demo" @lib,
+// }
+
+pkgtype(kind: "executable")

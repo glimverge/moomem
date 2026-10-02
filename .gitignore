@@ -9,3 +9,10 @@ coveralls.json
 .DS_Store/
 
 node_modules/
+
+.DS_Store
+_build/
+target/
+target
+.mooncakes/
+.moonagent/

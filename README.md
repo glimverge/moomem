@@ -119,3 +119,4 @@ moon run examples/default-reopen --target native
 - 路线图：[`docs/ROADMAP.md`](docs/ROADMAP.md)
 - 变更记录：[`docs/CHANGELOG.md`](docs/CHANGELOG.md)
 - 决策记录：[`docs/DECISIONS.md`](docs/DECISIONS.md)
+- 代码布局：[`docs/CODE-LAYOUT.md`](docs/CODE-LAYOUT.md)（含 [`src/README.md`](src/README.md) 包内地图）

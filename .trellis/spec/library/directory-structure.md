@@ -14,7 +14,7 @@
 | `.trellis/spec/` | AI coding guidelines + CI iron rules (this tree) | — |
 | `.github/workflows/` | CI / release **implementation** (living SoT for pipelines) | — |
 
-Module identity: `heyq02/moomem`. Package version is `moon.mod` (`0.6.0`). `MOOMEM_VERSION` in `src/lib.mbt` matches it. Snapshot format version is `SNAPSHOT_VERSION` (`1`), independent of the package version.
+Module identity: `heyq02/moomem`. Package version is `moon.mod` (`0.7.1`). `MOOMEM_VERSION` in `src/lib.mbt` matches it. Snapshot format version is `SNAPSHOT_VERSION` (`1`), independent of the package version.
 
 ## Core library file map (`src/`)
 

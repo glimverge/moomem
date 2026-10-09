@@ -1,5 +1,0 @@
-{"_example": "Fill with {\"file\": \"<path>\", \"reason\": \"<why>\"}. Put spec/research files only — no code paths. Run `python3 .trellis/scripts/get_context.py --mode packages` to list available specs. Delete this line once real entries are added."}
-{"file": ".trellis/spec/library/public-api-and-types.md", "reason": "Host API must stay MemoryStore; Config knobs OK"}
-{"file": ".trellis/spec/library/quality-guidelines.md", "reason": "P7: no store split; CI iron rules"}
-{"file": ".trellis/spec/library/directory-structure.md", "reason": "ranker/store placement; retrieval-tuning tool path"}
-{"file": "docs/project/08-w4-eval-report.md", "reason": "Root cause and holdout baselines"}

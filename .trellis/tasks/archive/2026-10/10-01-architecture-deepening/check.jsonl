@@ -1,5 +1,0 @@
-{"file": ".trellis/spec/library/index.md", "reason": "Library index for check"}
-{"file": ".trellis/spec/library/public-api-and-types.md", "reason": "Host API must stay unchanged"}
-{"file": ".trellis/tasks/10-01-architecture-deepening/research/module-map.md", "reason": "Verify module map claims"}
-{"file": ".trellis/tasks/10-01-architecture-deepening/research/deepening-backlog.md", "reason": "Verify backlog completeness"}
-{"file": ".trellis/spec/guides/cross-layer-thinking-guide.md", "reason": "Cross-layer checklist"}

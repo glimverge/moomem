@@ -110,3 +110,12 @@ moon run examples/default-reopen --target native
 | `examples/default-reopen` | 写入、召回、关掉再打开 |
 | `examples/host-inject-supersede` | 注入嵌入和提取后，旧事实被覆盖 |
 | `examples/isolation-forget-import` | 用户隔离、遗忘、导出再导入 |
+
+## 项目治理
+
+本项目的状态、路线图、变更与决策记录统一收纳在 [`docs/`](docs/)：
+
+- 当前状态：[`docs/STATUS.md`](docs/STATUS.md)
+- 路线图：[`docs/ROADMAP.md`](docs/ROADMAP.md)
+- 变更记录：[`docs/CHANGELOG.md`](docs/CHANGELOG.md)
+- 决策记录：[`docs/DECISIONS.md`](docs/DECISIONS.md)

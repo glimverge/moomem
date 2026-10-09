@@ -11,6 +11,7 @@ Keep a Changelog 风格；版本号取自 `moon.mod` 与 `MOOMEM_VERSION`（两�
 - `AGENTS.md` Trellis 块指向 `.trellis/scripts`；`workspace/index.md` 模板去 `tasks/archive`
 - `.gitignore` 增加 `.workbuddy/`
 - 新增项目管理套件：`STATUS.md` / `ROADMAP.md` / `CHANGELOG.md` / `DECISIONS.md`
+- 将上述治理文档与 `项目申报书.md` 统一移入 `docs/`，根目录只保留工程门面文件；`STATUS.md` 内指向根文档的链接改为 `../` 相对路径
 
 ## [0.7.1] - 2026-10-02
 

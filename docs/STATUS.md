@@ -40,8 +40,8 @@ MoonBit 嵌入式 Agent 记忆层——进程内、零部署、离线确定性�
 完整清单见 [ROADMAP.md](ROADMAP.md)。
 
 ## 文档导航
-- 用户契约 / 使用：`README.md`
-- 设计边界：`ARCHITECTURE.md`
+- 用户契约 / 使用：`../README.md`
+- 设计边界：`../ARCHITECTURE.md`
 - 竞赛申报（陈旧，待同步）：`项目申报书.md`
-- 开发者操作：`AGENTS.md`
+- 开发者操作：`../AGENTS.md`
 - 项目管理：**本文件** · 规划 `ROADMAP.md` · 变更 `CHANGELOG.md` · 决策 `DECISIONS.md`

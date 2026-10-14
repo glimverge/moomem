@@ -9,9 +9,7 @@
 
 MoonBit 嵌入式 Agent 记忆层。嵌在宿主进程里，按 `user_id` 做向量 + BM25 检索。native 上写入双槽 JSONL，崩溃后仍从上一份完整快照恢复。缺省离线，不需要 API Key。
 
-## 上手
-
-需要 [moon](https://www.moonbitlang.com/) ≥ `0.1.20260920`。
+## 使用
 
 ```bash
 moon add heyq02/moomem
@@ -37,7 +35,7 @@ fn main {
 
 native 上 `open("./memory")` 会写成 `<path>/moomem/head` 加两个 `slot*.jsonl`。先把整份快照写入非当前槽，成功后再拨 `head`。索引不落盘，`open` 时从快照重建。
 
-## 加上之后多了什么
+## 作用
 
 Qwen 和 DeepSeek 只把一句话变成向量和事实，它们不保存。moomem 把结果按 `user_id` 留下，下次 `recall` 从这里取，不再把原话发给模型。
 

@@ -71,3 +71,30 @@ test "KeywordIndex: BM25 ranking prefers stronger match" {
   inspect(hits.length(), content="2")
   inspect(hits[0].0, content="doc-many") // tf 更高者排前
 }
+
+///|
+test "KeywordIndex: missing df and length fall back to zero" {
+  let index = KeywordIndex::new()
+  index.upsert("u", "doc-a", ["apple", "banana"])
+  index.upsert("u", "doc-b", ["apple"])
+  match index.df.get("u") {
+    Some(df) => ignore(df.remove("apple"))
+    None => ()
+  }
+  index.upsert("u", "doc-a", ["banana"])
+  index.remove("u", "missing")
+  match index.df.get("u") {
+    Some(df) => ignore(df.remove("banana"))
+    None => ()
+  }
+  index.remove("u", "doc-a")
+  ignore(index.total_len.remove("u"))
+  inspect(index.search("u", "apple", 2).length(), content="0")
+  index.upsert("u", "doc-c", ["apple"])
+  match index.df.get("u") {
+    Some(df) => ignore(df.remove("apple"))
+    None => ()
+  }
+  let scored = index.search("u", "apple", 2)
+  inspect(scored.length() >= 1, content="true")
+}

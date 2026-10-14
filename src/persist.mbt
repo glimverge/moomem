@@ -472,3 +472,42 @@ test "crash recovery: partial write (killed mid-flush) truncates tail" {
   inspect(result.entries[0].content, content="我对花生过敏")
   inspect(result.truncated_recovered, content="1")
 }
+
+///|
+test "simulated save failure surfaces from add, forget, import, and close" {
+  let backend = MemoryBackend::new()
+  let store = match
+    MemoryStore::open("memory://gap-io", config=Config::{
+      ..Config::default(),
+      persistence: Some(backend),
+    }) {
+    Ok(store) => store
+    Err(_) => abort("open")
+  }
+  ignore(store.add("gap-io", "first fact"))
+  backend.set_fail_next_save(true)
+  let add_failed = match store.add("gap-io", "second fact") {
+    Err(IoFailure(_)) => true
+    _ => false
+  }
+  inspect(add_failed, content="true")
+  backend.set_fail_next_save(true)
+  let forget_failed = match store.forget("gap-io", All) {
+    Err(IoFailure(_)) => true
+    _ => false
+  }
+  inspect(forget_failed, content="true")
+  let line = "{\"id\":\"imp-1\",\"user_id\":\"gap-io\",\"content\":\"imported alpha\",\"kind\":\"fact\",\"embedding\":[],\"keywords\":[\"imported\",\"alpha\"],\"status\":\"active\",\"created_at\":9,\"seq\":9}"
+  backend.set_fail_next_save(true)
+  let import_failed = match store.import_jsonl(line + "\n") {
+    Err(IoFailure(_)) => true
+    _ => false
+  }
+  inspect(import_failed, content="true")
+  backend.set_fail_next_save(true)
+  let close_failed = match store.close() {
+    Err(IoFailure(_)) => true
+    _ => false
+  }
+  inspect(close_failed, content="true")
+}

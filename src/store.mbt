@@ -375,3 +375,63 @@ fn MemoryStore::flush(self : MemoryStore) -> Result[Unit, MoomemError] {
     Err(e) => Err(e)
   }
 }
+
+///|
+test "dangling ids are skipped by recall, list, forget, and backfill" {
+  let backend = MemoryBackend::new()
+  let store = match
+    MemoryStore::open("memory://dangling", config=Config::{
+      ..Config::default(),
+      persistence: Some(backend),
+      lexical_floor: 0.0,
+      lexical_gap: 1.0,
+    }) {
+    Ok(store) => store
+    Err(_) => abort("open")
+  }
+  ignore(store.add("dangling", "alpha word"))
+  store.keyword_index.upsert("dangling", "missing-id", tokenize("alpha"))
+  let hits = match store.recall("dangling", "alpha", top_k=5) {
+    Ok(hits) => hits
+    Err(_) => []
+  }
+  inspect(hits.length() >= 1, content="true")
+  match store.by_user.get("dangling") {
+    Some(ids) => ids.push("also-missing")
+    None => ()
+  }
+  ignore(store.recall("dangling", "alpha", top_k=5))
+  let listed = match store.list_entries("dangling") {
+    Ok(entries) => entries
+    Err(_) => []
+  }
+  inspect(listed.length() >= 1, content="true")
+  let removed = match store.forget("dangling", All) {
+    Ok(n) => n
+    Err(_) => -1
+  }
+  inspect(removed >= 1, content="true")
+  let backend2 = MemoryBackend::new()
+  let store2 = match
+    MemoryStore::open("memory://dangling-2", config=Config::{
+      ..Config::default(),
+      persistence: Some(backend2),
+    }) {
+    Ok(store) => store
+    Err(_) => abort("open2")
+  }
+  ignore(store2.add("dangling", "alpha word"))
+  ignore(store2.by_user.remove("dangling"))
+  let again = match store2.recall("dangling", "alpha", top_k=5) {
+    Ok(hits) => hits
+    Err(_) => []
+  }
+  inspect(again.length() >= 1, content="true")
+  let gone = match store2.forget("nobody", All) {
+    Ok(n) => n
+    Err(_) => -1
+  }
+  inspect(gone, content="0")
+  ignore(store.close())
+  ignore(store2.close())
+}

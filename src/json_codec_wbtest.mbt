@@ -224,6 +224,18 @@ fn codec_rejects(j : Json, needle : String) -> Bool {
 }
 
 ///|
+test "codec: blank line is rejected before parse" {
+  let failed = try {
+    ignore(parse_json_line_impl("   "))
+    false
+  } catch {
+    StoreCorrupted(_) => true
+    _ => false
+  }
+  inspect(failed, content="true")
+}
+
+///|
 test "codec: malformed fields and empty snapshot are rejected" {
   inspect(codec_rejects(Json::array([]), "not a JSON object"), content="true")
   let missing_kind = codec_base_object()

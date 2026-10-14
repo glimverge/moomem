@@ -43,8 +43,8 @@ jobs:
           num="${points%/*}"
           den="${points#*/}"
           echo "src coverage ${num}/${den}"
-          if (( num * 100 < den * 90 )); then
-            echo "src coverage ${num}/${den} is below 90%"
+          if (( num * 100 < den * 98 )); then
+            echo "src coverage ${num}/${den} is below 98%"
             exit 1
           fi
           moon coverage report --ignore-missing-files -f coveralls -o coveralls.json -p heyq02/moomem/src

@@ -30,6 +30,9 @@ test "rrf: single list passes through, top_k truncates" {
   inspect(tied[0], content="a")
   inspect(tied[1], content="b")
   inspect(rrf_weighted(["a"], ["b"], 0, 3, 1.0, 1.0).length(), content="0")
+  let dup = rrf_weighted(["x", "x"], ["x"], 60, 1, 1.0, 1.0)
+  inspect(dup.length(), content="1")
+  inspect(dup[0], content="x")
 }
 
 ///|

@@ -39,7 +39,7 @@ moon coverage report --ignore-missing-files -f summary -p heyq02/moomem/src
 moon coverage report --ignore-missing-files -f bisect
 ```
 
-`pnpm test` is `moon test` with no `--target`. `src/` coverage must stay ≥ 90% of points. Native CI fails if the suite shrinks below `NATIVE_TEST_BASELINE` in `unit-test.yml`; that floor only rises. After a coverage-enabled `moon test`, other report formats are `moon coverage report --ignore-missing-files -f coveralls`, `-f cobertura`, and `-f html`.
+`pnpm test` is `moon test` with no `--target`. `src/` coverage must stay ≥ 98% of points. Native CI fails if the suite shrinks below `NATIVE_TEST_BASELINE` in `unit-test.yml`; that floor only rises. After a coverage-enabled `moon test`, other report formats are `moon coverage report --ignore-missing-files -f coveralls`, `-f cobertura`, and `-f html`.
 
 Black-box tests see `pub` only. Assert with `inspect`. Inject traits by hand. Crash and partial-write cases use `MemoryBackend`.
 

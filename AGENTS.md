@@ -17,10 +17,9 @@ Documented `moon` baseline is in `README.md`. CI installs latest (`dated CDN pin
 | Path | Role |
 |------|------|
 | `src/` | Core package. `*_test.mbt` and `*_wbtest.mbt` stay beside sources. |
-| `examples/` | Three offline `moon run` scenes. Smoke only. |
 | `benchmark/` | Offline LoCoMo eval. |
 | `playground/` | Host sample (Qwen embed + DeepSeek extract). Depends on published `heyq02/moomem`, not this working tree. |
-| `.github/workflows/` | `check.yml`, `unit-test.yml`, `coverage.yml`, `smoke.yml`, `benchmark.yml` on push/PR to `main`. `commitlint.yml` on PR commits. `autofix.yml` runs `rs fmt`, `moon fmt`, and `moon check --deny-warn`. `release.yaml` on tag `v*`. |
+| `.github/workflows/` | `check.yml`, `unit-test.yml`, `coverage.yml`, `benchmark.yml` on push/PR to `main`. `commitlint.yml` on PR commits. `autofix.yml` runs `rs fmt`, `moon fmt`, and `moon check --deny-warn`. `release.yaml` on tag `v*`. |
 | `bump.config.ts` | Files bumpp rewrites: `package.json`, `moon.mod`, `src/lib.mbt`. |
 
 Targets: `native`, `wasm`, `wasm-gc`, `js`. Native uses `FsBackend` under `<path>/moomem/`. Other targets default to in-memory `MemoryBackend`. `#cfg(target="native")` belongs in `persist.mbt` (tests may use it in `persist_test.mbt`).
@@ -38,7 +37,6 @@ moon test --target js
 moon test --enable-coverage --target native
 moon coverage report --ignore-missing-files -f summary -p heyq02/moomem/src
 pnpm run cov:bisect
-moon run examples/default-reopen --target native
 moon run benchmark --target native
 ```
 
@@ -69,7 +67,7 @@ Before pushing library changes, run `moon check`, `moon test`, and `moon fmt` on
 
 ## Security and pitfalls
 
-- Tests, examples, and the offline benchmark never contain API keys. Do not commit `playground/.env`. `playground/memory/` is gitignored runtime state.
+- Tests and the offline benchmark never contain API keys. Do not commit `playground/.env`. `playground/memory/` is gitignored runtime state.
 - `open` returns `StoreCorrupted` when snapshot `v` mismatches, a non-final line is truncated, or both slots are unusable. Only a torn last line is dropped (`stats().truncated_recovered`).
 - wasm/js `recall` after process restart is empty unless the host injected a `PersistenceBackend`.
 - Playground behavior that disagrees with `src/` follows the published pin in `playground/moon.mod`.

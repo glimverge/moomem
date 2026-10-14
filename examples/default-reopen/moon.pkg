@@ -1,6 +1,0 @@
-import {
-  "heyq02/moomem/src",
-  "moonbitlang/x/fs",
-}
-
-pkgtype(kind: "executable")

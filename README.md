@@ -56,16 +56,6 @@ Qwen 和 DeepSeek 只把一句话变成向量和事实，它们不保存。moome
 
 「我搬到深圳了」没有盖掉「我住在北京」。缺省冲突判定只在相似度够高时覆盖，这两句会并存。
 
-## 示例
-
-都不读密钥、不访问网络：
-
-```bash
-moon run examples/default-reopen --target native
-moon run examples/host-inject-supersede --target native
-moon run examples/isolation-forget-import --target native
-```
-
 ## 开发
 
 ```bash

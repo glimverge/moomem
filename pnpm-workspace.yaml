@@ -1,0 +1,9 @@
+packages:
+  - '.'
+
+allowBuilds:
+  simple-git-hooks: true
+
+minimumReleaseAgeExclude:
+  - rstack@0.8.3
+  - '@heyq02/rstack-config@0.0.5'

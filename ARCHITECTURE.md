@@ -216,7 +216,7 @@ flowchart TD
 - 目标差异只用 `#cfg`，并且只放在 `persist.mbt` 的缺省后端选择。
 - 错误在内部可以用 `raise MoomemError`，公开方法收成 `Result`。
 
-未检测到 .NET、Java、React、Angular 或 Python 运行时结构。`package.json` 只用于本地覆盖率命令，不是库的运行时。
+未检测到 .NET、Java、React、Angular 或 Python 运行时结构。库的运行时仍是 MoonBit。`package.json` 管覆盖率命令，并用 `@heyq02/rstack-config` 管格式化、提交钩子和 commitlint。
 
 ## 10. 实现模式
 

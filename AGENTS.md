@@ -30,7 +30,7 @@ Host behavior and on-disk layout: `README.md`. Coding contracts: `.trellis/spec/
 
 ## Setup
 
-Toolchain is `moon`, not Node. `package.json` only wraps coverage scripts and pins `pnpm@12.8.1`.
+Toolchain for the library is `moon`. Node tooling is only repo hygiene: coverage scripts, plus [`@heyq02/rstack-config`](https://github.com/heyq02/rstack-config) for `rs fmt`, commit hooks, and commitlint. `package.json` pins `pnpm@12.10.1`.
 
 Documented baseline is `moon` ≥ `0.1.20260920` (see `README.md`). CI always installs **latest**: dated CDN pins currently return 403 (`.github/actions/setup-moonbit`).
 
@@ -55,7 +55,10 @@ Registry dependency: `moonbitlang/x@0.5.5`.
 | `examples/<scene>/` | Three offline demos: `default-reopen`, `host-inject-supersede`, `isolation-forget-import`. Smoke only. |
 | `benchmark/` | Offline LoCoMo eval (`moon run benchmark --target native`). |
 | `demo/` | Host sample (Qwen embed + DeepSeek extract). Own module `heyq02/demo`, depends on published `heyq02/moomem`, not the working tree. |
-| `.github/workflows/` | `test-pipeline.yml` (push/PR), `release-pipeline.yml` (manual). |
+| `.github/workflows/` | `test-pipeline.yml` (push/PR), `release-pipeline.yml` (manual), `commitlint.yml` (PR commit messages). |
+| `rstack.config.ts` | `define.extends([rstack(...)])` from `@heyq02/rstack-config`. `lib` / `lint` / `test` are off; `fmt` and `staged` are on. |
+| `commitlint.config.js` | Re-exports `@heyq02/rstack-config/commitlint`. |
+| `.rstack/hooks/` | `pre-commit` runs `rs staged`; `commit-msg` runs commitlint. `prepare` is `rs hooks`. |
 | `.trellis/spec/library/` | Invariants agents must follow. |
 
 `src/` map: `lib.mbt` constants; `types.mbt` / `errors.mbt`; `json_codec.mbt` (only JSON codec); `embedder.mbt` / `extractor.mbt` / `conflict.mbt` / `clock.mbt`; `dedup.mbt`; `index_vector.mbt` / `index_keyword.mbt` / `ranker.mbt`; `persist.mbt` (only non-test `@fs` call site); `store.mbt` + `store_add.mbt` / `store_recall.mbt` / `store_records.mbt` (one `MemoryStore`).

@@ -38,7 +38,7 @@ Iron rules: package tests and examples never read API keys.
 
 ### CI / release iron rules (durable)
 
-Executable workflow truth: [`.github/workflows/test-pipeline.yml`](../../../.github/workflows/test-pipeline.yml) and [`release-pipeline.yml`](../../../.github/workflows/release-pipeline.yml). This table is the durable rule list. Do not add a long-form process spec beside the YAML.
+Executable workflow truth: [`.github/workflows/test-pipeline.yml`](../../../.github/workflows/test-pipeline.yml), [`release-pipeline.yml`](../../../.github/workflows/release-pipeline.yml), and [`commitlint.yml`](../../../.github/workflows/commitlint.yml). This table is the durable rule list. Do not add a long-form process spec beside the YAML.
 
 | Rule | Meaning |
 |------|---------|
@@ -51,6 +51,7 @@ Executable workflow truth: [`.github/workflows/test-pipeline.yml`](../../../.git
 | Version alignment | Publish/tag path requires git semver ↔ `moon.mod` `version` match before credentials write |
 | Secret scope | `MOONCAKES_TOKEN` only on publish job; `COVERALLS_REPO_TOKEN` only on the push/PR coveralls job; never cache credentials under `~/.moon` |
 | Permissions | Offline quality: `contents: read`; write tokens only on the release job that needs them |
+| Commit messages | `commitlint.yml` lints PR commits with `@heyq02/rstack-config/commitlint`. It does not replace `moon test` or the release pipeline |
 
 When changing CI behavior: edit the YAML first (or same PR), then keep this table aligned. Do not revive a second process-spec tree.
 

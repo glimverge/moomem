@@ -13,7 +13,7 @@
 ///|
 /// 库版本号。与 `moon.mod` 和 `package.json` 相同，由 `bumpp` 一起改。
 /// `SNAPSHOT_VERSION` 是快照格式，不跟着发版号走。
-pub const MOOMEM_VERSION : String = "0.8.1"
+pub const MOOMEM_VERSION : String = "0.8.2"
 
 ///|
 /// 快照格式版本（header 中的 "v" 字段）

@@ -72,17 +72,6 @@ Qwen 和 DeepSeek 只把一句话变成向量和事实，它们不保存。moome
 
 这 20 题不是 Mem0 公布的全量 1540 题，也不能和他们 top 200、GPT 作答的 92.5% 直接比。逐题记录在 `benchmark/results/locomo-20.json`。
 
-## 开发
-
-```bash
-moon check --target native
-moon test --target native
-pnpm run format
-pnpm release
-```
-
-`pnpm release` 用 [`bumpp`](https://github.com/antfu-collective/bumpp) 同步 `package.json`、`moon.mod` 和 `MOOMEM_VERSION`，打 `v*` 标签后由 [release.yaml](.github/workflows/release.yaml) 发布到 mooncakes.io。
-
 ## License
 
 <!-- automd:contributors license=MIT author="heyq02" github="glimverge/moomem" -->

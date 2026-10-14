@@ -17,7 +17,7 @@ Documented `moon` baseline is in `README.md`. CI installs latest (`dated CDN pin
 | Path | Role |
 |------|------|
 | `src/` | Core package. `*_test.mbt` and `*_wbtest.mbt` stay beside sources. |
-| `benchmark/` | Local LoCoMo sample. Reads `benchmark/.env`. Not run in CI. |
+| `benchmark/` | Local LoCoMo sample. Reads `benchmark/.env`. Native run only; other targets compile an empty `main`. Not executed in CI. |
 | `playground/` | Host sample (Qwen embed + DeepSeek extract). Depends on published `heyq02/moomem`, not this working tree. |
 | `.github/workflows/` | `unit-test.yml` (native check, then tests), `coverage.yml` on push/PR to `main`. `commitlint.yml` on PR commits. `autofix.yml` runs `rs fmt`, `moon fmt`, and `moon check --deny-warn`. `release.yaml` on tag `v*`. |
 | `bump.config.ts` | Files bumpp rewrites: `package.json`, `moon.mod`, `src/lib.mbt`. |
@@ -48,7 +48,7 @@ Black-box tests see `pub` only. Assert with `inspect`. Inject traits by hand. Cr
 MoonBit block style (`///|`). Types `PascalCase`, functions and fields `snake_case`, traits `pub(open) trait`. Unmarked top-level defs are package-private. Format with `moon fmt`.
 
 - Fallible library paths return `Result[T, MoomemError]`. Do not `panic` or `abort`. New variants go in `errors.mbt` and must update `Show`, `message`, and `kind`.
-- Non-test `@fs` call sites stay in `persist.mbt`. `persist_test.mbt` is the test allowlist.
+- Non-test `@fs` call sites in `src/` stay in `persist.mbt`. `persist_test.mbt` is the test allowlist.
 - Snapshot and entry JSON encode/decode stay in `json_codec.mbt`.
 - Every index, search, dedup, `add`, `recall`, and `forget` path takes an explicit `user_id`. No cross-user scan.
 - Do not promote indexes, `rrf`, `tokenize`, `cosine_similarity`, or `keyword_jaccard` to a second host API.
@@ -68,6 +68,6 @@ Before pushing library changes, run `moon check`, `moon test`, and `moon fmt` on
 
 - Tests never contain API keys. Do not commit `playground/.env` or `benchmark/.env`. `playground/memory/` is gitignored runtime state.
 - `open` returns `StoreCorrupted` when snapshot `v` mismatches, a non-final line is truncated, or both slots are unusable. Only a torn last line is dropped (`stats().truncated_recovered`).
-- wasm/js `recall` after process restart is empty unless the host injected a `PersistenceBackend`.
+- wasm, wasm-gc, and js `recall` after process restart is empty unless the host injected a `PersistenceBackend`.
 - Playground behavior that disagrees with `src/` follows the published pin in `playground/moon.mod`.
 - Native file tests that touch a real directory need `--target native`. They are `#cfg`'d out of wasm/js.

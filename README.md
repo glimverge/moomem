@@ -33,7 +33,7 @@ fn main {
 }
 ```
 
-同一目录再次 `open`，记忆还在。wasm / js 缺省只留在进程内存里。要换真实模型，在 `open` 时注入 `Embedder`、`Extractor`、`ConflictJudge`。
+同一目录再次 `open`，记忆还在。wasm、wasm-gc、js 缺省只留在进程内存里。要换真实模型，在 `open` 时注入 `Embedder`、`Extractor`、`ConflictJudge`。
 
 native 上 `open("./memory")` 会写成 `<path>/moomem/head` 加两个 `slot*.jsonl`。先把整份快照写入非当前槽，成功后再拨 `head`。索引不落盘，`open` 时从快照重建。
 
@@ -70,7 +70,7 @@ Qwen 和 DeepSeek 只把一句话变成向量和事实，它们不保存。moome
 | 单跳 | 10/12 |
 | 合计 | 17/20 |
 
-这 20 题不是 Mem0 公布的全量 1540 题，也不能和他们 top 200、GPT 作答的 92.5% 直接比。逐题记录在 `benchmark/results/locomo-20.json`。
+这 20 题不是 Mem0 公布的全量 1540 题，也不能和他们 top 200、GPT 作答的 92.5% 直接比。逐题记录在 `benchmark/results/locomo-20.json`。题目文件派生自 LoCoMo，CC BY-NC 4.0，不适用本仓库的 MIT。
 
 ## License
 

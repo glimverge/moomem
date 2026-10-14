@@ -1,0 +1,51 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  release:
+    name: Release
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Setup JS
+        uses: sxzz/workflows/setup-js@main
+        with:
+          fetch-all: true
+          cache: false
+
+      - name: Generate GitHub Changelog
+        run: pnpx changelogithub
+        continue-on-error: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup MoonBit (no cache)
+        uses: ./.github/actions/setup-moonbit
+        with:
+          cache: "false"
+
+      - name: Package module
+        run: |
+          set -euo pipefail
+          tag="${GITHUB_REF_NAME#v}"
+          mod="$(sed -nE 's/^version[[:space:]]*=[[:space:]]*"([^"]+)".*/\1/p' moon.mod | head -n1)"
+          test -n "${mod}"
+          test "${tag}" = "${mod}"
+          moon package -v
+
+      - name: Configure mooncakes credentials
+        env:
+          MOONCAKES_TOKEN: ${{ secrets.MOONCAKES_TOKEN }}
+        run: bash scripts/release/configure-mooncakes-credentials.sh
+
+      - name: Publish to mooncakes.io
+        run: moon publish -v
+
+      - name: Cleanup mooncakes credentials
+        if: always()
+        run: rm -f "$HOME/.moon/credentials.json"

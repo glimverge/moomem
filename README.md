@@ -33,9 +33,28 @@ fn main {
 }
 ```
 
-同一目录再次 `open`，记忆还在。wasm / js 缺省只留在进程内存里。要换真实模型，在 `open` 时注入 `Embedder`、`Extractor`、`ConflictJudge`。[`playground/`](playground/) 用 Qwen 做嵌入、DeepSeek 做提取。
+同一目录再次 `open`，记忆还在。wasm / js 缺省只留在进程内存里。要换真实模型，在 `open` 时注入 `Embedder`、`Extractor`、`ConflictJudge`。
 
 native 上 `open("./memory")` 会写成 `<path>/moomem/head` 加两个 `slot*.jsonl`。先把整份快照写入非当前槽，成功后再拨 `head`。索引不落盘，`open` 时从快照重建。
+
+## 加上之后多了什么
+
+Qwen 和 DeepSeek 只把一句话变成向量和事实，它们不保存。moomem 把结果按 `user_id` 留下，下次 `recall` 从这里取，不再把原话发给模型。
+
+[`playground/`](playground/) 依赖已发布的 `heyq02/moomem`，注入这两个模型后跑 `moon run cmd/main`。下面是这一轮的结果：
+
+| 检查 | 跑出来的结果 | moomem 做了什么 |
+|---|---|---|
+| 我对花生过敏、我住在北京 | `extracted=1 inserted=1` | 收下模型抽出的事实 |
+| 今天天气不错 | `extracted=0 inserted=0` | 闲聊不入库 |
+| 过敏再说一遍 | `duplicates=1 inserted=0` | 认出重复，不存成第二条 |
+| 另一个用户搜过敏 | 无命中 | 按用户隔开 |
+| 关掉再 `open` | 过敏和住址还在 | 写在磁盘上，不靠这次进程 |
+| `forget` 后再搜过敏 | 不再出现 | 删掉一条，之后的召回遵守这次删除 |
+
+没有另跑一个摘掉 moomem 的对照。上表这些 `user_id`、`./memory`、关掉再打开还在，模型接口本身没有。
+
+「我搬到深圳了」没有盖掉「我住在北京」。缺省冲突判定只在相似度够高时覆盖，这两句会并存。
 
 ## 示例
 

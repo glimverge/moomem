@@ -1,11 +1,9 @@
-// L3 LoCoMo evaluation harness (W4).
-// Offline path: zero-network, zero-secret.
-// --live / --embedder api: opt-in only.
+// Local LoCoMo sample. Reads playground/.env. Not run in CI.
 import {
   "heyq02/moomem/src",
+  "moonbitlang/async",
+  "moonbitlang/async/http",
   "moonbitlang/core/json",
-  "moonbitlang/core/env",
-  "moonbitlang/core/string",
   "moonbitlang/x/fs",
 }
 

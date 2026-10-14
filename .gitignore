@@ -18,3 +18,4 @@ target
 .moonagent/
 .workbuddy/
 playground/memory/
+benchmark/run/

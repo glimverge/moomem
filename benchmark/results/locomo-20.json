@@ -1,0 +1,216 @@
+{
+  "seed": 20261014,
+  "conversation_index": 8,
+  "speakers": "Evan/Sam",
+  "turns": 509,
+  "embedder": "qwen3.7-text-embedding-flash",
+  "answerer": "deepseek-flash",
+  "judge": "deepseek-flash",
+  "top_k": 50,
+  "correct": 17,
+  "total": 20,
+  "by_category": [
+    {
+      "category": "multi-hop",
+      "correct": 4,
+      "total": 4
+    },
+    {
+      "category": "temporal",
+      "correct": 2,
+      "total": 3
+    },
+    {
+      "category": "open-domain",
+      "correct": 1,
+      "total": 1
+    },
+    {
+      "category": "single-hop",
+      "correct": 10,
+      "total": 12
+    }
+  ],
+  "rows": [
+    {
+      "category": 1,
+      "category_name": "multi-hop",
+      "question": "What kind of unhealthy snacks does Sam enjoy eating?",
+      "gold": "soda, candy",
+      "generated": "soda candy",
+      "label": "CORRECT",
+      "recalled": 50
+    },
+    {
+      "category": 3,
+      "category_name": "open-domain",
+      "question": "What role does nature and the outdoors play in Evan and Sam's mental well-being?",
+      "gold": "Nature and outdoor activities seem to be significant stress relievers and sources of joy for both Evan and Sam. These activities likely contribute positively to their mental well-being.",
+      "generated": "Nature and the outdoors serve as a restorative, calming, and emotionally clarifying resource for both Evan and Sam. On 11 January, 2024 at 9:37 pm, Sam said being in nature is “so calming” and helps them “relax and get some fresh air away from the city”; Evan said nature can be “super calming” and is “like pushing a reset button for your mind and body.” Sam added that being outdoors “rejuvenates” them and planned to spend more time in nature. Earlier, on 31 December, 2023, Sam said nature can make everything else seem small and help us find peace inside and remember the bigger picture; Evan agreed nature brings “peace and clarity.” Specific memories reinforce this: on 27 August, 2023, Evan found the Rocky Mountains refreshing, stunning, and relaxing, and said a road trip’s scenery “really chilled me out”; on 17 October, 2023, Sam said connecting with nature was “exactly what I need” and looked forward to hiking as a challenge and chance to appreciate nature’s beauty. On 9 November, 2023, Evan said watching waves and sunset colors by the beach helped him find peace “especially during tough times” and reminded him of nature’s resilience. On 19 August, 2023, Evan described painting landscapes and watercolors as capturing nature’s peacefulness and as a relaxing break from everyday stress. On 11 January, 2024, he also said when health “cramps your style,” small moments outdoors can make a big impact; a photo of vibrant blooming flowers brought a smile when he was down, and kayaking and watching the sunset last summer was unforgettable and peaceful. For Sam, morning running on 26 December, 2023, was described as a great way to clear my head, while Evan saw art and painting as helping recognize and handle feelings. So for both, nature and the outdoors are not just recreation—they are coping tools for stress, sources of peace, clarity, joy, resilience, and mental reset, and a way to support overall health and connection.",
+      "label": "CORRECT",
+      "recalled": 50
+    },
+    {
+      "category": 1,
+      "category_name": "multi-hop",
+      "question": "What kind of subjects does Evan enjoy painting?",
+      "gold": "nature landscapes, portraits, abstract minimalism",
+      "generated": "Evan enjoys painting landscapes and nature scenes. He said, “I love painting landscapes. Nature's beauty captivates me and brings me peace.” Examples in the memories include a beach sunset, cactus in the desert, sunset over water, a mountain range with a horse, a forest scene, and a blooming cherry blossom tree.",
+      "label": "CORRECT",
+      "recalled": 50
+    },
+    {
+      "category": 2,
+      "category_name": "temporal",
+      "question": "Which new activity does Sam take up in October 2023?",
+      "gold": "kayaking",
+      "generated": "Kayaking",
+      "label": "CORRECT",
+      "recalled": 50
+    },
+    {
+      "category": 1,
+      "category_name": "multi-hop",
+      "question": "Which two significant life events occur in Evan's life in December 2023 with his partner?",
+      "gold": "his partner gets pregnant and they get married",
+      "generated": "On 9 December 2023, Evan announced that his partner is pregnant. On 26 December 2023, Evan indicated that they had gotten married, saying he didn’t know why they didn’t get married before because he was in love with her at first sight.",
+      "label": "CORRECT",
+      "recalled": 50
+    },
+    {
+      "category": 2,
+      "category_name": "temporal",
+      "question": "When will Evan and his partner have their honeymoon in Canada?",
+      "gold": "February 2024",
+      "generated": "February 2024",
+      "label": "CORRECT",
+      "recalled": 50
+    },
+    {
+      "category": 2,
+      "category_name": "temporal",
+      "question": "When did Evan have a drunken night with his friends?",
+      "gold": "January 9, 2023",
+      "generated": "Evan had the drunken night with his friends on January 9, 2024 — described in his messages at 12:17 am on 10 January 2024 as happening “last night” / “yesterday.”",
+      "label": "WRONG",
+      "recalled": 50
+    },
+    {
+      "category": 1,
+      "category_name": "multi-hop",
+      "question": "What is a stress reliever for Evan?",
+      "gold": "Drawing, traveling, places with a beautiful view, yoga, sunsets or something comfortable for Evan",
+      "generated": "Painting — specifically watercolor painting — is a stress reliever for Evan. On 6 October, 2023, Evan said, “I find painting to be a great stress reliever.” He also mentioned on 10 January, 2024, that yoga helped him with stress.",
+      "label": "CORRECT",
+      "recalled": 50
+    },
+    {
+      "category": 4,
+      "category_name": "single-hop",
+      "question": "How did Evan get into watercolor painting?",
+      "gold": "friend's advice",
+      "generated": "On 18 May, 2023, Evan said his friend got him into watercolor painting and gave him some advice, and he was hooked right away. On 19 August, 2023, Evan also said it all started when a friend gave him a painting one day, which inspired him a lot, and that’s when he started painting.",
+      "label": "CORRECT",
+      "recalled": 50
+    },
+    {
+      "category": 4,
+      "category_name": "single-hop",
+      "question": "What new suggestion did Evan give to Sam regarding his soda and candy consumption?",
+      "gold": "try flavored seltzer water and dark chocolate with high cocoa content",
+      "generated": "On 6 June 2023, Evan suggested swapping soda for flavored seltzer water and, instead of candy, trying dark chocolate with high cocoa content.",
+      "label": "CORRECT",
+      "recalled": 50
+    },
+    {
+      "category": 4,
+      "category_name": "single-hop",
+      "question": "What did Sam agree to try instead of soda and candy?",
+      "gold": "flavored seltzer water and dark chocolate with high cocoa content",
+      "generated": "Flavored seltzer water instead of soda, and dark chocolate with high cocoa content instead of candy.",
+      "label": "CORRECT",
+      "recalled": 50
+    },
+    {
+      "category": 4,
+      "category_name": "single-hop",
+      "question": "What injury did Evan suffer from in August 2023?",
+      "gold": "Twisted knee",
+      "generated": "The retrieved memories do not mention any injury Evan suffered from in August 2023.",
+      "label": "WRONG",
+      "recalled": 50
+    },
+    {
+      "category": 4,
+      "category_name": "single-hop",
+      "question": "What sports activity has Evan been doing to stay active while dealing with the knee injury?",
+      "gold": "Swimming",
+      "generated": "Swimming.",
+      "label": "CORRECT",
+      "recalled": 50
+    },
+    {
+      "category": 4,
+      "category_name": "single-hop",
+      "question": "What did Evan suggest Sam try as a calming hobby?",
+      "gold": "Painting",
+      "generated": "Evan suggested that Sam try painting as a calming hobby.",
+      "label": "CORRECT",
+      "recalled": 50
+    },
+    {
+      "category": 4,
+      "category_name": "single-hop",
+      "question": "What did Evan recommend Sam acquire to get started with painting?",
+      "gold": "Acrylic paints, brushes, canvas/paper, palette",
+      "generated": "Evan recommended Sam get acrylic paints, brushes, a canvas/paper, and a palette to mix colors.",
+      "label": "CORRECT",
+      "recalled": 50
+    },
+    {
+      "category": 4,
+      "category_name": "single-hop",
+      "question": "What adventurous theme is emerging in Evan's life as mentioned by Sam?",
+      "gold": "helping lost tourists",
+      "generated": "Sam mentioned that Evan was becoming the “go-to guy for tourists in need” after another encounter with a lost tourist, suggesting an emerging theme of helping tourists (17 October, 2023).",
+      "label": "CORRECT",
+      "recalled": 50
+    },
+    {
+      "category": 4,
+      "category_name": "single-hop",
+      "question": "How did Sam suggest Evan view the setback with his broken Prius?",
+      "gold": "As a chance to explore other ways of staying active and traveling",
+      "generated": "In the 5 December, 2023 exchange, Sam agreed with Evan’s framing that the broken Prius was “just one of those things - even new cars can have problems,” replying, “Definitely. Take care, and let me know how the yoga goes. Bye!”",
+      "label": "WRONG",
+      "recalled": 50
+    },
+    {
+      "category": 4,
+      "category_name": "single-hop",
+      "question": "What family event is Evan planning for next summer?",
+      "gold": "big family reunion",
+      "generated": "A big family reunion.",
+      "label": "CORRECT",
+      "recalled": 50
+    },
+    {
+      "category": 4,
+      "category_name": "single-hop",
+      "question": "What did Sam suggest Evan should do with his keys?",
+      "gold": "put a GPS sensor on them",
+      "generated": "Sam suggested Evan put a GPS sensor on his keys.",
+      "label": "CORRECT",
+      "recalled": 50
+    },
+    {
+      "category": 4,
+      "category_name": "single-hop",
+      "question": "What movie did Sam watch that motivated him to keep up with his routine?",
+      "gold": "The Godfather",
+      "generated": "The Godfather",
+      "label": "CORRECT",
+      "recalled": 50
+    }
+  ]
+}

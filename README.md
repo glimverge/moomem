@@ -56,6 +56,22 @@ Qwen 和 DeepSeek 只把一句话变成向量和事实，它们不保存。moome
 
 「我搬到深圳了」没有盖掉「我住在北京」。缺省冲突判定只在相似度够高时覆盖，这两句会并存。
 
+## LoCoMo 抽样
+
+本地 `moon run benchmark --target native`，密钥在 `benchmark/.env`。远端不跑。
+
+协议对齐 [memory-benchmarks](https://github.com/mem0ai/memory-benchmarks) 的 LoCoMo：按轮次写入，检索后让模型只根据命中作答，裁判判 `CORRECT` / `WRONG`。固定种子 `20261014` 抽到 Evan / Sam 这一段（509 轮），再抽 20 道可计分题。嵌入是 `qwen3.7-text-embedding-flash`，作答和裁判都是 `deepseek-flash`。`recall` 每次取前 50 条。
+
+| 类别 | 判对 |
+|---|---|
+| 多跳 | 4/4 |
+| 时间 | 2/3 |
+| 开放 | 1/1 |
+| 单跳 | 10/12 |
+| 合计 | 17/20 |
+
+这 20 题不是 Mem0 公布的全量 1540 题，也不能和他们 top 200、GPT 作答的 92.5% 直接比。逐题记录在 `benchmark/results/locomo-20.json`。
+
 ## 开发
 
 ```bash

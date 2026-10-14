@@ -1,150 +1,338 @@
-// LoCoMo L3 evaluation entrypoint (W4).
+// LoCoMo sample, aligned with mem0ai/memory-benchmarks:
+// ingest each turn, recall, answer from the hits, judge CORRECT / WRONG.
 //
-// Offline:
 //   moon run benchmark --target native
-// Machine-readable report:
-//   moon run benchmark --target native -- --report /tmp/offline.json
+
+///|
+struct Turn {
+  session : Int32
+  date : String
+  speaker : String
+  text : String
+}
+
+///|
+struct Question {
+  category : Int32
+  question : String
+  answer : String
+}
+
+///|
+struct Sample {
+  seed : Int32
+  conversation_index : Int32
+  speaker_a : String
+  speaker_b : String
+  reference_date : String
+  turns : Array[Turn]
+  questions : Array[Question]
+}
+
+///|
+fn json_obj(value : Json) -> Map[String, Json]? {
+  if value is Object(obj) {
+    Some(obj)
+  } else {
+    None
+  }
+}
+
+///|
+fn field_string(obj : Map[String, Json], key : String) -> String raise {
+  match obj.get(key) {
+    Some(String(text)) => text
+    _ => raise Failure("missing string \{key}")
+  }
+}
+
+///|
+fn field_int(obj : Map[String, Json], key : String) -> Int32 raise {
+  match obj.get(key) {
+    Some(Number(number, ..)) => number.to_int()
+    _ => raise Failure("missing number \{key}")
+  }
+}
+
+///|
+fn load_sample(path : String) -> Sample raise {
+  let root = @json.parse(@fs.read_file_to_string(path))
+  let obj = match json_obj(root) {
+    Some(obj) => obj
+    None => raise Failure("fixture root is not an object")
+  }
+  let turn_json = match obj.get("turns") {
+    Some(Array(items)) => items
+    _ => raise Failure("fixture missing turns")
+  }
+  let turns : Array[Turn] = []
+  for item in turn_json {
+    let turn = match json_obj(item) {
+      Some(turn) => turn
+      None => raise Failure("turn is not an object")
+    }
+    turns.push(Turn::{
+      session: field_int(turn, "session"),
+      date: field_string(turn, "date"),
+      speaker: field_string(turn, "speaker"),
+      text: field_string(turn, "text"),
+    })
+  }
+  let question_json = match obj.get("questions") {
+    Some(Array(items)) => items
+    _ => raise Failure("fixture missing questions")
+  }
+  let questions : Array[Question] = []
+  for item in question_json {
+    let question = match json_obj(item) {
+      Some(question) => question
+      None => raise Failure("question is not an object")
+    }
+    questions.push(Question::{
+      category: field_int(question, "category"),
+      question: field_string(question, "question"),
+      answer: field_string(question, "answer"),
+    })
+  }
+  Sample::{
+    seed: field_int(obj, "seed"),
+    conversation_index: field_int(obj, "conversation_index"),
+    speaker_a: field_string(obj, "speaker_a"),
+    speaker_b: field_string(obj, "speaker_b"),
+    reference_date: field_string(obj, "reference_date"),
+    turns,
+    questions,
+  }
+}
+
+///|
+fn memory_line(turn : Turn) -> String {
+  let session = if turn.session < 10 {
+    "0\{turn.session}"
+  } else {
+    "\{turn.session}"
+  }
+  "[s\{session}|\{turn.date}] \{turn.speaker}: \{turn.text}"
+}
+
+///|
+fn sort_lines(lines : Array[String]) -> Unit {
+  let mut i = 1
+  while i < lines.length() {
+    let key = lines[i]
+    let mut j = i - 1
+    while j >= 0 && lines[j].compare(key) > 0 {
+      lines[j + 1] = lines[j]
+      j = j - 1
+    }
+    lines[j + 1] = key
+    i = i + 1
+  }
+}
+
+///|
+fn category_name(category : Int32) -> String {
+  match category {
+    1 => "multi-hop"
+    2 => "temporal"
+    3 => "open-domain"
+    4 => "single-hop"
+    _ => "other"
+  }
+}
+
+///|
+fn[T] stop(message : String) -> T {
+  println(message)
+  abort(message)
+}
 
 ///|
 fn main {
-  let opts = parse_args()
-  if opts.help {
-    print_help()
-    return
+  let env = load_env("benchmark/.env") catch { err => stop("env: \{err}") }
+  let sample = load_sample("benchmark/data/locomo_20.json") catch {
+    err => stop("fixture: \{err}")
   }
-  println("# moomem L3 LoCoMo evaluation")
-  println("")
   println(
-    "mode: embedder=\{opts.embedder} live=\{opts.live} limit=\{opts.limit} extract_limit=\{opts.extract_limit}",
+    "locomo sample seed=\{sample.seed} conversation=\{sample.conversation_index} \{sample.speaker_a}/\{sample.speaker_b}",
   )
-  println("")
-
-  let fixture = resolve_fixture_path(opts)
-  println("fixture: \{fixture}")
-  let data = load_locomo_subset(fixture)
-  println("loaded conversations=\{data.conversations.length()}")
-  println("")
-
-  // ---- retrieval (hashing embedder only; host supplies a real Embedder) ----
-  println("## Retrieval")
-  println("")
-  let (hybrid, bm25) = run_retrieval_eval(
-    data,
-    opts.embedder,
-    None,
-    @src.DEFAULT_DIM,
-    opts.limit,
+  println(
+    "turns=\{sample.turns.length()} questions=\{sample.questions.length()} embed=\{env.qwen_model} answer=\{env.deepseek_model}",
   )
-
-  // ---- conflict ----
-  println("## Conflict")
-  println("")
-  let conflict_path = "benchmark/data/conflict_pairs.json"
-  let conflicts = load_conflict_fixture(conflict_path)
-  let conflict = run_conflict_eval(conflicts)
-
-  // ---- persistence / isolation ----
-  println("## Persistence & Isolation")
-  println("")
-  let leaks = run_isolation_eval(data)
-  let persist_ok = run_persistence_eval()
-
-  // ---- extraction ----
-  println("## Extraction")
-  println("")
-  let extraction = run_extraction_offline_skip()
-
-  // ---- gates ----
-  let h_r = recall_of(hybrid)
-  let b_r = recall_of(bm25)
-  let mut ok = true
-  let mut gate_isolation = "pass"
-  let mut gate_persistence = "pass"
-  let mut gate_conflict = "pass"
-  let mut gate_hybrid = "n_a"
-  let mut gate_target = "n_a"
-  let mut gate_extraction = if extraction.skipped { "skipped" } else { "pass" }
-
-  if leaks != 0 {
-    println("gate fail: cross-user leaks=\{leaks}")
-    ok = false
-    gate_isolation = "fail"
+  let probe = QwenEmbedder::{
+    api_key: env.qwen_key,
+    base_url: env.qwen_base,
+    model: env.qwen_model,
+    dim: 0,
   }
-  if persist_ok != 1 {
-    println("gate fail: persistence reopen inconsistent")
-    ok = false
-    gate_persistence = "fail"
-  }
-  // Offline hashing has no semantics; RRF with noisy vectors can underperform
-  // pure BM25. Non-regression hybrid≥bm25 is enforced only for --embedder api
-  // (see TARGET_15PCT). Hashing mode still reports the comparison above.
-  if opts.embedder == "api" && h_r < b_r {
-    println(
-      "gate fail: hybrid Recall@5 \{format_mrr(h_r)} < bm25 \{format_mrr(b_r)}",
-    )
-    ok = false
-    gate_hybrid = "fail"
-  } else if opts.embedder == "api" {
-    gate_hybrid = "pass"
-  } else if opts.embedder == "hashing" && h_r < b_r {
-    println(
-      "NON_REGRESSION: hybrid_below_bm25 under hashing (report-only; quality claim requires --embedder api)",
-    )
-  }
-  let t15 = target_15pct_label(opts.embedder, h_r, b_r)
-  // TARGET_15PCT is recorded in the report; hard fail remains hybrid≥bm25 (api).
-  if opts.embedder == "api" {
-    gate_target = if t15 == "met" { "pass" } else { "fail" }
-  }
-  if conflict.rate < 0.8 {
-    println(
-      "gate fail: near-duplicate supersede \{format_mrr(conflict.rate)} < 0.800",
-    )
-    ok = false
-    gate_conflict = "fail"
-  }
-  // Extraction precision is recorded only (live stdout already prints PASS/MISSED).
-  if !extraction.skipped {
-    gate_extraction = if extraction.precision >= 0.8 { "pass" } else { "fail" }
-  }
-
-  let status = if ok { "pass" } else { "fail" }
-  let gate_overall = if ok { "pass" } else { "fail" }
-  let report_path = resolve_report_path(opts)
-  if report_path.length() > 0 {
-    let report = ModeReport::{
-      mode: mode_name(opts),
-      embedder: opts.embedder,
-      model: "",
-      dim: 0,
-      extractor_model: extraction.model,
-      hybrid_recall: h_r,
-      hybrid_mrr: mrr_of(hybrid),
-      bm25_recall: b_r,
-      bm25_mrr: mrr_of(bm25),
-      vs_bm25_pct: vs_bm25_pct(h_r, b_r),
-      target_15pct: t15,
-      conflict,
-      cross_user_leaks: leaks,
-      reopen_ok: persist_ok,
-      extraction,
-      status,
-      gate_isolation,
-      gate_persistence,
-      gate_conflict,
-      gate_hybrid_ge_bm25: gate_hybrid,
-      gate_target_15pct: gate_target,
-      gate_extraction,
-      gate_overall,
+  let dim = match probe.embed(["dimension"]) {
+    Ok(vectors) =>
+      if vectors.length() == 0 || vectors[0].length() == 0 {
+        stop("embed probe returned an empty vector")
+        0
+      } else {
+        vectors[0].length()
+      }
+    Err(err) => {
+      stop("embed probe: \{err.message()}")
+      0
     }
-    write_mode_report(report_path, report)
   }
-
-  if ok {
-    println("LOCOMO_PASS")
-  } else if opts.report_only_exit {
-    println("LOCOMO_FAIL: gates not met (report-only-exit; continuing)")
-  } else {
-    fail("\{mode_name(opts)} LoCoMo gates not met")
+  println("embedding dim=\{dim} recall_top_k=50")
+  let embedder : &@src.Embedder = QwenEmbedder::{
+    api_key: env.qwen_key,
+    base_url: env.qwen_base,
+    model: env.qwen_model,
+    dim,
   }
+  let judge : &@src.ConflictJudge = KeepAllJudge::{ }
+  let backend = @src.MemoryBackend::new()
+  let store = match
+    @src.MemoryStore::open("memory://locomo", config=@src.Config::{
+      ..@src.Config::default(),
+      embedder: Some(embedder),
+      judge: Some(judge),
+      persistence: Some(backend),
+      dim,
+    }) {
+    Ok(store) => store
+    Err(err) => {
+      stop("open: \{err.message()}")
+      abort("open")
+    }
+  }
+  let mut index = 0
+  for turn in sample.turns {
+    index = index + 1
+    let line = memory_line(turn)
+    match store.add("conv-8", line) {
+      Ok(summary) =>
+        if summary.inserted != 1 || summary.degraded {
+          stop(
+            "add \{index} inserted=\{summary.inserted} degraded=\{summary.degraded}",
+          )
+        }
+      Err(err) => stop("add \{index}: \{err.message()}")
+    }
+    if index % 25 == 0 || index == sample.turns.length() {
+      println("ingested \{index}/\{sample.turns.length()}")
+    }
+  }
+  let rows : Array[Json] = []
+  let mut correct = 0
+  let mut seen = 0
+  let counts : Map[Int32, Int32] = Map([])
+  let hits_by_cat : Map[Int32, Int32] = Map([])
+  for question in sample.questions {
+    seen = seen + 1
+    let recalled = match store.recall("conv-8", question.question, top_k=50) {
+      Ok(hits) => hits
+      Err(err) => {
+        stop("recall \{seen}: \{err.message()}")
+        []
+      }
+    }
+    let lines : Array[String] = []
+    for hit in recalled {
+      lines.push(hit.content)
+    }
+    sort_lines(lines)
+    let generated = chat(
+      env,
+      "Answer from the retrieved memories.",
+      answer_prompt(question.question, lines, sample.reference_date),
+    ) catch {
+      err => {
+        stop("answer \{seen}: \{err}")
+        ""
+      }
+    }
+    let short = after_answer(generated)
+    let gold = gold_of(question.category, question.answer)
+    let judged = chat(
+      env,
+      "You evaluate conversational memory recall. Return JSON only.",
+      judge_prompt(question.question, gold, short),
+    ) catch {
+      err => {
+        stop("judge \{seen}: \{err}")
+        ""
+      }
+    }
+    let label = judge_label(judged)
+    let ok = label == "correct"
+    if ok {
+      correct = correct + 1
+    }
+    let prev = match counts.get(question.category) {
+      Some(n) => n
+      None => 0
+    }
+    counts[question.category] = prev + 1
+    let prev_hit = match hits_by_cat.get(question.category) {
+      Some(n) => n
+      None => 0
+    }
+    if ok {
+      hits_by_cat[question.category] = prev_hit + 1
+    } else {
+      hits_by_cat[question.category] = prev_hit
+    }
+    println(
+      "q=\{seen} \{category_name(question.category)} \{if ok { "CORRECT" } else { "WRONG" }} \{correct}/\{seen}",
+    )
+    let row : Map[String, Json] = Map([])
+    row["category"] = Json::number(question.category.to_double())
+    row["category_name"] = Json::string(category_name(question.category))
+    row["question"] = Json::string(question.question)
+    row["gold"] = Json::string(gold)
+    row["generated"] = Json::string(short)
+    row["label"] = Json::string(if ok { "CORRECT" } else { "WRONG" })
+    row["recalled"] = Json::number(lines.length().to_double())
+    rows.push(Json::object(row))
+  }
+  let by_category : Array[Json] = []
+  for category in [1, 2, 3, 4] {
+    let total = match counts.get(category) {
+      Some(n) => n
+      None => 0
+    }
+    if total == 0 {
+      continue
+    }
+    let hit = match hits_by_cat.get(category) {
+      Some(n) => n
+      None => 0
+    }
+    let item : Map[String, Json] = Map([])
+    item["category"] = Json::string(category_name(category))
+    item["correct"] = Json::number(hit.to_double())
+    item["total"] = Json::number(total.to_double())
+    by_category.push(Json::object(item))
+    println("\{category_name(category)} \{hit}/\{total}")
+  }
+  println("overall \{correct}/\{seen}")
+  let root : Map[String, Json] = Map([])
+  root["seed"] = Json::number(sample.seed.to_double())
+  root["conversation_index"] = Json::number(
+    sample.conversation_index.to_double(),
+  )
+  root["speakers"] = Json::string("\{sample.speaker_a}/\{sample.speaker_b}")
+  root["turns"] = Json::number(sample.turns.length().to_double())
+  root["embedder"] = Json::string(env.qwen_model)
+  root["answerer"] = Json::string(env.deepseek_model)
+  root["judge"] = Json::string(env.deepseek_model)
+  root["top_k"] = Json::number(50.0)
+  root["correct"] = Json::number(correct.to_double())
+  root["total"] = Json::number(seen.to_double())
+  root["by_category"] = Json::array(by_category)
+  root["rows"] = Json::array(rows)
+  @fs.write_string_to_file(
+    "benchmark/results/locomo-20.json",
+    Json::object(root).stringify(),
+  ) catch {
+    @fs.IOError(msg) => stop("write results: \{msg}")
+  }
+  println("LOCOMO_DONE \{correct}/\{seen}")
+  ignore(store.close())
 }

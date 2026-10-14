@@ -374,13 +374,22 @@ fn must_open(dir : String, config : @moomem.Config) -> @moomem.MemoryStore {
 }
 
 ///|
-fn print_add(store : @moomem.MemoryStore, text : String) -> Unit {
-  println("[add] \{text}")
-  match store.add("user-42", text) {
-    Ok(summary) =>
+fn print_add(
+  store : @moomem.MemoryStore,
+  user_id : String,
+  text : String,
+) -> @moomem.AddSummary {
+  println("[add] \{user_id} \{text}")
+  match store.add(user_id, text) {
+    Ok(summary) => {
       println(
         "  extracted=\{summary.extracted} inserted=\{summary.inserted} duplicates=\{summary.duplicates} superseded=\{summary.superseded} degraded=\{summary.degraded}",
       )
+      for note in summary.notes {
+        println("  note: \{note}")
+      }
+      summary
+    }
     Err(err) => {
       println("  error: \{err.message()}")
       abort("add failed")
@@ -389,10 +398,14 @@ fn print_add(store : @moomem.MemoryStore, text : String) -> Unit {
 }
 
 ///|
-fn print_recall(store : @moomem.MemoryStore, query : String) -> Unit {
-  println("[recall] \{query}")
-  match store.recall("user-42", query, top_k=3) {
-    Ok(hits) =>
+fn recall_of(
+  store : @moomem.MemoryStore,
+  user_id : String,
+  query : String,
+) -> Array[@moomem.MemoryEntry] {
+  println("[recall] \{user_id} \{query}")
+  match store.recall(user_id, query, top_k=3) {
+    Ok(hits) => {
       if hits.length() == 0 {
         println("  (无命中)")
       } else {
@@ -400,10 +413,33 @@ fn print_recall(store : @moomem.MemoryStore, query : String) -> Unit {
           println("  [\{hit.status}] \{hit.kind} \{hit.content}")
         }
       }
+      hits
+    }
     Err(err) => {
       println("  error: \{err.message()}")
       abort("recall failed")
     }
+  }
+}
+
+///|
+fn hits_contain(hits : Array[@moomem.MemoryEntry], needle : String) -> Bool {
+  let mut found = false
+  for hit in hits {
+    if hit.content.contains(needle) {
+      found = true
+    }
+  }
+  found
+}
+
+///|
+fn check(failures : Array[String], ok : Bool, name : String) -> Unit {
+  if ok {
+    println("PASS \{name}")
+  } else {
+    println("FAIL \{name}")
+    failures.push(name)
   }
 }
 
@@ -456,20 +492,121 @@ fn main {
   let dir = "./memory"
   reset_dir(dir)
   let store = must_open(dir, config)
-  print_add(store, "我对花生过敏")
-  print_add(store, "我住在北京")
-  print_add(store, "我搬到深圳了")
-  print_add(store, "今天天气不错")
-  print_recall(store, "花生过敏")
-  print_recall(store, "我住在哪里")
+  let failures : Array[String] = []
+  let allergy = print_add(store, "user-42", "我对花生过敏")
+  check(
+    failures,
+    allergy.extracted >= 1 && allergy.inserted >= 1 && !allergy.degraded,
+    "allergy fact inserted",
+  )
+  let beijing = print_add(store, "user-42", "我住在北京")
+  check(
+    failures,
+    beijing.inserted >= 1 && !beijing.degraded,
+    "beijing fact inserted",
+  )
+  let shenzhen = print_add(store, "user-42", "我搬到深圳了")
+  check(
+    failures,
+    !shenzhen.degraded && shenzhen.superseded == 0,
+    "default judge keeps both residences",
+  )
+  let chat = print_add(store, "user-42", "今天天气不错")
+  check(
+    failures,
+    chat.extracted == 0 && chat.inserted == 0,
+    "chitchat stayed out of the store",
+  )
+  let again = print_add(store, "user-42", "我对花生过敏")
+  check(
+    failures,
+    again.duplicates >= 1 || again.inserted == 0,
+    "repeat allergy was not inserted again",
+  )
+  let allergy_hits = recall_of(store, "user-42", "花生过敏")
+  check(
+    failures,
+    hits_contain(allergy_hits, "花生"),
+    "recall finds the allergy",
+  )
+  let home_hits = recall_of(store, "user-42", "我住在哪里")
+  check(
+    failures,
+    hits_contain(home_hits, "深圳") && hits_contain(home_hits, "北京"),
+    "recall still returns both residences",
+  )
+  let leaked = recall_of(store, "user-7", "花生过敏")
+  check(failures, leaked.length() == 0, "another user cannot see the allergy")
+  match store.list_entries("user-42") {
+    Ok(entries) => {
+      let mut active_beijing = false
+      for entry in entries {
+        if entry.content.contains("北京") {
+          println("  [audit] \{entry.status} \{entry.content}")
+          if entry.status.to_string() == "Active" {
+            active_beijing = true
+          }
+        }
+      }
+      check(failures, active_beijing, "Beijing entry stays active")
+    }
+    Err(err) => check(failures, false, "list entries: \{err.message()}")
+  }
   match store.stats() {
-    Ok(stats) => println("[stats] \{stats}")
-    Err(err) => println("[stats] \{err.message()}")
+    Ok(stats) => {
+      println("[stats] \{stats}")
+      check(failures, stats.extractor_mode == "llm", "extractor mode is llm")
+      check(failures, stats.active >= 2, "at least two active memories")
+      check(failures, stats.superseded == 0, "nothing was superseded")
+    }
+    Err(err) => check(failures, false, "stats: \{err.message()}")
   }
   ignore(store.close())
   println("[reopen]")
   let restored = must_open(dir, config)
-  print_recall(restored, "花生过敏")
-  print_recall(restored, "我住在哪里")
+  let restored_allergy = recall_of(restored, "user-42", "花生过敏")
+  check(
+    failures,
+    hits_contain(restored_allergy, "花生"),
+    "allergy survives reopen",
+  )
+  let restored_home = recall_of(restored, "user-42", "我住在哪里")
+  check(
+    failures,
+    hits_contain(restored_home, "深圳") && hits_contain(restored_home, "北京"),
+    "both residences survive reopen",
+  )
+  match restored.list_entries("user-42") {
+    Ok(entries) => {
+      let mut allergy_id = ""
+      for entry in entries {
+        if entry.content.contains("花生") &&
+          entry.status.to_string() == "Active" {
+          allergy_id = entry.id
+        }
+      }
+      check(failures, allergy_id.length() > 0, "allergy id is still active")
+      if allergy_id.length() > 0 {
+        match
+          restored.forget("user-42", @moomem.ForgetTarget::ById(allergy_id)) {
+          Ok(removed) =>
+            check(failures, removed == 1, "forget removes the allergy")
+          Err(err) => check(failures, false, "forget: \{err.message()}")
+        }
+        let after_forget = recall_of(restored, "user-42", "花生过敏")
+        check(
+          failures,
+          !hits_contain(after_forget, "花生"),
+          "forgotten allergy is not recalled",
+        )
+      }
+    }
+    Err(err) => check(failures, false, "list after reopen: \{err.message()}")
+  }
   ignore(restored.close())
+  if failures.length() > 0 {
+    println("failed checks: \{failures.length()}")
+    abort("playground verification failed")
+  }
+  println("all checks passed")
 }

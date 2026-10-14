@@ -14,7 +14,6 @@ define.extends([
       ignorePatterns: [
         '.github/**',
         '.cursor/**',
-        '.trellis/**',
         'docs/**',
         'playground/**',
         'examples/**',

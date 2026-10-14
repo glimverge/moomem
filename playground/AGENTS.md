@@ -1,6 +1,6 @@
 # playground (`heyq02/playground`)
 
-Host sample that injects Qwen embeddings and DeepSeek extraction into moomem. This directory is its own MoonBit module. Library rules for the core package live in the repository-root `AGENTS.md` and `.trellis/spec/library/`.
+Host sample that injects Qwen embeddings and DeepSeek extraction into moomem. This directory is its own MoonBit module. Library rules for the core package live in the repository-root `AGENTS.md`.
 
 ```bash
 cp .env.example .env    # DEEPSEEK_* and QWEN_*; never commit .env

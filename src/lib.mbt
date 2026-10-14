@@ -11,8 +11,8 @@
 //   - fs 调用只出现在 persist.mbt（moonbitlang/x/fs 唯一依赖）
 
 ///|
-/// 库版本号（与 moon.mod 保持同步）
-/// 注意：moon.mod 版本由 release-pipeline 管理；本常量需在每次发版后手工同步
+/// 库版本号。与 `moon.mod` 和 `package.json` 相同，由 `bumpp` 一起改。
+/// `SNAPSHOT_VERSION` 是快照格式，不跟着发版号走。
 pub const MOOMEM_VERSION : String = "0.7.1"
 
 ///|

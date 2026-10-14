@@ -12,8 +12,8 @@ pkgtype(kind: "executable")
 
 options(
   targets: {
-    "main.mbt": ["native"],
-    "live.mbt": ["native"],
-    "stub.mbt": ["wasm", "wasm-gc", "js"],
+    "main.mbt": [ "native" ],
+    "live.mbt": [ "native" ],
+    "stub.mbt": [ "wasm", "wasm-gc", "js" ],
   },
 )

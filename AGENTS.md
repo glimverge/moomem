@@ -6,7 +6,7 @@ Host behavior and on-disk layout: `README.md`. File map: `src/README.md`. `playg
 
 ## Toolchain
 
-`moon` builds and tests the library. Node is repo hygiene only: [`@heyq02/rstack-config`](https://github.com/heyq02/rstack-config) (`rs fmt`, hooks, commitlint) and [`bumpp`](https://github.com/antfu-collective/bumpp). `package.json` pins `pnpm@12.10.1`.
+`moon` builds and tests the library. Node is repo hygiene only: [`@heyq02/rstack-config`](https://github.com/heyq02/rstack-config) (`rs fmt`, hooks, commitlint), [`automd`](https://automd.unjs.io) for parts of `README.md`, and [`bumpp`](https://github.com/antfu-collective/bumpp). `package.json` pins `pnpm@12.10.1`.
 
 `moon.mod` `version`, `package.json` `version`, and `src/lib.mbt` `MOOMEM_VERSION` stay the same string. `pnpm release` updates all three, commits, tags `v{version}`, and pushes. `pnpm release --no-push` stops after the local commit and tag. `SNAPSHOT_VERSION` is the snapshot header `v` and does not follow the package version.
 

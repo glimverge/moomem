@@ -1,13 +1,13 @@
 # moomem
 
-[![Version](https://img.shields.io/badge/dynamic/regex?url=https%3A%2F%2Fraw.githubusercontent.com%2Fglimverge%2Fmoomem%2Frefs%2Fheads%2Fmain%2Fmoon.mod&search=%5Eversion%5Cs%2A%3D%5Cs%2A%22%28%3FP%3Cversion%3E%5B%5E%22%5D%2B%29%22&replace=%24%3Cversion%3E&flags=m&label=version&logo=github)](https://github.com/glimverge/moomem/blob/main/moon.mod)
-[![Coverage Status](https://coveralls.io/repos/github/glimverge/moomem/badge.svg?branch=main)](https://coveralls.io/github/glimverge/moomem?branch=main)
-[![Docs](https://img.shields.io/badge/docs-mooncakes.io-green)](https://mooncakes.io/docs/heyq02/moomem/)
-[![License](https://img.shields.io/github/license/glimverge/moomem)](https://github.com/glimverge/moomem/blob/main/LICENSE)
+<p>
+  <a href="https://github.com/glimverge/moomem/blob/main/moon.mod"><img src="https://img.shields.io/badge/dynamic/regex?url=https%3A%2F%2Fraw.githubusercontent.com%2Fglimverge%2Fmoomem%2Frefs%2Fheads%2Fmain%2Fmoon.mod&search=%5Eversion%5Cs%2A%3D%5Cs%2A%22%28%3FP%3Cversion%3E%5B%5E%22%5D%2B%29%22&replace=%24%3Cversion%3E&flags=m&label=version&style=flat-square&colorA=564341&colorB=EDED91" alt="version" /></a>
+  <a href="https://coveralls.io/github/glimverge/moomem?branch=main"><img src="https://img.shields.io/coverallsCoverage/github/glimverge/moomem?branch=main&style=flat-square&colorA=564341&colorB=EDED91" alt="coverage" /></a>
+  <a href="https://mooncakes.io/docs/heyq02/moomem/"><img src="https://img.shields.io/badge/docs-mooncakes.io-EDED91?style=flat-square&colorA=564341&colorB=EDED91" alt="docs" /></a>
+  <a href="https://github.com/glimverge/moomem/blob/main/LICENSE"><img src="https://img.shields.io/badge/License-MIT-blue.svg?style=flat-square&colorA=564341&colorB=EDED91" alt="license" /></a>
+</p>
 
-> MoonBit 嵌入式 Agent 记忆层：零部署、崩溃可恢复、按用户隔离。
-
-Agent 进程一结束就失忆。**moomem** 嵌在宿主进程里，不用单独起服务。native 上把记忆写进本地目录，关掉再打开还能 `recall`。wasm / js 缺省只留在进程内存里。
+MoonBit 嵌入式 Agent 记忆层：嵌在宿主进程里，按用户隔离，native 上崩溃后仍能从上一份完整快照恢复。
 
 ## 能力
 
@@ -40,7 +40,7 @@ fn main {
 }
 ```
 
-native 上，同一目录再次 `open`，记忆还在，`recall` 结果一致。
+native 上，同一目录再次 `open`，记忆还在，`recall` 结果一致。wasm / js 缺省只留在进程内存里。
 
 > [!NOTE]
 > 缺省实现不访问网络。要做语义提取或真实向量，在 `open` 时注入 `Embedder`、`Extractor`、`ConflictJudge`。
@@ -67,7 +67,7 @@ moon run cmd/main
 `head` 指到哪个槽，哪个就是当前真相。写入时的顺序是**先整份覆盖写进非当前槽，成功后再拨 `head`**：
 
 - 写槽写到一半崩溃 → `head` 还指着旧槽，数据一点不丢；
-- 拨 `head` 写到一半崩溃 → `head` 损坏，此时回退到"两个槽里都能解析 header、且 `gen` 更大的那个"。
+- 拨 `head` 写到一半崩溃 → `head` 损坏，此时回退到两个槽里都能解析 header、且 `gen` 更大的那个。
 
 每个 `slot*.jsonl` 是 JSON Lines：第 1 行是 header，之后每行一条记忆，**按 `seq` 升序**。header 三个字段：
 
@@ -88,7 +88,7 @@ moon run cmd/main
  "metadata":{"extractor":"raw"}}
 ```
 
-`status` 有 `active` / `superseded` / `deleted` / `unstructured` 四种。`recall` 只返回 `active` 与 `unstructured` 这两类，被覆盖和被删除的条目**仍留在快照里**供审计。注意 `kind` 和 `status` 是两个独立字段：上面那条记忆是 `kind=unstructured`（缺省 `RawExtractor` 原样入库）配 `status=active`（还生效着）。
+`status` 有 `active` / `superseded` / `deleted` / `unstructured` 四种。`recall` 只返回 `active` 与 `unstructured` 这两类，被覆盖和被删除的条目**仍留在快照里**供审计。`kind` 和 `status` 是两个独立字段：上面那条记忆是 `kind=unstructured`（缺省 `RawExtractor` 原样入库）配 `status=active`（还生效着）。
 
 `metadata` 里 `extractor` 记提取器模式；若这次写入降级过，还会多出 `extraction_degraded` 或 `embedding_degraded`。
 
@@ -103,6 +103,8 @@ moon run cmd/main
 
 ```bash
 moon run examples/default-reopen --target native
+moon run examples/host-inject-supersede --target native
+moon run examples/isolation-forget-import --target native
 ```
 
 | 示例 | 看什么 |
@@ -111,6 +113,36 @@ moon run examples/default-reopen --target native
 | `examples/host-inject-supersede` | 注入嵌入和提取后，旧事实被覆盖 |
 | `examples/isolation-forget-import` | 用户隔离、遗忘、导出再导入 |
 
-## 项目治理
+## 开发
+
+```bash
+moon check --target native
+moon test --target native
+pnpm run format   # automd + rs fmt
+pnpm release      # bumpp：改版本、提交、打 tag、推送
+```
+
+`pnpm release` 用 [`bumpp`](https://github.com/antfu-collective/bumpp) 把 `package.json`、`moon.mod` 和 `MOOMEM_VERSION` 改成同一个版本，然后提交、打 `v{version}` 标签并推送。`v*` 标签会跑 [`.github/workflows/release.yaml`](.github/workflows/release.yaml)（GitHub Release 经由 [changelogithub](https://github.com/antfu/changelogithub)，再 `moon package` 并发布到 mooncakes.io）。
 
 路线图在 GitHub Project：[moomem](https://github.com/orgs/glimverge/projects/1)。代码布局见 [`src/README.md`](src/README.md)。
+
+## License
+
+<!-- automd:contributors license=MIT author="heyq02" github="glimverge/moomem" -->
+
+Published under the [MIT](https://github.com/glimverge/moomem/blob/main/LICENSE) license.
+Made by [@heyq02](https://github.com/heyq02) and [community](https://github.com/glimverge/moomem/graphs/contributors) 💛
+<br><br>
+<a href="https://github.com/glimverge/moomem/graphs/contributors">
+<img src="https://contrib.rocks/image?repo=glimverge/moomem" />
+</a>
+
+<!-- /automd -->
+
+<!-- automd:with-automd -->
+
+---
+
+_🤖 auto updated with [automd](https://automd.unjs.io)_
+
+<!-- /automd -->

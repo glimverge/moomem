@@ -56,7 +56,7 @@ pnpm run format
 pnpm release
 ```
 
-`pnpm release` 用 [`bumpp`](https://github.com/antfu-collective/bumpp) 同步 `package.json`、`moon.mod` 和 `MOOMEM_VERSION`，打 `v*` 标签后由 [release.yaml](.github/workflows/release.yaml) 发布到 mooncakes.io。代码布局见 [`src/README.md`](src/README.md)。
+`pnpm release` 用 [`bumpp`](https://github.com/antfu-collective/bumpp) 同步 `package.json`、`moon.mod` 和 `MOOMEM_VERSION`，打 `v*` 标签后由 [release.yaml](.github/workflows/release.yaml) 发布到 mooncakes.io。
 
 ## License
 

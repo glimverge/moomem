@@ -2,7 +2,7 @@
 
 Embedded agent memory library for [MoonBit](https://www.moonbitlang.com/). Module `heyq02/moomem`. Host API is `MemoryStore`: `open` / `add` / `recall` / `forget` / `stats` / `close`, plus list / export / import. Search is hybrid vector + BM25, sharded by `user_id`. Native persistence is a dual-slot JSONL snapshot plus `head`. Defaults are offline and deterministic; hosts inject `Embedder`, `Extractor`, and `ConflictJudge` for real models.
 
-Host behavior and on-disk layout: `README.md`. File map: `src/README.md`. `playground/` is a separate module.
+Host behavior and on-disk layout: `README.md`. `playground/` is a separate module.
 
 ## Toolchain
 

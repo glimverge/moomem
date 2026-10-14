@@ -1,10 +1,10 @@
 # moomem
 
 <p>
-  <a href="https://mooncakes.io/docs/heyq02/moomem/"><img src="https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fmooncakes.io%2Fapi-new%2Fv0%2Fmanifest%2Fheyq02%2Fmoomem&query=%24.latest_version&label=version&style=flat-square&colorA=564341&colorB=EDED91" alt="version" /></a>
+  <a href="https://mooncakes.io/docs/heyq02/moomem/"><img src="https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fmooncakes.io%2Fapi-new%2Fv0%2Fmanifest%2Fheyq02%2Fmoomem&query=%24.latest_version&label=mooncake&style=flat-square&colorA=564341&colorB=EDED91" alt="version" /></a>
   <a href="https://mooncakes.io/docs/heyq02/moomem/"><img src="https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fmooncakes.io%2Fapi-new%2Fv0%2Fmanifest%2Fheyq02%2Fmoomem&query=%24.downloads&label=downloads&style=flat-square&colorA=564341&colorB=EDED91" alt="downloads" /></a>
-  <a href="https://github.com/glimverge/moomem/blob/main/LICENSE"><img src="https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fmooncakes.io%2Fapi-new%2Fv0%2Fmanifest%2Fheyq02%2Fmoomem&query=%24.metadata.license&label=license&style=flat-square&colorA=564341&colorB=EDED91" alt="license" /></a>
   <a href="https://coveralls.io/github/glimverge/moomem?branch=main"><img src="https://img.shields.io/coverallsCoverage/github/glimverge/moomem?branch=main&style=flat-square&colorA=564341&colorB=EDED91" alt="coverage" /></a>
+  <a href="https://github.com/glimverge/moomem/blob/main/LICENSE"><img src="https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fmooncakes.io%2Fapi-new%2Fv0%2Fmanifest%2Fheyq02%2Fmoomem&query=%24.metadata.license&label=license&style=flat-square&colorA=564341&colorB=EDED91" alt="license" /></a>
 </p>
 
 MoonBit 嵌入式 Agent 记忆层。嵌在宿主进程里，按 `user_id` 做向量 + BM25 检索。native 上写入双槽 JSONL，崩溃后仍从上一份完整快照恢复。缺省离线，不需要 API Key。

@@ -36,10 +36,10 @@ moon test --target wasm-gc
 moon test --target js
 moon test --enable-coverage --target native
 moon coverage report --ignore-missing-files -f summary -p heyq02/moomem/src
-pnpm run cov:bisect
+moon coverage report --ignore-missing-files -f bisect
 ```
 
-`pnpm test` is `moon test` with no `--target`. `src/` coverage must stay ≥ 90% of points. Native CI fails if the suite shrinks below `NATIVE_TEST_BASELINE` in `unit-test.yml`; that floor only rises. `cov:json`, `cov:xml`, and `cov:html` need a coverage-enabled `moon test` first.
+`pnpm test` is `moon test` with no `--target`. `src/` coverage must stay ≥ 90% of points. Native CI fails if the suite shrinks below `NATIVE_TEST_BASELINE` in `unit-test.yml`; that floor only rises. After a coverage-enabled `moon test`, other report formats are `moon coverage report --ignore-missing-files -f coveralls`, `-f cobertura`, and `-f html`.
 
 Black-box tests see `pub` only. Assert with `inspect`. Inject traits by hand. Crash and partial-write cases use `MemoryBackend`.
 

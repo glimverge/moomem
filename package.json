@@ -10,16 +10,11 @@
   "scripts": {
     "automd": "automd",
     "commitlint": "commitlint",
-    "cov:bisect": "pnpm run test:cov && moon coverage report --ignore-missing-files -f summary -p heyq02/moomem/src | python3 -c 'import sys; t=sys.stdin.read(); print(t, end=\"\"); rows=[ln for ln in t.splitlines() if ln.startswith(\"Total: \")]; num, den = rows[-1].split()[1].split(\"/\"); ratio = int(num) / int(den); print(\"src coverage {:.2%}\".format(ratio)); sys.exit(0 if ratio >= 0.9 else 1)' && moon coverage report --ignore-missing-files -f bisect",
-    "cov:html": "moon coverage report --ignore-missing-files -f html",
-    "cov:json": "moon coverage report --ignore-missing-files -f coveralls",
-    "cov:xml": "moon coverage report --ignore-missing-files -f cobertura",
     "format": "pnpm automd && rs fmt",
     "format:check": "rs fmt --check",
     "prepare": "rs hooks",
     "release": "bumpp",
-    "test": "moon test",
-    "test:cov": "moon test --enable-coverage"
+    "test": "moon test"
   },
   "devDependencies": {
     "@commitlint/cli": "^20.5.3",

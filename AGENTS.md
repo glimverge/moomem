@@ -153,7 +153,7 @@ CI on push/PR to `main` is split by kind:
 
 Push/PR jobs must stay offline: no `MOONCAKES_TOKEN`, no model endpoints. `COVERALLS_REPO_TOKEN` is only for `coverage.yml`.
 
-Release (`.github/workflows/release.yaml`) runs on a `v*` tag push, same shape as the sxzz release workflow: changelogithub, then publish. The publish step is `moon package` and `moon publish` to mooncakes.io. The tag must match `moon.mod` `version` (`v0.7.1` publishes `0.7.1`). Bump versions locally with `scripts/release/bump-version.sh` before tagging. Do not cache `~/.moon/credentials.json`.
+Release (`.github/workflows/release.yaml`) runs on a `v*` tag push, same shape as the sxzz release workflow: changelogithub, then publish. The publish step is `moon package`, then [`cogna-dev/moonbit-actions/publish`](https://github.com/cogna-dev/moonbit-actions). The tag must match `moon.mod` `version` (`v0.7.1` publishes `0.7.1`). Bump versions locally with `scripts/release/bump-version.sh` before tagging. `MOONCAKES_TOKEN` is the base64 of `~/.moon/credentials.json`, not the raw file. Do not cache `~/.moon`.
 
 ## Pull requests
 

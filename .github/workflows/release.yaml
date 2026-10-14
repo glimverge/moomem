@@ -38,14 +38,7 @@ jobs:
           test "${tag}" = "${mod}"
           moon package -v
 
-      - name: Configure mooncakes credentials
-        env:
-          MOONCAKES_TOKEN: ${{ secrets.MOONCAKES_TOKEN }}
-        run: bash scripts/release/configure-mooncakes-credentials.sh
-
       - name: Publish to mooncakes.io
-        run: moon publish -v
-
-      - name: Cleanup mooncakes credentials
-        if: always()
-        run: rm -f "$HOME/.moon/credentials.json"
+        uses: cogna-dev/moonbit-actions/publish@v0
+        with:
+          token: ${{ secrets.MOONCAKES_TOKEN }}

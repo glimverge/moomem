@@ -19,7 +19,7 @@ Documented `moon` baseline is in `README.md`. CI installs latest (`dated CDN pin
 | `src/` | Core package. `*_test.mbt` and `*_wbtest.mbt` stay beside sources. |
 | `benchmark/` | Local LoCoMo sample. Reads `benchmark/.env`. Not run in CI. |
 | `playground/` | Host sample (Qwen embed + DeepSeek extract). Depends on published `heyq02/moomem`, not this working tree. |
-| `.github/workflows/` | `check.yml`, `unit-test.yml`, `coverage.yml` on push/PR to `main`. `commitlint.yml` on PR commits. `autofix.yml` runs `rs fmt`, `moon fmt`, and `moon check --deny-warn`. `release.yaml` on tag `v*`. |
+| `.github/workflows/` | `unit-test.yml` (native check, then tests), `coverage.yml` on push/PR to `main`. `commitlint.yml` on PR commits. `autofix.yml` runs `rs fmt`, `moon fmt`, and `moon check --deny-warn`. `release.yaml` on tag `v*`. |
 | `bump.config.ts` | Files bumpp rewrites: `package.json`, `moon.mod`, `src/lib.mbt`. |
 
 Targets: `native`, `wasm`, `wasm-gc`, `js`. Native uses `FsBackend` under `<path>/moomem/`. Other targets default to in-memory `MemoryBackend`. `#cfg(target="native")` belongs in `persist.mbt` (tests may use it in `persist_test.mbt`).

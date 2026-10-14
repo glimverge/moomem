@@ -1,4 +1,5 @@
-// Local LoCoMo sample. Reads playground/.env. Not run in CI.
+// Local LoCoMo sample. Reads benchmark/.env. Native only: the HTTP client
+// is not available on wasm / js, and CI tests those targets.
 import {
   "heyq02/moomem/src",
   "moonbitlang/async",
@@ -8,3 +9,11 @@ import {
 }
 
 pkgtype(kind: "executable")
+
+options(
+  targets: {
+    "main.mbt": ["native"],
+    "live.mbt": ["native"],
+    "stub.mbt": ["wasm", "wasm-gc", "js"],
+  },
+)

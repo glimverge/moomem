@@ -24,10 +24,10 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Setup MoonBit (no cache)
-        uses: ./.github/actions/setup-moonbit
+      - name: Setup MoonBit
+        uses: cogna-dev/moonbit-actions/setup@v0
         with:
-          cache: "false"
+          version: latest
 
       - name: Package module
         run: |

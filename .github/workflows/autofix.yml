@@ -21,7 +21,7 @@ jobs:
       - run: pnpm install
       - run: pnpm run format
       - name: Setup MoonBit
-        uses: ./.github/actions/setup-moonbit
+        uses: cogna-dev/moonbit-actions/setup@v0
       - name: moon fmt
         run: |
           set -euo pipefail

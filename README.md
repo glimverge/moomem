@@ -1,7 +1,7 @@
 # moomem
 
 <p>
-  <a href="https://github.com/glimverge/moomem/blob/main/moon.mod"><img src="https://img.shields.io/badge/dynamic/regex?url=https%3A%2F%2Fraw.githubusercontent.com%2Fglimverge%2Fmoomem%2Frefs%2Fheads%2Fmain%2Fmoon.mod&search=%5Eversion%5Cs%2A%3D%5Cs%2A%22%28%3FP%3Cversion%3E%5B%5E%22%5D%2B%29%22&replace=%24%3Cversion%3E&flags=m&label=version&style=flat-square&colorA=564341&colorB=EDED91" alt="version" /></a>
+  <a href="https://github.com/glimverge/moomem/blob/main/moon.mod"><img src="https://img.shields.io/badge/dynamic/regex?url=https%3A%2F%2Fraw.githubusercontent.com%2Fglimverge%2Fmoomem%2Frefs%2Fheads%2Fmain%2Fmoon.mod&search=%5Eversion%5Cs%2A%3D%5Cs%2A%22%28%3FP%3Cversion%3E%5B%5E%22%5D%2B%29%22&replace=%24%3Cversion%3E&flags=m&label=moon&style=flat-square&colorA=564341&colorB=EDED91" alt="version" /></a>
   <a href="https://coveralls.io/github/glimverge/moomem?branch=main"><img src="https://img.shields.io/coverallsCoverage/github/glimverge/moomem?branch=main&style=flat-square&colorA=564341&colorB=EDED91" alt="coverage" /></a>
   <a href="https://mooncakes.io/docs/heyq02/moomem/"><img src="https://img.shields.io/badge/docs-mooncakes.io-EDED91?style=flat-square&colorA=564341&colorB=EDED91" alt="docs" /></a>
   <a href="https://github.com/glimverge/moomem/blob/main/LICENSE"><img src="https://img.shields.io/badge/License-MIT-blue.svg?style=flat-square&colorA=564341&colorB=EDED91" alt="license" /></a>

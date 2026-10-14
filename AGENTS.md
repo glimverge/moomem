@@ -55,7 +55,7 @@ Registry dependency: `moonbitlang/x@0.5.5`.
 | `examples/<scene>/` | Three offline demos: `default-reopen`, `host-inject-supersede`, `isolation-forget-import`. Smoke only. |
 | `benchmark/` | Offline LoCoMo eval (`moon run benchmark --target native`). |
 | `demo/` | Host sample (Qwen embed + DeepSeek extract). Own module `heyq02/demo`, depends on published `heyq02/moomem`, not the working tree. |
-| `.github/workflows/` | `test-pipeline.yml` (push/PR), `release.yaml` (tag `v*`), `commitlint.yml` (PR commit messages), `autofix.yml` (`rs fmt`, `moon fmt`, and `moon check --deny-warn` on PR/push to `main`). |
+| `.github/workflows/` | `check.yml`, `unit-test.yml`, `coverage.yml`, `smoke.yml`, `benchmark.yml` (push/PR), `release.yaml` (tag `v*`), `commitlint.yml` (PR commit messages), `autofix.yml` (`rs fmt`, `moon fmt`, and `moon check --deny-warn` on PR/push to `main`). |
 | `rstack.config.ts` | `define.extends([rstack(...)])` from `@heyq02/rstack-config`. `lib` / `lint` / `test` are off; `fmt` and `staged` are on. |
 | `commitlint.config.js` | Re-exports `@heyq02/rstack-config/commitlint`. |
 | `.rstack/hooks/` | `pre-commit` runs `rs staged`; `commit-msg` runs commitlint. `prepare` is `rs hooks`. |
@@ -120,7 +120,7 @@ Conventions:
 - Assert with `inspect`. Inject traits by hand. There is no mock framework.
 - Crash and partial-write cases use `MemoryBackend` (`persist.mbt` / `persist_test.mbt`).
 - Package tests, examples, and the default benchmark path must not read API keys or call model endpoints.
-- Native CI fails if the suite shrinks below `NATIVE_TEST_BASELINE` (76 in `test-pipeline.yml`). The floor only rises.
+- Native CI fails if the suite shrinks below `NATIVE_TEST_BASELINE` (76 in `unit-test.yml`). The floor only rises.
 
 ## Code style
 
@@ -143,14 +143,15 @@ Before adding a helper, search for `validate_user_id`, `content_fingerprint`, `t
 
 There is no Node/app build. `moon check` and `moon test` are the build. `moon package` runs in the release job.
 
-CI (`.github/workflows/test-pipeline.yml`), on push/PR to `main`:
+CI on push/PR to `main` is split by kind:
 
-1. `moon check --target native`
-2. `moon test` on `native` (with coverage), `wasm`, `wasm-gc`, `js`
-3. Three example smokes, then `moon run benchmark --target native`
-4. Coveralls upload of the native `src/` report
+1. `check.yml` — `moon check --target native`
+2. `unit-test.yml` — `moon test` on `native`, `wasm`, `wasm-gc`, `js`. Native must stay at or above `NATIVE_TEST_BASELINE`
+3. `coverage.yml` — native `moon test --enable-coverage`, `src/` points ≥ 90%, then Coveralls
+4. `smoke.yml` — three offline examples
+5. `benchmark.yml` — `moon run benchmark --target native`
 
-Push/PR jobs must stay offline: no `MOONCAKES_TOKEN`, no model endpoints. `COVERALLS_REPO_TOKEN` is only for the upload job.
+Push/PR jobs must stay offline: no `MOONCAKES_TOKEN`, no model endpoints. `COVERALLS_REPO_TOKEN` is only for `coverage.yml`.
 
 Release (`.github/workflows/release.yaml`) runs on a `v*` tag push, same shape as the sxzz release workflow: changelogithub, then publish. The publish step is `moon package` and `moon publish` to mooncakes.io. The tag must match `moon.mod` `version` (`v0.7.1` publishes `0.7.1`). Bump versions locally with `scripts/release/bump-version.sh` before tagging. Do not cache `~/.moon/credentials.json`.
 

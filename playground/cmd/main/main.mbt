@@ -573,7 +573,8 @@ fn main {
   let restored_home = recall_of(restored, "user-42", "我住在哪里")
   check(
     failures,
-    hits_contain(restored_home, "深圳") && hits_contain(restored_home, "北京"),
+    hits_contain(restored_home, "深圳") &&
+    hits_contain(restored_home, "北京"),
     "both residences survive reopen",
   )
   match restored.list_entries("user-42") {

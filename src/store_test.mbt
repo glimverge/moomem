@@ -348,8 +348,7 @@ test "conflict: supersede old fact (injected deterministic judge)" {
 test "degrade: failing extractor stores unstructured and stays recallable" {
   let backend = @src.MemoryBackend::new()
   let extractor : &@src.Extractor = StoreFailingExtractor::{ }
-  let store = match
-    store_open(backend, None, Some(extractor), None, None) {
+  let store = match store_open(backend, None, Some(extractor), None, None) {
     Ok(s) => s
     Err(e) => {
       inspect(e.message(), content="SHOULD NOT REACH")

@@ -17,4 +17,4 @@ pub const MOOMEM_VERSION : String = "0.7.1"
 
 ///|
 /// 快照格式版本（header 中的 "v" 字段）
-pub const SNAPSHOT_VERSION : Int = 1
+pub const SNAPSHOT_VERSION : Int32 = 1

@@ -21,12 +21,12 @@ pub struct MemoryStore {
   judge : &ConflictJudge
   persistence : &PersistenceBackend
   clock : &Clock
-  dim : Int
-  rrf_k : Int
-  recall_candidates : Int
+  dim : Int32
+  rrf_k : Int32
+  recall_candidates : Int32
   supersede_threshold : Double
   /// add 链路冲突检测每路候选窗口
-  conflict_candidates : Int
+  conflict_candidates : Int32
   /// SimilarityJudge Coexist 下界间距（仅在缺省 judge 构造时消费）
   coexist_band : Double
   /// recall 命中不足 top_k 时的补齐策略
@@ -48,13 +48,13 @@ pub struct MemoryStore {
   /// 逻辑时钟上界（快照 header.clock 来源）
   mut clock_high : Int64
   /// 下一个逻辑序号（持久化恢复续接，永不复用）
-  mut next_seq : Int
+  mut next_seq : Int32
   /// 快照代数
-  mut gen : Int
+  mut gen : Int32
   /// 启动恢复时截断的尾部半行数
-  truncated_recovered : Int
+  truncated_recovered : Int32
   /// 提取器连续失败计数（连续 3 次返回错误）
-  mut extraction_failures : Int
+  mut extraction_failures : Int32
   /// 最近一次成功落盘的逻辑时钟
   mut last_write_at : Int64
   mut ever_flushed : Bool
@@ -99,9 +99,7 @@ pub fn MemoryStore::open(
   }
   if cfg.conflict_candidates < 1 {
     return Err(
-      MoomemError::InvalidOperation(
-        "config.conflict_candidates must be >= 1",
-      ),
+      MoomemError::InvalidOperation("config.conflict_candidates must be >= 1"),
     )
   }
   if cfg.coexist_band < 0.0 || cfg.coexist_band >= 1.0 {
@@ -115,11 +113,10 @@ pub fn MemoryStore::open(
     )
   }
   if cfg.lexical_gap < 1.0 {
-    return Err(
-      MoomemError::InvalidOperation("config.lexical_gap must be >= 1"),
-    )
+    return Err(MoomemError::InvalidOperation("config.lexical_gap must be >= 1"))
   }
-  if cfg.vector_weight_when_lexical <= 0.0 || cfg.vector_weight_when_lexical > 1.0 {
+  if cfg.vector_weight_when_lexical <= 0.0 ||
+    cfg.vector_weight_when_lexical > 1.0 {
     return Err(
       MoomemError::InvalidOperation(
         "config.vector_weight_when_lexical must be in (0, 1]",
@@ -187,7 +184,8 @@ pub fn MemoryStore::open(
         cfg.supersede_threshold,
         embedder,
         coexist_band=cfg.coexist_band,
-      ) as &ConflictJudge
+      )
+      as &ConflictJudge
   }
   let clock : &Clock = match cfg.clock {
     Some(c) => c

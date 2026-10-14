@@ -169,7 +169,7 @@ fn get_string_field(
 fn get_int_field(
   obj : Map[String, Json],
   key : String,
-) -> Int raise MoomemError {
+) -> Int32 raise MoomemError {
   match obj.get(key) {
     Some(Number(n, ..)) => n.to_int()
     Some(_) =>
@@ -247,7 +247,7 @@ fn get_string_array_field(
 
 ///|
 /// 快照 header：{"v":1,"gen":..,"clock":..}
-fn snapshot_header_to_json(v : Int, gen : Int, clock : Int64) -> Json {
+fn snapshot_header_to_json(v : Int32, gen : Int32, clock : Int64) -> Json {
   let obj : Map[String, Json] = Map([])
   obj.set("v", Json::number(v.to_double()))
   obj.set("gen", Json::number(gen.to_double()))
@@ -259,7 +259,7 @@ fn snapshot_header_to_json(v : Int, gen : Int, clock : Int64) -> Json {
 /// 解析 header 行；校验版本号。返回 (v, gen, clock)。
 fn parse_snapshot_header(
   j : Json,
-) -> Result[(Int, Int, Int64), MoomemError] {
+) -> Result[(Int32, Int32, Int64), MoomemError] {
   try {
     let obj = match j {
       Object(o) => o
@@ -299,7 +299,7 @@ fn parse_json_line(line : String) -> Result[Json, MoomemError] {
 ///|
 /// 组装完整快照文本：header 行 + 每条 entry 一行 JSON。
 fn build_snapshot_text(
-  gen : Int,
+  gen : Int32,
   clock : Int64,
   entries : Array[MemoryEntry],
 ) -> String {
@@ -318,10 +318,10 @@ fn build_snapshot_text(
 ///|
 /// 快照解析结果：header 代数与时钟 + 条目列表（按文件序） + 截断计数。
 priv struct SnapshotParseResult {
-  gen : Int
+  gen : Int32
   clock : Int64
   entries : Array[MemoryEntry]
-  truncated_recovered : Int
+  truncated_recovered : Int32
 }
 
 ///|

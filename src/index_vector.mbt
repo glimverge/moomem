@@ -55,7 +55,7 @@ fn VectorIndex::remove(
 ///|
 /// 某 user 分片的条目数（wbtest 用；主路径不读 size）。
 #warnings("-unused_value")
-fn VectorIndex::size(self : VectorIndex, user_id : String) -> Int {
+fn VectorIndex::size(self : VectorIndex, user_id : String) -> Int32 {
   match self.shards.get(user_id) {
     Some(m) => m.length()
     None => 0
@@ -70,7 +70,7 @@ fn VectorIndex::search(
   self : VectorIndex,
   user_id : String,
   query_vector : Array[Double],
-  k : Int,
+  k : Int32,
 ) -> Array[(String, Double)] {
   if query_vector.length() == 0 {
     return []

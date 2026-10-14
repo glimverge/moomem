@@ -11,7 +11,7 @@ pub fn MemoryStore::recall(
   self : MemoryStore,
   user_id : String,
   query : String,
-  top_k? : Int,
+  top_k? : Int32,
 ) -> Result[Array[MemoryEntry], MoomemError] {
   if self.closed {
     return Err(MoomemError::InvalidOperation("store is closed"))
@@ -47,7 +47,9 @@ pub fn MemoryStore::recall(
     Ok(vs) => if vs.length() > 0 { vs[0] } else { [] }
     Err(_) => []
   }
-  let vector_hits = self.vector_index.search(user_id, query_vector, candidates_n)
+  let vector_hits = self.vector_index.search(
+    user_id, query_vector, candidates_n,
+  )
   let keyword_hits = self.keyword_index.search(user_id, query, candidates_n)
   let vector_ids : Array[String] = vector_hits.map(p => p.0)
   let keyword_ids : Array[String] = keyword_hits.map(p => p.0)
@@ -62,7 +64,11 @@ pub fn MemoryStore::recall(
       )
       let soft = if strong && self.vector_weight_when_lexical <= 0.05 {
         let out : Array[String] = []
-        let limit = if k < keyword_ids.length() { k } else { keyword_ids.length() }
+        let limit = if k < keyword_ids.length() {
+          k
+        } else {
+          keyword_ids.length()
+        }
         for i = 0; i < limit; i = i + 1 {
           out.push(keyword_ids[i])
         }

@@ -77,8 +77,8 @@ fn flush_word(buf : StringBuilder, tokens : Array[String]) -> Unit {
 
 ///|
 priv struct Bm25Doc {
-  tf : Map[String, Int]
-  len : Int
+  tf : Map[String, Int32]
+  len : Int32
 }
 
 ///|
@@ -88,9 +88,9 @@ struct KeywordIndex {
   // user → (entry_id → doc)
   shards : Map[String, Map[String, Bm25Doc]]
   // user → (term → 文档频率 df)
-  df : Map[String, Map[String, Int]]
+  df : Map[String, Map[String, Int32]]
   // user → 分片总词长（所有 doc len 之和）
-  total_len : Map[String, Int]
+  total_len : Map[String, Int32]
 }
 
 ///|
@@ -117,11 +117,11 @@ fn KeywordIndex::shard(
 fn KeywordIndex::df_shard(
   self : KeywordIndex,
   user_id : String,
-) -> Map[String, Int] {
+) -> Map[String, Int32] {
   match self.df.get(user_id) {
     Some(m) => m
     None => {
-      let m : Map[String, Int] = Map([])
+      let m : Map[String, Int32] = Map([])
       self.df.set(user_id, m)
       m
     }
@@ -132,7 +132,7 @@ fn KeywordIndex::df_shard(
 fn KeywordIndex::add_total_len(
   self : KeywordIndex,
   user_id : String,
-  delta : Int,
+  delta : Int32,
 ) -> Unit {
   let cur = match self.total_len.get(user_id) {
     Some(v) => v
@@ -171,7 +171,7 @@ fn KeywordIndex::upsert(
     None => ()
   }
   // 建新文档
-  let tf : Map[String, Int] = Map([])
+  let tf : Map[String, Int32] = Map([])
   for t in keywords {
     let cur = match tf.get(t) {
       Some(n) => n
@@ -227,7 +227,7 @@ fn KeywordIndex::remove(
 ///|
 /// 某 user 分片的条目数（wbtest 用；主路径不读 size）。
 #warnings("-unused_value")
-fn KeywordIndex::size(self : KeywordIndex, user_id : String) -> Int {
+fn KeywordIndex::size(self : KeywordIndex, user_id : String) -> Int32 {
   match self.shards.get(user_id) {
     Some(m) => m.length()
     None => 0
@@ -241,7 +241,7 @@ fn KeywordIndex::search(
   self : KeywordIndex,
   user_id : String,
   query : String,
-  k : Int,
+  k : Int32,
 ) -> Array[(String, Double)] {
   let query_terms = tokenize(query)
   if query_terms.length() == 0 {

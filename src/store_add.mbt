@@ -22,13 +22,11 @@ fn MemoryStore::extract_for_add(
 ) -> Result[AddExtractOutcome, MoomemError] {
   match self.extractor.extract(user_id, text) {
     Ok(fs) =>
-      Ok(
-        AddExtractOutcome::{
-          facts: fs,
-          extraction_failed: false,
-          degraded: false,
-        },
-      )
+      Ok(AddExtractOutcome::{
+        facts: fs,
+        extraction_failed: false,
+        degraded: false,
+      })
     Err(e) => {
       self.extraction_failures = self.extraction_failures + 1
       let failures = self.extraction_failures
@@ -43,21 +41,19 @@ fn MemoryStore::extract_for_add(
       notes.push(
         "extraction degraded to raw unstructured (failure \{failures}/\{MAX_EXTRACTION_FAILURES}): \{err_text}",
       )
-      Ok(
-        AddExtractOutcome::{
-          facts: [
-            ExtractedFact::{
-              content: text,
-              kind: Unstructured,
-              source_span: None,
-              degraded: true,
-              degrade_reason: Some(err_text),
-            },
-          ],
-          extraction_failed: true,
-          degraded: true,
-        },
-      )
+      Ok(AddExtractOutcome::{
+        facts: [
+          ExtractedFact::{
+            content: text,
+            kind: Unstructured,
+            source_span: None,
+            degraded: true,
+            degrade_reason: Some(err_text),
+          },
+        ],
+        extraction_failed: true,
+        degraded: true,
+      })
     }
   }
 }
@@ -158,11 +154,12 @@ fn MemoryStore::collect_conflict_candidates(
       }
     }
   }
-  for pair in self.keyword_index.search(
-    user_id,
-    content,
-    self.conflict_candidates,
-  ) {
+  for
+    pair in self.keyword_index.search(
+      user_id,
+      content,
+      self.conflict_candidates,
+    ) {
     if !candidate_ids.contains(pair.0) {
       candidate_ids.push(pair.0)
     }
@@ -251,7 +248,7 @@ fn MemoryStore::apply_conflict_verdicts(
   entry : MemoryEntry,
   verdicts : Array[ConflictVerdict],
   notes : Array[String],
-) -> Int {
+) -> Int32 {
   let mut superseded = 0
   let id = entry.id
   for v in verdicts {
@@ -272,9 +269,7 @@ fn MemoryStore::apply_conflict_verdicts(
       Coexist => {
         entry.metadata.set("conflict_decision", Json::string("coexist"))
         entry.metadata.set("conflict_with", Json::string(v.existing.id))
-        notes.push(
-          "coexists with \{v.existing.id} (\"\{v.existing.content}\")",
-        )
+        notes.push("coexists with \{v.existing.id} (\"\{v.existing.content}\")")
       }
       Ignore => ()
     }
@@ -286,8 +281,8 @@ fn MemoryStore::apply_conflict_verdicts(
 /// 有状态变更才落盘。
 fn MemoryStore::flush_after_add_mutation(
   self : MemoryStore,
-  inserted : Int,
-  superseded : Int,
+  inserted : Int32,
+  superseded : Int32,
 ) -> Result[Unit, MoomemError] {
   if inserted > 0 || superseded > 0 {
     self.flush()
@@ -355,20 +350,12 @@ pub fn MemoryStore::add(
       fact.content,
       vec,
     )
-    let (verdicts, judge_degraded) = self.judge_for_add(
-      fact,
-      candidates,
-      notes,
-    )
+    let (verdicts, judge_degraded) = self.judge_for_add(fact, candidates, notes)
     if judge_degraded {
       degraded = true
     }
     let entry = self.insert_fact_entry(
-      user_id,
-      fact,
-      vec,
-      extraction_degraded_flag,
-      embedding_failed,
+      user_id, fact, vec, extraction_degraded_flag, embedding_failed,
     )
     inserted = inserted + 1
     superseded = superseded +

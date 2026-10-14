@@ -38,11 +38,7 @@ test "RawExtractor: raw passthrough with kind=unstructured" {
     spanned.to_string(),
     content="{content: 花生, kind: Preference, source_span: Some(0:2)}",
   )
-  let bare = @src.ExtractedFact::{
-    ..spanned,
-    kind: Event,
-    source_span: None,
-  }
+  let bare = @src.ExtractedFact::{ ..spanned, kind: Event, source_span: None, }
   inspect(
     bare.to_string(),
     content="{content: 花生, kind: Event, source_span: None}",

@@ -5,7 +5,7 @@
 ///|
 /// 归一化内容（去首尾空白 + 小写 + 主语前缀/尾标点）的内容指纹（FNV-1a）。
 /// Package-private; host path goes through MemoryStore::add dedup.
-fn content_fingerprint(content : String) -> Int {
+fn content_fingerprint(content : String) -> Int32 {
   fnv1a(normalize_content(content))
 }
 
@@ -69,7 +69,7 @@ fn strip_trailing_punct(s : String) -> String {
 /// supersede / forget 时同步摘除。
 /// Package-private (abstract): host API is MemoryStore only.
 struct DedupIndex {
-  by_user : Map[String, Map[Int, String]]
+  by_user : Map[String, Map[Int32, String]]
 }
 
 ///|
@@ -102,7 +102,7 @@ fn DedupIndex::register(
   let fp_map = match self.by_user.get(user_id) {
     Some(m) => m
     None => {
-      let m : Map[Int, String] = Map([])
+      let m : Map[Int32, String] = Map([])
       self.by_user.set(user_id, m)
       m
     }

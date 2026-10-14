@@ -59,17 +59,15 @@ pub impl Extractor for RawExtractor with fn extract(_, _, text) {
   if is_blank_text(text) {
     return Ok([])
   }
-  Ok(
-    [
-      ExtractedFact::{
-        content: text,
-        kind: Unstructured,
-        source_span: None,
-        degraded: false,
-        degrade_reason: None,
-      },
-    ],
-  )
+  Ok([
+    ExtractedFact::{
+      content: text,
+      kind: Unstructured,
+      source_span: None,
+      degraded: false,
+      degrade_reason: None,
+    },
+  ])
 }
 
 ///|

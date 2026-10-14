@@ -59,7 +59,7 @@ pub struct SimilarityJudge {
 pub fn SimilarityJudge::new(
   threshold : Double,
   embedder : &Embedder,
-  coexist_band? : Double = COEXIST_BAND,
+  coexist_band~ : Double = COEXIST_BAND,
 ) -> SimilarityJudge {
   SimilarityJudge::{ threshold, embedder, coexist_band, }
 }

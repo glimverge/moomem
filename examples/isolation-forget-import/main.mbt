@@ -6,11 +6,21 @@
 ///|
 fn reset_dir(dir : String) -> Unit {
   if @fs.path_exists(dir) {
-    @fs.remove_file("\{dir}/moomem/slot0.jsonl") catch { _ => () }
-    @fs.remove_file("\{dir}/moomem/slot1.jsonl") catch { _ => () }
-    @fs.remove_file("\{dir}/moomem/head") catch { _ => () }
-    @fs.remove_dir("\{dir}/moomem") catch { _ => () }
-    @fs.remove_dir(dir) catch { _ => () }
+    @fs.remove_file("\{dir}/moomem/slot0.jsonl") catch {
+      _ => ()
+    }
+    @fs.remove_file("\{dir}/moomem/slot1.jsonl") catch {
+      _ => ()
+    }
+    @fs.remove_file("\{dir}/moomem/head") catch {
+      _ => ()
+    }
+    @fs.remove_dir("\{dir}/moomem") catch {
+      _ => ()
+    }
+    @fs.remove_dir(dir) catch {
+      _ => ()
+    }
   }
 }
 
@@ -26,7 +36,11 @@ fn open_store(dir : String) -> @src.MemoryStore {
 }
 
 ///|
-fn print_recall(store : @src.MemoryStore, user_id : String, query : String) -> Unit {
+fn print_recall(
+  store : @src.MemoryStore,
+  user_id : String,
+  query : String,
+) -> Unit {
   println("[recall] \{user_id} / \{query}")
   match store.recall(user_id, query, top_k=3) {
     Ok(hits) => {
@@ -49,7 +63,9 @@ fn print_recall(store : @src.MemoryStore, user_id : String, query : String) -> U
 
 ///|
 fn main {
-  println("=== isolation-forget-import  用户隔离 / forget / export_jsonl / import_jsonl ===")
+  println(
+    "=== isolation-forget-import  用户隔离 / forget / export_jsonl / import_jsonl ===",
+  )
   println("")
   let source_dir = "/tmp/moomem-demo-isolation-forget-import"
   let copy_dir = "/tmp/moomem-demo-isolation-forget-import-copy"
@@ -135,7 +151,8 @@ fn main {
   ignore(store.close())
   let copy = open_store(copy_dir)
   match copy.import_jsonl(exported) {
-    Ok((imported, skipped)) => println("[import] imported=\{imported} skipped=\{skipped}")
+    Ok((imported, skipped)) =>
+      println("[import] imported=\{imported} skipped=\{skipped}")
     Err(e) => {
       println("import failed: \{e.message()}")
       abort("import failed")

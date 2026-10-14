@@ -225,10 +225,7 @@ fn codec_rejects(j : Json, needle : String) -> Bool {
 
 ///|
 test "codec: malformed fields and empty snapshot are rejected" {
-  inspect(
-    codec_rejects(Json::array([]), "not a JSON object"),
-    content="true",
-  )
+  inspect(codec_rejects(Json::array([]), "not a JSON object"), content="true")
   let missing_kind = codec_base_object()
   missing_kind.remove("kind")
   inspect(
@@ -249,10 +246,7 @@ test "codec: malformed fields and empty snapshot are rejected" {
   )
   let bad_meta = codec_base_object()
   bad_meta.set("metadata", Json::array([]))
-  inspect(
-    codec_rejects(Json::object(bad_meta), "metadata"),
-    content="true",
-  )
+  inspect(codec_rejects(Json::object(bad_meta), "metadata"), content="true")
   let bad_status = codec_base_object()
   bad_status.set("status", Json::string("nope"))
   inspect(
@@ -267,10 +261,7 @@ test "codec: malformed fields and empty snapshot are rejected" {
   )
   let bad_kind = codec_base_object()
   bad_kind.set("kind", Json::string("nope"))
-  inspect(
-    codec_rejects(Json::object(bad_kind), "unknown kind"),
-    content="true",
-  )
+  inspect(codec_rejects(Json::object(bad_kind), "unknown kind"), content="true")
   let kind_num = codec_base_object()
   kind_num.set("kind", Json::number(1.0))
   inspect(
@@ -304,7 +295,10 @@ test "codec: malformed fields and empty snapshot are rejected" {
   let clock_text = codec_base_object()
   clock_text.set("created_at", Json::string("1"))
   inspect(
-    codec_rejects(Json::object(clock_text), "field 'created_at' is not a number"),
+    codec_rejects(
+      Json::object(clock_text),
+      "field 'created_at' is not a number",
+    ),
     content="true",
   )
   let missing_clock = codec_base_object()
@@ -327,10 +321,7 @@ test "codec: malformed fields and empty snapshot are rejected" {
   )
   let emb_item = codec_base_object()
   emb_item.set("embedding", Json::array([Json::string("x")]))
-  inspect(
-    codec_rejects(Json::object(emb_item), "non-number"),
-    content="true",
-  )
+  inspect(codec_rejects(Json::object(emb_item), "non-number"), content="true")
   let kw_text = codec_base_object()
   kw_text.set("keywords", Json::string("nope"))
   inspect(
@@ -345,10 +336,7 @@ test "codec: malformed fields and empty snapshot are rejected" {
   )
   let kw_item = codec_base_object()
   kw_item.set("keywords", Json::array([Json::number(1.0)]))
-  inspect(
-    codec_rejects(Json::object(kw_item), "non-string"),
-    content="true",
-  )
+  inspect(codec_rejects(Json::object(kw_item), "non-string"), content="true")
   let null_ok = codec_base_object()
   let restored = match entry_from_json(Json::object(null_ok)) {
     Ok(e) => e.superseded_by == None && e.metadata.length() == 0
@@ -385,9 +373,8 @@ test "codec: malformed fields and empty snapshot are rejected" {
     _ => false
   }
   inspect(header, content="true")
-  let blank_mid = match parse_snapshot_text(
-    "{\"v\":1,\"gen\":1,\"clock\":1}\n\n{}\n",
-  ) {
+  let blank_mid = match
+    parse_snapshot_text("{\"v\":1,\"gen\":1,\"clock\":1}\n\n{}\n") {
     Err(StoreCorrupted(msg)) => msg.contains("blank entry line")
     _ => false
   }

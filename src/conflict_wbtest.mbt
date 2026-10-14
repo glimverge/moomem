@@ -76,9 +76,7 @@ test "SimilarityJudge: keyword jaccard" {
   let jac_full = keyword_jaccard("我爱北京", ["我", "爱", "北京"])
   let close = jac_full.is_close(3.0 / 7.0, absolute_tolerance=1.0e-9)
   inspect(close, content="true")
-  let jac_partial = keyword_jaccard("我爱北京", [
-    "我", "恨", "上海",
-  ])
+  let jac_partial = keyword_jaccard("我爱北京", ["我", "恨", "上海"])
   let close = jac_partial.is_close(1.0 / 9.0, absolute_tolerance=1.0e-9)
   inspect(close, content="true")
   inspect(keyword_jaccard("我爱你", ["无关词"]), content="0")
@@ -116,7 +114,7 @@ impl Embedder for ConflictEmptyEmbedder with fn dim(_) {
 
 ///|
 test "SimilarityJudge: embedder failure falls back to keyword overlap" {
-  let failing = SimilarityJudge::new(0.5, ConflictFailingEmbedder::{  })
+  let failing = SimilarityJudge::new(0.5, ConflictFailingEmbedder::{ })
   let fact : ExtractedFact = ExtractedFact::{
     content: "我爱北京",
     kind: Fact,
@@ -146,7 +144,7 @@ test "SimilarityJudge: embedder failure falls back to keyword overlap" {
   }
   inspect(verdicts.length(), content="1")
   inspect(verdicts[0].decision == Replace, content="true")
-  let empty = SimilarityJudge::new(0.5, ConflictEmptyEmbedder::{  })
+  let empty = SimilarityJudge::new(0.5, ConflictEmptyEmbedder::{ })
   let none = match empty.judge(fact, [cand]) {
     Ok(vs) => vs.length()
     Err(_) => -1

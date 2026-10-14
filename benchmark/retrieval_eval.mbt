@@ -2,14 +2,14 @@
 
 ///|
 struct RetrievalScores {
-  mut hit : Int
-  mut total : Int
+  mut hit : Int32
+  mut total : Int32
   mut mrr_sum : Double
   // category 1..4
-  cat_hit : Array[Int]
-  cat_total : Array[Int]
+  cat_hit : Array[Int32]
+  cat_total : Array[Int32]
   cat_mrr : Array[Double]
-  mut adversarial_excluded : Int
+  mut adversarial_excluded : Int32
 }
 
 ///|
@@ -32,11 +32,7 @@ fn register_prov(
   dia_id : String,
 ) -> Unit {
   match prov.get(content) {
-    Some(arr) => {
-      if !arr.contains(dia_id) {
-        arr.push(dia_id)
-      }
-    }
+    Some(arr) => if !arr.contains(dia_id) { arr.push(dia_id) }
     None => prov.set(content, [dia_id])
   }
 }
@@ -46,18 +42,17 @@ fn evidence_hit(
   hits : Array[@src.MemoryEntry],
   evidence : Array[String],
   prov : Map[String, Array[String]],
-) -> Int? {
+) -> Int32? {
   // return 1-based rank of first hit matching any evidence dia_id
   let mut rank = 1
   for h in hits {
     match prov.get(h.content) {
-      Some(dias) => {
+      Some(dias) =>
         for d in dias {
           if evidence.contains(d) {
             return Some(rank)
           }
         }
-      }
       None => ()
     }
     rank = rank + 1
@@ -68,7 +63,7 @@ fn evidence_hit(
 ///|
 fn open_retrieval_store(
   embedder : &@src.Embedder?,
-  dim : Int,
+  dim : Int32,
   backfill : @src.RecallBackfill,
 ) -> @src.MemoryStore {
   let backend : &@src.PersistenceBackend = @src.MemoryBackend::new()
@@ -110,7 +105,7 @@ fn score_retrieval(
   store : @src.MemoryStore,
   data : LocomoSubset,
   prov : Map[String, Array[String]],
-  limit : Int,
+  limit : Int32,
 ) -> RetrievalScores {
   let scores = empty_scores()
   let mut scored = 0
@@ -164,7 +159,7 @@ fn print_retrieval_block(title : String, s : RetrievalScores) -> Unit {
   println("| category | Recall@5 | MRR@5 |")
   println("|---|---|---|")
   let names = ["", "multi-hop", "temporal", "open-domain", "single-hop"]
-  for c in 1..=4 {
+  for c in 1..<=4 {
     let hit = s.cat_hit[c]
     let tot = s.cat_total[c]
     let cmrr = if tot == 0 { 0.0 } else { s.cat_mrr[c] / tot.to_double() }
@@ -180,11 +175,15 @@ fn run_retrieval_eval(
   data : LocomoSubset,
   embedder_mode : String,
   api_embedder : &@src.Embedder?,
-  api_dim : Int,
-  limit : Int,
+  api_dim : Int32,
+  limit : Int32,
 ) -> (RetrievalScores, RetrievalScores) {
-  println("note: retrieval uses NoConflictJudge so near-duplicate turns do not supersede (retrieval-only isolation).")
-  println("note: primary numbers use default BackfillRecency; NoBackfill control printed separately.")
+  println(
+    "note: retrieval uses NoConflictJudge so near-duplicate turns do not supersede (retrieval-only isolation).",
+  )
+  println(
+    "note: primary numbers use default BackfillRecency; NoBackfill control printed separately.",
+  )
   println("")
 
   // ---- hybrid ----
@@ -193,7 +192,11 @@ fn run_retrieval_eval(
   } else {
     None // HashingEmbedder default
   }
-  let hybrid_dim = if embedder_mode == "api" { api_dim } else { @src.DEFAULT_DIM }
+  let hybrid_dim = if embedder_mode == "api" {
+    api_dim
+  } else {
+    @src.DEFAULT_DIM
+  }
   let store_h = open_retrieval_store(
     hybrid_emb,
     hybrid_dim,
@@ -202,7 +205,10 @@ fn run_retrieval_eval(
   let prov_h = ingest_conversations(store_h, data)
   let hybrid = score_retrieval(store_h, data, prov_h, limit)
   ignore(store_h.close())
-  print_retrieval_block("Hybrid (embedder=\{embedder_mode}, backfill=Recency)", hybrid)
+  print_retrieval_block(
+    "Hybrid (embedder=\{embedder_mode}, backfill=Recency)",
+    hybrid,
+  )
 
   // ---- bm25 only ----
   let null_e : &@src.Embedder = NullEmbedder::{ }
@@ -214,7 +220,9 @@ fn run_retrieval_eval(
   let prov_b = ingest_conversations(store_b, data)
   let bm25 = score_retrieval(store_b, data, prov_b, limit)
   ignore(store_b.close())
-  print_retrieval_block("BM25-only baseline (NullEmbedder, backfill=Recency)", bm25)
+  print_retrieval_block(
+    "BM25-only baseline (NullEmbedder, backfill=Recency)", bm25,
+  )
 
   // comparison
   let h_r = if hybrid.total == 0 {
@@ -228,11 +236,7 @@ fn run_retrieval_eval(
     bm25.hit.to_double() / bm25.total.to_double()
   }
   let abs_delta = h_r - b_r
-  let rel = if b_r == 0.0 {
-    0.0
-  } else {
-    abs_delta / b_r
-  }
+  let rel = if b_r == 0.0 { 0.0 } else { abs_delta / b_r }
   println("### Hybrid vs BM25-only")
   println("")
   println("| | Recall@5 | abs Δ | rel Δ |")

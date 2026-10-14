@@ -11,7 +11,7 @@ pub(open) trait Embedder {
     MoomemError,
   ]
   /// 嵌入维度。
-  fn dim(self : Self) -> Int
+  fn dim(self : Self) -> Int32
 }
 
 ///|
@@ -19,12 +19,14 @@ pub(open) trait Embedder {
 /// 每 token FNV-1a 哈希到 [0, dim) 桶 → 桶内 TF 累加 → L2 归一。
 /// 确定性、离线，三后端行为一致。
 pub struct HashingEmbedder {
-  dim : Int
+  dim : Int32
 }
 
 ///|
 /// 构造 HashingEmbedder；dim 必须 > 0，否则返回 Err。
-pub fn HashingEmbedder::new(dim : Int) -> Result[HashingEmbedder, MoomemError] {
+pub fn HashingEmbedder::new(
+  dim : Int32,
+) -> Result[HashingEmbedder, MoomemError] {
   if dim <= 0 {
     return Err(
       MoomemError::EmbeddingFailure(
@@ -53,7 +55,7 @@ pub impl Embedder for HashingEmbedder with fn dim(self) {
 pub extend HashingEmbedder with Embedder::{embed, dim}
 
 ///|
-fn hashing_embed_one(text : String, dim : Int) -> Array[Double] {
+fn hashing_embed_one(text : String, dim : Int32) -> Array[Double] {
   let vector = Array::make(dim, 0.0)
   let tokens = tokenize(text)
   for token in tokens {

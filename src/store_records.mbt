@@ -12,7 +12,7 @@ pub fn MemoryStore::forget(
   self : MemoryStore,
   user_id : String,
   target : ForgetTarget,
-) -> Result[Int, MoomemError] {
+) -> Result[Int32, MoomemError] {
   if self.closed {
     return Err(MoomemError::InvalidOperation("store is closed"))
   }
@@ -100,7 +100,7 @@ pub fn MemoryStore::export_jsonl(
 pub fn MemoryStore::import_jsonl(
   self : MemoryStore,
   jsonl : String,
-) -> Result[(Int, Int), MoomemError] {
+) -> Result[(Int32, Int32), MoomemError] {
   if self.closed {
     return Err(MoomemError::InvalidOperation("store is closed"))
   }

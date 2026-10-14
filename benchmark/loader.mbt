@@ -9,7 +9,7 @@ struct LocomoTurn {
 ///|
 struct LocomoQA {
   question : String
-  category : Int
+  category : Int32
   evidence : Array[String]
 }
 
@@ -48,7 +48,7 @@ fn json_str(j : Json) -> String? {
 }
 
 ///|
-fn json_num_int(j : Json) -> Int? {
+fn json_num_int(j : Json) -> Int32? {
   if j is Number(n, ..) {
     Some(n.to_int())
   } else {

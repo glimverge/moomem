@@ -6,11 +6,21 @@
 ///|
 fn reset_dir(dir : String) -> Unit {
   if @fs.path_exists(dir) {
-    @fs.remove_file("\{dir}/moomem/slot0.jsonl") catch { _ => () }
-    @fs.remove_file("\{dir}/moomem/slot1.jsonl") catch { _ => () }
-    @fs.remove_file("\{dir}/moomem/head") catch { _ => () }
-    @fs.remove_dir("\{dir}/moomem") catch { _ => () }
-    @fs.remove_dir(dir) catch { _ => () }
+    @fs.remove_file("\{dir}/moomem/slot0.jsonl") catch {
+      _ => ()
+    }
+    @fs.remove_file("\{dir}/moomem/slot1.jsonl") catch {
+      _ => ()
+    }
+    @fs.remove_file("\{dir}/moomem/head") catch {
+      _ => ()
+    }
+    @fs.remove_dir("\{dir}/moomem") catch {
+      _ => ()
+    }
+    @fs.remove_dir(dir) catch {
+      _ => ()
+    }
   }
 }
 
@@ -62,7 +72,9 @@ fn main {
   println(
     "=== default-reopen  moomem \{@src.MOOMEM_VERSION}  snapshot \{@src.SNAPSHOT_VERSION} ===",
   )
-  println("缺省 Config：RawExtractor + HashingEmbedder + SimilarityJudge + FsBackend")
+  println(
+    "缺省 Config：RawExtractor + HashingEmbedder + SimilarityJudge + FsBackend",
+  )
   println("")
   let dir = "/tmp/moomem-demo-default-reopen"
   reset_dir(dir)

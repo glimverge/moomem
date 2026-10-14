@@ -22,9 +22,7 @@ fn main {
   let fixture = resolve_fixture_path(opts)
   println("fixture: \{fixture}")
   let data = load_locomo_subset(fixture)
-  println(
-    "loaded conversations=\{data.conversations.length()}",
-  )
+  println("loaded conversations=\{data.conversations.length()}")
   println("")
 
   // ---- retrieval (hashing embedder only; host supplies a real Embedder) ----

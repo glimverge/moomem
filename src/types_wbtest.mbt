@@ -51,10 +51,7 @@ test "Show and is_recallable cover every status and kind" {
     summary.to_string(),
     content="{extracted: 2, inserted: 1, duplicates: 1, superseded: 0, degraded: true, notes: [first, second]}",
   )
-  let empty_notes = AddSummary::{
-    ..summary,
-    notes: [],
-  }
+  let empty_notes = AddSummary::{ ..summary, notes: [], }
   inspect(empty_notes.to_string().contains("notes: []"), content="true")
   let fresh = StoreStats::{
     total: 0,
@@ -73,5 +70,8 @@ test "Show and is_recallable cover every status and kind" {
     last_write_at: Some(7L),
     unstructured: 1,
   }
-  inspect(written.to_string().contains("last_write_at: Some(7)"), content="true")
+  inspect(
+    written.to_string().contains("last_write_at: Some(7)"),
+    content="true",
+  )
 }

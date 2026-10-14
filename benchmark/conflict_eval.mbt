@@ -14,7 +14,10 @@ fn open_conflict_store() -> @src.MemoryStore {
 }
 
 ///|
-fn pair_similarity(old_text : String, new_text : String) -> (Double, Double, Double) {
+fn pair_similarity(
+  old_text : String,
+  new_text : String,
+) -> (Double, Double, Double) {
   let emb = match @src.HashingEmbedder::new(@src.DEFAULT_DIM) {
     Ok(e) => e
     Err(e) => fail("HashingEmbedder::new: \{e.message()}")
@@ -23,18 +26,16 @@ fn pair_similarity(old_text : String, new_text : String) -> (Double, Double, Dou
     Ok(vs) => vs
     Err(e) => fail("embed conflict pair: \{e.message()}")
   }
-  let cos = if vecs.length() >= 2 {
-    eval_cosine(vecs[0], vecs[1])
-  } else {
-    0.0
-  }
+  let cos = if vecs.length() >= 2 { eval_cosine(vecs[0], vecs[1]) } else { 0.0 }
   let jac = eval_jaccard(old_text, eval_tokenize(new_text))
   let mx = if cos >= jac { cos } else { jac }
   (cos, jac, mx)
 }
 
 ///|
-fn evaluate_near_duplicate(pairs : Array[ConflictPairCase]) -> (Int, Int, Double) {
+fn evaluate_near_duplicate(
+  pairs : Array[ConflictPairCase],
+) -> (Int32, Int32, Double) {
   let store = open_conflict_store()
   let mut ok = 0
   let mut min_sim = 2.0

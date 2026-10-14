@@ -10,7 +10,11 @@
 struct AdversarialAlwaysReplaceJudge {}
 
 ///|
-impl ConflictJudge for AdversarialAlwaysReplaceJudge with fn judge(_, _, candidates) {
+impl ConflictJudge for AdversarialAlwaysReplaceJudge with fn judge(
+  _,
+  _,
+  candidates,
+) {
   Ok(
     candidates.map(c => @src.ConflictVerdict::{
       existing: c,
@@ -47,7 +51,7 @@ impl Embedder for AdversarialOneHotEmbedder with fn dim(_self) {
 struct AdversarialUniqueEmbedder {}
 
 ///|
-fn adversarial_trailing_number(text : String) -> Int {
+fn adversarial_trailing_number(text : String) -> Int32 {
   let mut acc = 0
   for c in text.iter() {
     if c >= '0' && c <= '9' {
@@ -104,7 +108,7 @@ fn adversarial_open_default(
 
 ///|
 /// 两位零填充序号(01..99)
-fn adversarial_padded_number(n : Int) -> String {
+fn adversarial_padded_number(n : Int32) -> String {
   if n < 10 {
     "0\{n}"
   } else {
@@ -120,8 +124,8 @@ fn adversarial_entry_line(
   content : String,
   embedding : Array[Double],
   keywords : Array[String],
-  created_at : Int,
-  seq : Int,
+  created_at : Int32,
+  seq : Int32,
 ) -> String {
   let obj : Map[String, Json] = Map([])
   obj.set("id", Json::string(id))
@@ -267,7 +271,8 @@ test "55+ entries BM25/vector correctness, top_k cap 50, isolation at scale" {
   let backend = @src.MemoryBackend::new()
   // 注入唯一维度嵌入器,保证 55 条互不相似(全部保持 active)
   let embedder : &@src.Embedder = AdversarialUniqueEmbedder::{ }
-  let store = match adversarial_open(backend, None, None, None, Some(embedder)) {
+  let store = match
+    adversarial_open(backend, None, None, None, Some(embedder)) {
     Ok(s) => s
     Err(e) => {
       inspect(e.message(), content="SHOULD NOT REACH")
@@ -281,7 +286,8 @@ test "55+ entries BM25/vector correctness, top_k cap 50, isolation at scale" {
       Err(_) => false
     }
     inspect(ok1, content="true")
-    let ok2 = match store.add("qa-many2", "册\{adversarial_padded_number(i)}") {
+    let ok2 = match
+      store.add("qa-many2", "册\{adversarial_padded_number(i)}") {
       Ok(s) => s.inserted == 1
       Err(_) => false
     }
@@ -298,7 +304,8 @@ test "55+ entries BM25/vector correctness, top_k cap 50, isolation at scale" {
   inspect(st.active, content="110")
   // 精确命中:唯一 token "17" 应让 17 号条目排第一(top_k=1 无补齐干扰)
   for probe in [17, 42, 55] {
-    let hit = match store.recall("qa-many", "\{adversarial_padded_number(probe)}", top_k=1) {
+    let hit = match
+      store.recall("qa-many", "\{adversarial_padded_number(probe)}", top_k=1) {
       Ok(r) => r
       Err(_) => {
         inspect("recall failed", content="SHOULD NOT REACH")
@@ -361,7 +368,8 @@ test "supersede chain A->B->C; restore keeps superseded invisible" {
   let backend = @src.MemoryBackend::new()
   let embedder : &@src.Embedder = AdversarialOneHotEmbedder::{ }
   let judge : &@src.ConflictJudge = AdversarialAlwaysReplaceJudge::{ }
-  let store = match adversarial_open(backend, Some(judge), None, None, Some(embedder)) {
+  let store = match
+    adversarial_open(backend, Some(judge), None, None, Some(embedder)) {
     Ok(s) => s
     Err(e) => {
       inspect(e.message(), content="SHOULD NOT REACH")
@@ -447,7 +455,8 @@ test "supersede chain A->B->C; restore keeps superseded invisible" {
   inspect(st.active, content="1")
   ignore(store.close())
   // "进程重启":superseded 不得复活
-  let store2 = match adversarial_open(backend, None, None, None, Some(embedder)) {
+  let store2 = match
+    adversarial_open(backend, None, None, None, Some(embedder)) {
     Ok(s) => s
     Err(e) => {
       inspect(e.message(), content="SHOULD NOT REACH")
@@ -744,7 +753,7 @@ test "zero-hit query returns empty even when user has entries" {
 ///|
 test "config validation rejects illegal values" {
   let backend : &@src.PersistenceBackend = @src.MemoryBackend::new()
-  let mk_cfg = (dim : Int, rrf_k : Int, rc : Int, thr : Double) => {
+  let mk_cfg = (dim : Int32, rrf_k : Int32, rc : Int32, thr : Double) => {
     let cfg : @src.Config = @src.Config::{
       ..@src.Config::default(),
       persistence: Some(backend),
@@ -768,7 +777,10 @@ test "config validation rejects illegal values" {
   inspect(rejected(mk_cfg(256, 60, 0, 1.01)), content="true")
   // 边界值 1.0 合法
   let ok_at_one = match
-    @src.MemoryStore::open("memory://adversarial", config=mk_cfg(256, 60, 0, 1.0)) {
+    @src.MemoryStore::open(
+      "memory://adversarial",
+      config=mk_cfg(256, 60, 0, 1.0),
+    ) {
     Ok(_) => true
     Err(_) => false
   }
@@ -997,7 +1009,10 @@ test "import tolerates corrupted lines; dim-mismatched entry keyword-recallable"
     "qa-io",
     "维度锚点记忆",
     [0.5, 0.5, 0.5],
-    ["维", "度", "锚", "点", "记", "忆", "维度", "度锚", "锚点", "点记", "记忆"],
+    [
+      "维", "度", "锚", "点", "记", "忆", "维度", "度锚", "锚点", "点记",
+      "记忆",
+    ],
     100,
     100,
   )
@@ -1009,8 +1024,7 @@ test "import tolerates corrupted lines; dim-mismatched entry keyword-recallable"
       return
     }
   }
-  let (imported2, skipped2) = match
-    store2.import_jsonl(odd) {
+  let (imported2, skipped2) = match store2.import_jsonl(odd) {
     Ok(pair) => pair
     Err(e) => {
       inspect(e.message(), content="SHOULD NOT REACH")

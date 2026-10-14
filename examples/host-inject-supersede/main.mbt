@@ -18,7 +18,7 @@ pub impl @src.Embedder for ResidenceEmbedder with fn dim(_self) {
 }
 
 ///|
-pub extend ResidenceEmbedder with @src.Embedder::{ embed, dim }
+pub extend ResidenceEmbedder with @src.Embedder::{embed, dim}
 
 ///|
 fn residence_vector(text : String) -> Array[Double] {
@@ -56,16 +56,26 @@ pub impl @src.Extractor for ResidenceExtractor with fn mode(_) {
 }
 
 ///|
-pub extend ResidenceExtractor with @src.Extractor::{ extract, mode }
+pub extend ResidenceExtractor with @src.Extractor::{extract, mode}
 
 ///|
 fn reset_dir(dir : String) -> Unit {
   if @fs.path_exists(dir) {
-    @fs.remove_file("\{dir}/moomem/slot0.jsonl") catch { _ => () }
-    @fs.remove_file("\{dir}/moomem/slot1.jsonl") catch { _ => () }
-    @fs.remove_file("\{dir}/moomem/head") catch { _ => () }
-    @fs.remove_dir("\{dir}/moomem") catch { _ => () }
-    @fs.remove_dir(dir) catch { _ => () }
+    @fs.remove_file("\{dir}/moomem/slot0.jsonl") catch {
+      _ => ()
+    }
+    @fs.remove_file("\{dir}/moomem/slot1.jsonl") catch {
+      _ => ()
+    }
+    @fs.remove_file("\{dir}/moomem/head") catch {
+      _ => ()
+    }
+    @fs.remove_dir("\{dir}/moomem") catch {
+      _ => ()
+    }
+    @fs.remove_dir(dir) catch {
+      _ => ()
+    }
   }
 }
 
@@ -91,18 +101,20 @@ fn print_entries(store : @src.MemoryStore) -> Unit {
 
 ///|
 fn main {
-  println("=== host-inject-supersede  宿主 Embedder + Extractor，缺省 SimilarityJudge ===")
+  println(
+    "=== host-inject-supersede  宿主 Embedder + Extractor，缺省 SimilarityJudge ===",
+  )
   println("")
   let dir = "/tmp/moomem-demo-host-inject-supersede"
   reset_dir(dir)
-  let embedder : &@src.Embedder = ResidenceEmbedder::{  }
-  let extractor : &@src.Extractor = ResidenceExtractor::{  }
+  let embedder : &@src.Embedder = ResidenceEmbedder::{ }
+  let extractor : &@src.Extractor = ResidenceExtractor::{ }
   let config : @src.Config = @src.Config::{
     ..@src.Config::default(),
     embedder: Some(embedder),
     extractor: Some(extractor),
   }
-  let store = match @src.MemoryStore::open(dir, config=config) {
+  let store = match @src.MemoryStore::open(dir, config~) {
     Ok(opened) => opened
     Err(e) => {
       println("open failed: \{e.message()}")
@@ -111,7 +123,8 @@ fn main {
   }
   println("[add] 用户住北京")
   match store.add("user-42", "用户住北京") {
-    Ok(summary) => println("  inserted=\{summary.inserted} superseded=\{summary.superseded}")
+    Ok(summary) =>
+      println("  inserted=\{summary.inserted} superseded=\{summary.superseded}")
     Err(e) => {
       println("  error: \{e.message()}")
       abort("add failed")

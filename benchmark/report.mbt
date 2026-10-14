@@ -5,19 +5,19 @@
 struct ExtractionReport {
   skipped : Bool
   precision : Double
-  hit : Int
-  denom : Int
+  hit : Int32
+  denom : Int32
   model : String
   /// Gold cases actually scored this run (after --extract-limit).
-  cases_scored : Int
+  cases_scored : Int32
   /// Full gold set size (100); 0 when skipped.
-  cases_total : Int
+  cases_total : Int32
 }
 
 ///|
 struct ConflictReport {
-  ok : Int
-  total : Int
+  ok : Int32
+  total : Int32
   rate : Double
 }
 
@@ -26,7 +26,7 @@ struct ModeReport {
   mode : String // offline | api | live
   embedder : String
   model : String // "" if none
-  dim : Int // 0 if none / n_a
+  dim : Int32 // 0 if none / n_a
   extractor_model : String // "" if none
   hybrid_recall : Double
   hybrid_mrr : Double
@@ -35,8 +35,8 @@ struct ModeReport {
   vs_bm25_pct : Double
   target_15pct : String // met | missed | n_a
   conflict : ConflictReport
-  cross_user_leaks : Int
-  reopen_ok : Int
+  cross_user_leaks : Int32
+  reopen_ok : Int32
   extraction : ExtractionReport
   status : String // pass | fail
   gate_isolation : String
@@ -63,7 +63,7 @@ fn json_opt_string(s : String) -> Json {
 }
 
 ///|
-fn json_opt_int(v : Int, present : Bool) -> Json {
+fn json_opt_int(v : Int32, present : Bool) -> Json {
   if present {
     Json::number(v.to_double())
   } else {
@@ -193,20 +193,20 @@ fn vs_bm25_pct(hybrid_r : Double, bm25_r : Double) -> Double {
   if bm25_r == 0.0 {
     0.0
   } else {
-    ((hybrid_r - bm25_r) / bm25_r) * 100.0
+    (hybrid_r - bm25_r) / bm25_r * 100.0
   }
 }
 
 ///|
-fn target_15pct_label(embedder : String, hybrid_r : Double, bm25_r : Double) -> String {
+fn target_15pct_label(
+  embedder : String,
+  hybrid_r : Double,
+  bm25_r : Double,
+) -> String {
   if embedder != "api" {
     return "n_a"
   }
-  let rel = if bm25_r == 0.0 {
-    0.0
-  } else {
-    (hybrid_r - bm25_r) / bm25_r
-  }
+  let rel = if bm25_r == 0.0 { 0.0 } else { (hybrid_r - bm25_r) / bm25_r }
   if rel >= 0.15 {
     "met"
   } else {

@@ -74,7 +74,7 @@ pub(all) struct MemoryEntry {
   /// 覆盖者 id（状态机：Active→Superseded 时写入）
   mut superseded_by : String?
   /// 逻辑序号，持久化恢复计数器，永不复用
-  seq : Int
+  seq : Int32
   /// 痕迹元数据（extractor / degraded / conflict_decision 等）
   metadata : Map[String, Json]
 }
@@ -130,13 +130,13 @@ pub extend ForgetTarget with Show::{to_string, output}
 /// add 的返回摘要：提取条数、入库条数、重复、覆盖与降级。
 pub struct AddSummary {
   /// 提取器产出的事实条数
-  extracted : Int
+  extracted : Int32
   /// 实际新入库条数
-  inserted : Int
+  inserted : Int32
   /// 与既有条目内容指纹重复而跳过的条数
-  duplicates : Int
+  duplicates : Int32
   /// 被 Replace 裁决覆盖（置 Superseded）的旧条目数
-  superseded : Int
+  superseded : Int32
   /// 本次 add 是否发生降级（提取失败→raw / 嵌入失败→仅 BM25）
   degraded : Bool
   /// 人类可读备注（重复 id、冲突判定、降级原因等）
@@ -157,18 +157,18 @@ pub extend AddSummary with Show::{to_string, output}
 ///|
 /// stats 的返回结构。
 pub struct StoreStats {
-  total : Int
-  active : Int
-  superseded : Int
-  deleted : Int
+  total : Int32
+  active : Int32
+  superseded : Int32
+  deleted : Int32
   /// status == Unstructured 的条目数（降级入库，待重提取）
-  unstructured : Int
+  unstructured : Int32
   /// 快照逻辑字节数（MemoryBackend 下为逻辑值）
   bytes_on_disk : Int64
   /// 最近一次成功落盘的逻辑时钟；从未写盘为 None
   last_write_at : Int64?
   /// 启动恢复时截断的尾部半行数
-  truncated_recovered : Int
+  truncated_recovered : Int32
   /// 当前提取器模式（"raw" | "llm"）
   extractor_mode : String
 }
@@ -239,15 +239,15 @@ pub(all) struct Config {
   /// None → LogicalClock（从快照 header.clock 续接）
   clock : &Clock?
   /// 嵌入维度，缺省 256
-  dim : Int
+  dim : Int32
   /// RRF 融合常数 k，缺省 60
-  rrf_k : Int
+  rrf_k : Int32
   /// 每路召回候选数；0 = 自动（min(top_k*2, 50)）
-  recall_candidates : Int
+  recall_candidates : Int32
   /// 冲突判定 Replace 阈值，缺省 0.82
   supersede_threshold : Double
   /// add 链路冲突检测每路候选窗口，缺省 8（合法域 >= 1）
-  conflict_candidates : Int
+  conflict_candidates : Int32
   /// SimilarityJudge 的 Coexist 下界间距，缺省 0.15（合法域 [0, 1)）
   coexist_band : Double
   /// recall 补齐策略，缺省 BackfillRecency
@@ -293,26 +293,26 @@ pub fn Config::default() -> Config {
 // ---------------------------------------------------------------------------
 
 ///|
-pub const DEFAULT_DIM : Int = 256
+pub const DEFAULT_DIM : Int32 = 256
 
 ///|
-pub const DEFAULT_RRF_K : Int = 60
+pub const DEFAULT_RRF_K : Int32 = 60
 
 ///|
 pub const DEFAULT_SUPERSEDE_THRESHOLD : Double = 0.82
 
 ///|
-pub const DEFAULT_RECALL_TOP_K : Int = 5
+pub const DEFAULT_RECALL_TOP_K : Int32 = 5
 
 ///|
-pub const MAX_RECALL_TOP_K : Int = 50
+pub const MAX_RECALL_TOP_K : Int32 = 50
 
 ///|
-pub const MAX_USER_ID_LEN : Int = 64
+pub const MAX_USER_ID_LEN : Int32 = 64
 
 ///|
 /// add 链路冲突检测的每路候选窗口
-pub const CONFLICT_CANDIDATES : Int = 8
+pub const CONFLICT_CANDIDATES : Int32 = 8
 
 ///|
 /// SimilarityJudge 的 Coexist 下界间距：[threshold-0.15, threshold)
@@ -320,7 +320,7 @@ pub const COEXIST_BAND : Double = 0.15
 
 ///|
 /// 提取器连续失败降级上限
-pub const MAX_EXTRACTION_FAILURES : Int = 3
+pub const MAX_EXTRACTION_FAILURES : Int32 = 3
 
 ///|
 /// adaptive 词法强判定：BM25 top1 下限（独立开发集校准；偏低以覆盖短轮次）
@@ -414,8 +414,8 @@ fn show_int64_opt(v : Int64?) -> String {
 
 ///|
 /// FNV-1a 32bit 稳定哈希（三后端确定性一致，用于嵌入分桶与内容指纹）。
-fn fnv1a(s : String) -> Int {
-  let mut h : Int = 0x0811c9dc5
+fn fnv1a(s : String) -> Int32 {
+  let mut h : Int32 = 0x0811c9dc5
   for c in s.iter() {
     h = (h ^ c.to_int()) * 0x01000193
   }
@@ -424,7 +424,7 @@ fn fnv1a(s : String) -> Int {
 
 ///|
 /// 非负整数的十六进制小写串，左侧补零至 width 位。
-fn to_hex_padded(value : Int, width : Int) -> String {
+fn to_hex_padded(value : Int32, width : Int32) -> String {
   let mut s = value.to_string(radix=16)
   while s.length() < width {
     s = "0" + s
@@ -436,7 +436,11 @@ fn to_hex_padded(value : Int, width : Int) -> String {
 /// 条目 id："{seq 12位hex}-{rand 4 hex}"。
 /// rand 部分由 (content, seq, created_at) 哈希派生——确定性且三后端一致，
 /// 测试可精确断言；seq 保证全局唯一与恢复续接。
-fn generate_entry_id(seq : Int, content : String, created_at : Int64) -> String {
+fn generate_entry_id(
+  seq : Int32,
+  content : String,
+  created_at : Int64,
+) -> String {
   let seq_hex = to_hex_padded(seq, 12)
   let seed = fnv1a("\{content}:\{seq}:\{created_at.to_string()}") & 0xFFFF
   let rand_hex = to_hex_padded(seed, 4)

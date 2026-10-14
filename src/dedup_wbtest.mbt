@@ -32,5 +32,8 @@ test "DedupIndex: subject-prefix / trailing-punct normalize as same fingerprint"
     content="true",
   )
   // 不同槽位值不应误命中
-  inspect(dedup.lookup("user-a", "我的工号是 B2048") == None, content="true")
+  inspect(
+    dedup.lookup("user-a", "我的工号是 B2048") == None,
+    content="true",
+  )
 }

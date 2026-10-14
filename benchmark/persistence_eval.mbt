@@ -1,7 +1,7 @@
 // Persistence reopen consistency + cross-user isolation aggregate checks.
 
 ///|
-fn run_isolation_eval(data : LocomoSubset) -> Int {
+fn run_isolation_eval(data : LocomoSubset) -> Int32 {
   let backend : &@src.PersistenceBackend = @src.MemoryBackend::new()
   let judge : &@src.ConflictJudge = NoConflictJudge::{ }
   let cfg = @src.Config::{
@@ -66,22 +66,30 @@ fn run_isolation_eval(data : LocomoSubset) -> Int {
 ///|
 fn cleanup_dir(dir : String) -> Unit {
   if @fs.path_exists(dir) {
-    @fs.remove_file("\{dir}/moomem/slot0.jsonl") catch { _ => () }
-    @fs.remove_file("\{dir}/moomem/slot1.jsonl") catch { _ => () }
-    @fs.remove_file("\{dir}/moomem/head") catch { _ => () }
-    @fs.remove_dir("\{dir}/moomem") catch { _ => () }
-    @fs.remove_dir(dir) catch { _ => () }
+    @fs.remove_file("\{dir}/moomem/slot0.jsonl") catch {
+      _ => ()
+    }
+    @fs.remove_file("\{dir}/moomem/slot1.jsonl") catch {
+      _ => ()
+    }
+    @fs.remove_file("\{dir}/moomem/head") catch {
+      _ => ()
+    }
+    @fs.remove_dir("\{dir}/moomem") catch {
+      _ => ()
+    }
+    @fs.remove_dir(dir) catch {
+      _ => ()
+    }
   }
 }
 
 ///|
-fn run_persistence_eval() -> Int {
+fn run_persistence_eval() -> Int32 {
   let dir = "tmp_moomem_locomo_persist"
   cleanup_dir(dir)
   let facts = [
-    "我对花生过敏",
-    "我住在北京海淀区",
-    "偏好清淡粤菜",
+    "我对花生过敏", "我住在北京海淀区", "偏好清淡粤菜",
   ]
   let store1 = match @src.MemoryStore::open(dir) {
     Ok(s) => s

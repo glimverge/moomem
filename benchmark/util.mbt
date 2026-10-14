@@ -24,7 +24,7 @@ fn format_mrr(v : Double) -> String {
 }
 
 ///|
-fn format_ratio(num : Int, den : Int) -> String {
+fn format_ratio(num : Int32, den : Int32) -> String {
   if den == 0 {
     "n/a"
   } else {
@@ -43,8 +43,8 @@ fn format_pct(delta : Double) -> String {
 }
 
 ///|
-fn parse_int_arg(raw : String, flag : String) -> Int {
-  let v : Int = @string.parse_int(raw) catch {
+fn parse_int_arg(raw : String, flag : String) -> Int32 {
+  let v : Int32 = @string.parse_int(raw) catch {
     _ => fail("\{flag} expects integer, got \{raw}")
   }
   v
@@ -55,8 +55,8 @@ struct CliOpts {
   fixture : String
   embedder : String // hashing | api
   live : Bool
-  limit : Int // 0 = no limit (retrieval QA)
-  extract_limit : Int // 0 = no limit (extraction gold cases); archive uses 20
+  limit : Int32 // 0 = no limit (retrieval QA)
+  extract_limit : Int32 // 0 = no limit (extraction gold cases); archive uses 20
   report : String // "" = no report file
   report_only_exit : Bool // write report then exit 0 even if gates fail
   help : Bool
@@ -169,7 +169,9 @@ fn print_help() -> Unit {
   println("                       (or env MOOMEM_LOCOMO_EXTRACT_LIMIT)")
   println("  --report <path>      write machine-readable JSON for this mode")
   println("                       (or env MOOMEM_LOCOMO_REPORT)")
-  println("  --report-only-exit   after writing report, exit 0 even if gates fail")
+  println(
+    "  --report-only-exit   after writing report, exit 0 even if gates fail",
+  )
   println("                       (archive use; push offline keeps hard fail)")
   println("  --help")
 }
@@ -197,11 +199,7 @@ fn read_text_file(path : String) -> String {
     Some(d) => d
     None => "(unknown)"
   }
-  let abs = if path.has_prefix("/") {
-    path
-  } else {
-    "\{cwd}/\{path}"
-  }
+  let abs = if path.has_prefix("/") { path } else { "\{cwd}/\{path}" }
   @fs.read_file_to_string(abs) catch {
     e => {
       let detail = match e {

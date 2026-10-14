@@ -33,7 +33,7 @@ pub(open) trait PersistenceBackend {
 pub struct MemoryBackend {
   mut snapshot : String?
   /// 测试注入：写盘时只写入前 N 个字符（模拟进程被杀的半写状态）；None = 完整写入
-  mut simulate_partial_write : Int?
+  mut simulate_partial_write : Int32?
   /// 测试注入：下一次 save 直接失败（模拟 IO 错误）
   mut fail_next_save : Bool
   /// 累计写入字节数（stats 的逻辑值来源）
@@ -92,17 +92,14 @@ fn MemoryBackend::peek(self : MemoryBackend) -> String? {
 /// 测试注入：模拟进程被杀的半写状态（save 只写入前 n 个字符）；None = 完整写入。
 fn MemoryBackend::set_simulate_partial_write(
   self : MemoryBackend,
-  n : Int?,
+  n : Int32?,
 ) -> Unit {
   self.simulate_partial_write = n
 }
 
 ///|
 /// 测试注入：下一次 save 直接失败（模拟 IO 错误）。
-fn MemoryBackend::set_fail_next_save(
-  self : MemoryBackend,
-  fail : Bool,
-) -> Unit {
+fn MemoryBackend::set_fail_next_save(self : MemoryBackend, fail : Bool) -> Unit {
   self.fail_next_save = fail
 }
 
@@ -117,7 +114,7 @@ pub struct FsBackend {
   /// 宿主给定的记忆库根目录
   base_dir : String
   /// 当前有效槽（0 / 1）
-  mut slot : Int
+  mut slot : Int32
 }
 
 ///|
@@ -131,7 +128,7 @@ fn FsBackend::moomem_dir(self : FsBackend) -> String {
 }
 
 ///|
-fn FsBackend::slot_path(self : FsBackend, slot : Int) -> String {
+fn FsBackend::slot_path(self : FsBackend, slot : Int32) -> String {
   "\{self.moomem_dir()}/slot\{slot}.jsonl"
 }
 
@@ -144,7 +141,7 @@ fn FsBackend::head_path(self : FsBackend) -> String {
 /// 读取指定槽文件并校验其 header 可解析（用于槽选择）；失败返回 None。
 fn FsBackend::read_slot_if_valid(
   self : FsBackend,
-  slot : Int,
+  slot : Int32,
 ) -> Result[String?, MoomemError] {
   let path = self.slot_path(slot)
   if !@fs.path_exists(path) {
@@ -172,7 +169,7 @@ fn FsBackend::read_slot_if_valid(
 
 ///|
 /// 从快照文本解析 header 中的 gen（用于双槽歧义时取大者）。
-fn snapshot_gen_of(content : String) -> Int? {
+fn snapshot_gen_of(content : String) -> Int32? {
   let first_line = match content.split("\n").next() {
     Some(l) => l.to_owned()
     None => return None
@@ -198,7 +195,7 @@ pub impl PersistenceBackend for FsBackend with fn load(self) {
     } else {
       None
     }
-    let head_slot : Int? = match head_content {
+    let head_slot : Int32? = match head_content {
       Some(c) =>
         match c.trim() {
           "0" => Some(0)

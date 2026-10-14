@@ -6,7 +6,7 @@
 /// k 为平滑常数（缺省 60），top_k 为截断长度。
 /// 排序确定性：融合分降序，相同分按 id 升序。
 /// Package-private; used by MemoryStore::recall only.
-fn rrf(lists : Array[Array[String]], k : Int, top_k : Int) -> Array[String] {
+fn rrf(lists : Array[Array[String]], k : Int32, top_k : Int32) -> Array[String] {
   if k <= 0 {
     return []
   }
@@ -32,8 +32,8 @@ fn rrf(lists : Array[Array[String]], k : Int, top_k : Int) -> Array[String] {
 fn rrf_weighted(
   vector_ids : Array[String],
   keyword_ids : Array[String],
-  k : Int,
-  top_k : Int,
+  k : Int32,
+  top_k : Int32,
   vector_weight : Double,
   keyword_weight : Double,
 ) -> Array[String] {
@@ -69,7 +69,10 @@ fn rrf_weighted(
 }
 
 ///|
-fn rank_scores_to_ids(scores : Map[String, Double], top_k : Int) -> Array[String] {
+fn rank_scores_to_ids(
+  scores : Map[String, Double],
+  top_k : Int32,
+) -> Array[String] {
   let ranked : Array[(String, Double)] = []
   for kv in scores.iter() {
     ranked.push(kv)
@@ -124,7 +127,7 @@ fn lexical_strong(
 fn protect_bm25_topk(
   fused : Array[String],
   keyword_ids : Array[String],
-  k : Int,
+  k : Int32,
 ) -> Array[String] {
   let out : Array[String] = []
   let in_out : Map[String, Bool] = Map([])
@@ -133,7 +136,11 @@ fn protect_bm25_topk(
     out.push(fused[i])
     in_out.set(fused[i], true)
   }
-  let protect_n = if k < keyword_ids.length() { k } else { keyword_ids.length() }
+  let protect_n = if k < keyword_ids.length() {
+    k
+  } else {
+    keyword_ids.length()
+  }
   let keep_set : Map[String, Bool] = Map([])
   for i = 0; i < protect_n; i = i + 1 {
     keep_set.set(keyword_ids[i], true)

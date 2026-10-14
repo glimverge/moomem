@@ -7,7 +7,7 @@
 ///|
 /// 记录 judge 收到的候选数（不产生裁决，便于断言窗口大小）。
 struct ConfigCountingJudge {
-  mut last_count : Int
+  mut last_count : Int32
 }
 
 ///|
@@ -80,7 +80,7 @@ impl Embedder for ConfigFixedEmbedder with fn dim(_self) {
 }
 
 ///|
-fn config_unit_vector(i : Int, scale : Double) -> Array[Double] {
+fn config_unit_vector(i : Int32, scale : Double) -> Array[Double] {
   let v = Array::make(@src.DEFAULT_DIM, 0.0)
   v[i] = scale
   v
@@ -90,17 +90,12 @@ fn config_unit_vector(i : Int, scale : Double) -> Array[Double] {
 fn config_open(
   config : @src.Config,
 ) -> Result[@src.MemoryStore, @src.MoomemError] {
-  @src.MemoryStore::open("memory://config", config=config)
+  @src.MemoryStore::open("memory://config", config~)
 }
 
 ///|
-fn config_base(
-  backend : &@src.PersistenceBackend,
-) -> @src.Config {
-  @src.Config::{
-    ..@src.Config::default(),
-    persistence: Some(backend),
-  }
+fn config_base(backend : &@src.PersistenceBackend) -> @src.Config {
+  @src.Config::{ ..@src.Config::default(), persistence: Some(backend), }
 }
 
 // ---------------------------------------------------------------------------
@@ -140,7 +135,7 @@ test "default config add/recall matches prior behavior" {
 ///|
 test "conflict_candidates=1 limits candidates to at most one per path" {
   let backend : &@src.PersistenceBackend = @src.MemoryBackend::new()
-  let judge = ConfigCountingJudge::{ last_count: -1 }
+  let judge = ConfigCountingJudge::{ last_count: -1, }
   let embedder : &@src.Embedder = ConfigResidenceEmbedder::{ }
   let cfg = @src.Config::{
     ..config_base(backend),
@@ -183,7 +178,8 @@ test "conflict_candidates=1 limits candidates to at most one per path" {
   }
   ignore(store2.add("w3-a2b", "我住在北京市海淀区甲"))
   ignore(store2.add("w3-a2b", "我住在北京市海淀区乙"))
-  let s_narrow = match store2.add("w3-a2b", "我搬家了现在住在深圳南山区") {
+  let s_narrow = match
+    store2.add("w3-a2b", "我搬家了现在住在深圳南山区") {
     Ok(s) => s
     Err(e) => {
       inspect(e.message(), content="SHOULD NOT REACH")
@@ -203,28 +199,19 @@ test "conflict_candidates=1 limits candidates to at most one per path" {
 ///|
 test "conflict_candidates=0 and coexist_band=1.0 rejected" {
   let backend : &@src.PersistenceBackend = @src.MemoryBackend::new()
-  let bad_cc = @src.Config::{
-    ..config_base(backend),
-    conflict_candidates: 0,
-  }
+  let bad_cc = @src.Config::{ ..config_base(backend), conflict_candidates: 0, }
   let rejected_cc = match config_open(bad_cc) {
     Err(InvalidOperation(msg)) => msg.contains("conflict_candidates")
     _ => false
   }
   inspect(rejected_cc, content="true")
-  let bad_band = @src.Config::{
-    ..config_base(backend),
-    coexist_band: 1.0,
-  }
+  let bad_band = @src.Config::{ ..config_base(backend), coexist_band: 1.0, }
   let rejected_band = match config_open(bad_band) {
     Err(InvalidOperation(msg)) => msg.contains("coexist_band")
     _ => false
   }
   inspect(rejected_band, content="true")
-  let bad_gap = @src.Config::{
-    ..config_base(backend),
-    lexical_gap: 0.9,
-  }
+  let bad_gap = @src.Config::{ ..config_base(backend), lexical_gap: 0.9, }
   let rejected_gap = match config_open(bad_gap) {
     Err(InvalidOperation(msg)) => msg.contains("lexical_gap")
     _ => false
@@ -239,10 +226,7 @@ test "conflict_candidates=0 and coexist_band=1.0 rejected" {
     _ => false
   }
   inspect(rejected_wv, content="true")
-  let bad_floor = @src.Config::{
-    ..config_base(backend),
-    lexical_floor: -0.1,
-  }
+  let bad_floor = @src.Config::{ ..config_base(backend), lexical_floor: -0.1, }
   let rejected_floor = match config_open(bad_floor) {
     Err(InvalidOperation(msg)) => msg.contains("lexical_floor")
     _ => false
@@ -266,11 +250,8 @@ test "conflict_candidates=0 and coexist_band=1.0 rejected" {
 ///|
 test "NoBackfill vs BackfillRecency" {
   let texts = [
-    "w3alpha peanut allergy unique1",
-    "w3alpha peanut allergy unique2",
-    "w3beta unrelated filler3",
-    "w3beta unrelated filler4",
-    "w3beta unrelated filler5",
+    "w3alpha peanut allergy unique1", "w3alpha peanut allergy unique2", "w3beta unrelated filler3",
+    "w3beta unrelated filler4", "w3beta unrelated filler5",
   ]
   // NoBackfill：仅返回真实命中
   let backend_nb : &@src.PersistenceBackend = @src.MemoryBackend::new()
@@ -382,10 +363,7 @@ test "coexist_band=0.30 expands Coexist window" {
     }
   }
   inspect(wide_vs.length(), content="1")
-  inspect(
-    wide_vs[0].decision == @src.ConflictDecision::Coexist,
-    content="true",
-  )
+  inspect(wide_vs[0].decision == @src.ConflictDecision::Coexist, content="true")
 
   let narrow = @src.SimilarityJudge::new(0.82, e, coexist_band=0.15)
   let narrow_j : &@src.ConflictJudge = narrow
@@ -477,7 +455,7 @@ test "adaptive fusion favors BM25 on strong lexical query" {
     table,
     fallback: config_unit_vector(2, 1.0),
   }
-  let judge : &@src.ConflictJudge = ConfigCountingJudge::{ last_count: -1 }
+  let judge : &@src.ConflictJudge = ConfigCountingJudge::{ last_count: -1, }
   let backend : &@src.PersistenceBackend = @src.MemoryBackend::new()
   let cfg = @src.Config::{
     ..config_base(backend),
@@ -509,11 +487,8 @@ test "adaptive fusion favors BM25 on strong lexical query" {
   inspect(lexical.length() >= 1, content="true")
   inspect(lexical[0].content.contains("花生过敏"), content="true")
 
-  let semantic = match store.recall(
-    "w3-a7",
-    "hypersensitivity to groundnuts",
-    top_k=2,
-  ) {
+  let semantic = match
+    store.recall("w3-a7", "hypersensitivity to groundnuts", top_k=2) {
     Ok(r) => r
     Err(e) => {
       inspect(e.message(), content="SHOULD NOT REACH")

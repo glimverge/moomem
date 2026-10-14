@@ -5,17 +5,9 @@
 ///|
 fn[T] block_on(work : async () -> T) -> T raise {
   let slot : Ref[Result[T, Error]?] = Ref(None)
-  @async.run_async_main(
-    async fn() {
-      slot.val = Some(
-        try {
-          Ok(work())
-        } catch {
-          err => Err(err)
-        },
-      )
-    },
-  )
+  @async.run_async_main(async fn() {
+    slot.val = Some(Ok(work()) catch { err => Err(err) })
+  })
   match slot.val {
     Some(Ok(value)) => value
     Some(Err(err)) => raise err
@@ -48,7 +40,9 @@ fn split_once(line : String, sep : Char) -> (String, String)? {
     }
   }
   if found {
-    Some((key.to_string().trim().to_owned(), value.to_string().trim().to_owned()))
+    Some(
+      (key.to_string().trim().to_owned(), value.to_string().trim().to_owned()),
+    )
   } else {
     None
   }
@@ -112,16 +106,14 @@ fn post_json(url : String, api_key : String, payload : Json) -> Json raise {
   let headers : @http.Headers = Map([])
   headers["authorization"] = "Bearer \{api_key}"
   headers["content-type"] = "application/json"
-  block_on(
-    async fn() {
-      let (response, body) = @http.post(url, payload.stringify(), headers~)
-      if response.code < 200 || response.code >= 300 {
-        let detail = body.text() catch { _ => "" }
-        raise Failure("HTTP \{response.code} \{clip(detail)}")
-      }
-      body.json()
-    },
-  )
+  block_on(async fn() {
+    let (response, body) = @http.post(url, payload.stringify(), headers~)
+    if response.code < 200 || response.code >= 300 {
+      let detail = body.text() catch { _ => "" }
+      raise Failure("HTTP \{response.code} \{clip(detail)}")
+    }
+    body.json()
+  })
 }
 
 ///|
@@ -129,7 +121,7 @@ struct QwenEmbedder {
   api_key : String
   base_url : String
   model : String
-  dim : Int
+  dim : Int32
 }
 
 ///|
@@ -206,7 +198,7 @@ pub impl @moomem.Embedder for QwenEmbedder with fn dim(self) {
 }
 
 ///|
-pub extend QwenEmbedder with @moomem.Embedder::{ embed, dim }
+pub extend QwenEmbedder with @moomem.Embedder::{embed, dim}
 
 ///|
 struct DeepSeekExtractor {
@@ -268,15 +260,13 @@ fn facts_from_content(content : String) -> Array[@moomem.ExtractedFact] raise {
                 Some(String(name)) => kind_of(name)
                 _ => @moomem.EntryKind::Fact
               }
-              facts.push(
-                @moomem.ExtractedFact::{
-                  content: text.trim().to_owned(),
-                  kind,
-                  source_span: None,
-                  degraded: false,
-                  degrade_reason: None,
-                },
-              )
+              facts.push(@moomem.ExtractedFact::{
+                content: text.trim().to_owned(),
+                kind,
+                source_span: None,
+                degraded: false,
+                degrade_reason: None,
+              })
             }
           _ => ()
         }
@@ -321,10 +311,7 @@ pub impl @moomem.Extractor for DeepSeekExtractor with fn extract(self, _, text) 
       "role": Json::string("system"),
       "content": Json::string(prompt),
     }),
-    Json::object({
-      "role": Json::string("user"),
-      "content": Json::string(text),
-    }),
+    Json::object({ "role": Json::string("user"), "content": Json::string(text) }),
   ])
   let payload : Map[String, Json] = Map([])
   payload["model"] = Json::string(self.model)
@@ -352,16 +339,26 @@ pub impl @moomem.Extractor for DeepSeekExtractor with fn mode(_) {
 }
 
 ///|
-pub extend DeepSeekExtractor with @moomem.Extractor::{ extract, mode }
+pub extend DeepSeekExtractor with @moomem.Extractor::{extract, mode}
 
 ///|
 fn reset_dir(dir : String) -> Unit {
   if @fs.path_exists(dir) {
-    @fs.remove_file("\{dir}/moomem/slot0.jsonl") catch { _ => () }
-    @fs.remove_file("\{dir}/moomem/slot1.jsonl") catch { _ => () }
-    @fs.remove_file("\{dir}/moomem/head") catch { _ => () }
-    @fs.remove_dir("\{dir}/moomem") catch { _ => () }
-    @fs.remove_dir(dir) catch { _ => () }
+    @fs.remove_file("\{dir}/moomem/slot0.jsonl") catch {
+      _ => ()
+    }
+    @fs.remove_file("\{dir}/moomem/slot1.jsonl") catch {
+      _ => ()
+    }
+    @fs.remove_file("\{dir}/moomem/head") catch {
+      _ => ()
+    }
+    @fs.remove_dir("\{dir}/moomem") catch {
+      _ => ()
+    }
+    @fs.remove_dir(dir) catch {
+      _ => ()
+    }
   }
 }
 
@@ -418,9 +415,7 @@ fn main {
       abort("env failed")
     }
   }
-  println(
-    "models: embed=\{env.qwen_model} extract=\{env.deepseek_model}",
-  )
+  println("models: embed=\{env.qwen_model} extract=\{env.deepseek_model}")
   let probe = QwenEmbedder::{
     api_key: env.qwen_key,
     base_url: env.qwen_base,

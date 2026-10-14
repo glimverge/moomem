@@ -7,7 +7,7 @@
   <a href="https://github.com/glimverge/moomem/blob/main/LICENSE"><img src="https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fmooncakes.io%2Fapi-new%2Fv0%2Fmanifest%2Fheyq02%2Fmoomem&query=%24.metadata.license&label=license&style=flat-square&colorA=564341&colorB=EDED91" alt="license" /></a>
 </p>
 
-MoonBit 嵌入式 Agent 记忆层。嵌在宿主进程里，崩溃后仍从上一份完整快照恢复。缺省不需要 API Key。
+嵌在 MoonBit 宿主进程里的 Agent 记忆库，崩溃后从上一份完整快照恢复，缺省不用 API Key。
 
 | | |
 | --- | --- |

@@ -26,13 +26,13 @@ jobs:
         run: |
           set -euo pipefail
           moon fmt
-          moon -C demo update
-          moon -C demo fmt
+          moon -C playground update
+          moon -C playground fmt
       - name: moon check
         run: |
           set -euo pipefail
           moon check --deny-warn --fmt --target native
-          moon -C demo check --deny-warn --fmt --target native
+          moon -C playground check --deny-warn --fmt --target native
       - uses: autofix-ci/action@c5b2d67aa2274e7b5a18224e8171550871fc7e4a
         with:
           commit-message: 'chore: apply automated updates'

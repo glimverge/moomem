@@ -9,7 +9,7 @@
 //   "moonbitlang/x@0.4.6",
 // }
 
-name = "heyq02/demo"
+name = "heyq02/playground"
 
 version = "0.1.0"
 

@@ -45,10 +45,10 @@ native 上，同一目录再次 `open`，记忆还在，`recall` 结果一致。
 > [!NOTE]
 > 缺省实现不访问网络。要做语义提取或真实向量，在 `open` 时注入 `Embedder`、`Extractor`、`ConflictJudge`。
 
-[`demo/`](demo/) 就是这样接的：Qwen 做嵌入，DeepSeek 做提取。复制 `demo/.env.example` 为 `demo/.env`，填上密钥后：
+[`playground/`](playground/) 就是这样接的：Qwen 做嵌入，DeepSeek 做提取。复制 `playground/.env.example` 为 `playground/.env`，填上密钥后：
 
 ```bash
-cd demo
+cd playground
 moon run cmd/main
 ```
 

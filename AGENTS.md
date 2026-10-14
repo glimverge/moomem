@@ -26,7 +26,7 @@ Embedded agent memory library for [MoonBit](https://www.moonbitlang.com/). Modul
 
 Host behavior and on-disk layout: `README.md`. Coding contracts: `.trellis/spec/library/`. Read that index before editing `src/`.
 
-`demo/` is a separate MoonBit module with its own `AGENTS.md`. The closest file wins.
+`playground/` is a separate MoonBit module with its own `AGENTS.md`. The closest file wins.
 
 ## Setup
 
@@ -54,7 +54,7 @@ Registry dependency: `moonbitlang/x@0.5.5`.
 | `src/` | Core package. Black-box `*_test.mbt` and white-box `*_wbtest.mbt` stay beside sources. |
 | `examples/<scene>/` | Three offline demos: `default-reopen`, `host-inject-supersede`, `isolation-forget-import`. Smoke only. |
 | `benchmark/` | Offline LoCoMo eval (`moon run benchmark --target native`). |
-| `demo/` | Host sample (Qwen embed + DeepSeek extract). Own module `heyq02/demo`, depends on published `heyq02/moomem`, not the working tree. |
+| `playground/` | Host sample (Qwen embed + DeepSeek extract). Own module `heyq02/playground`, depends on published `heyq02/moomem`, not the working tree. |
 | `.github/workflows/` | `check.yml`, `unit-test.yml`, `coverage.yml`, `smoke.yml`, `benchmark.yml` (push/PR), `release.yaml` (tag `v*`), `commitlint.yml` (PR commit messages), `autofix.yml` (`rs fmt`, `moon fmt`, and `moon check --deny-warn` on PR/push to `main`). |
 | `rstack.config.ts` | `define.extends([rstack(...)])` from `@heyq02/rstack-config`. `lib` / `lint` / `test` are off; `fmt` and `staged` are on. |
 | `commitlint.config.js` | Re-exports `@heyq02/rstack-config/commitlint`. |
@@ -82,15 +82,15 @@ moon run examples/isolation-forget-import --target native
 moon run benchmark --target native
 ```
 
-Live host demo (needs secrets; do not commit `.env`):
+Live host playground (needs secrets; do not commit `.env`):
 
 ```bash
-cd demo
+cd playground
 cp .env.example .env
 moon run cmd/main
 ```
 
-`demo/moon.mod` pins `heyq02/moomem@0.7.0`. A change in this repo's `src/` does not affect `demo/` until that dependency is bumped.
+`playground/moon.mod` pins `heyq02/moomem@0.7.0`. A change in this repo's `src/` does not affect `playground/` until that dependency is bumped.
 
 ## Testing
 
@@ -170,12 +170,12 @@ Also run the other three targets when the change is not clearly native-only. If 
 ## Security
 
 - Tests, examples, and the offline benchmark never contain API keys.
-- `demo/.env` is local only (gitignored). `demo/memory/` is gitignored runtime state.
+- `playground/.env` is local only (gitignored). `playground/memory/` is gitignored runtime state.
 - `MOONCAKES_TOKEN` belongs only on the publish job.
 
 ## Troubleshooting
 
 - `open` returns `StoreCorrupted` when snapshot `v` mismatches, a non-final line is truncated, or both slots are unusable. Only a torn **last** line is dropped (`stats().truncated_recovered`).
 - wasm/js `recall` after process restart is empty unless the host injected a `PersistenceBackend`. That is the default backend, not a lost write on native.
-- `demo/` behavior that disagrees with `src/` is usually the pinned mooncakes version, not the working tree.
+- `playground/` behavior that disagrees with `src/` is usually the pinned mooncakes version, not the working tree.
 - Native file tests that touch a real directory need `--target native`. They are `#cfg`'d out of wasm/js.

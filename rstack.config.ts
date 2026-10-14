@@ -16,7 +16,7 @@ define.extends([
         '.cursor/**',
         '.trellis/**',
         'docs/**',
-        'demo/**',
+        'playground/**',
         'examples/**',
         'benchmark/**',
         'src/**',

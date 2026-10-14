@@ -1,6 +1,6 @@
 name = "heyq02/moomem"
 
-version = "0.7.2"
+version = "0.7.3"
 
 import {
   "moonbitlang/x@0.5.5",

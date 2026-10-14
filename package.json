@@ -1,6 +1,6 @@
 {
   "name": "moomem",
-  "version": "0.7.2",
+  "version": "0.7.3",
   "private": true,
   "description": "Repo tooling for the MoonBit moomem library. The library itself is moon.mod.",
   "keywords": [],

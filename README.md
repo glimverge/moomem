@@ -113,10 +113,4 @@ moon run examples/default-reopen --target native
 
 ## 项目治理
 
-本项目的状态、路线图、变更与决策记录统一收纳在 [`docs/`](docs/)：
-
-- 当前状态：[`docs/STATUS.md`](docs/STATUS.md)
-- 路线图：[`docs/ROADMAP.md`](docs/ROADMAP.md)
-- 变更记录：[`docs/CHANGELOG.md`](docs/CHANGELOG.md)
-- 决策记录：[`docs/DECISIONS.md`](docs/DECISIONS.md)
-- 代码布局：[`docs/CODE-LAYOUT.md`](docs/CODE-LAYOUT.md)（含 [`src/README.md`](src/README.md) 包内地图）
+路线图在 GitHub Project：[moomem](https://github.com/orgs/glimverge/projects/1)。代码布局见 [`src/README.md`](src/README.md)。
